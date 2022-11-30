@@ -1,0 +1,13 @@
+[
+  {
+    "name": "deploy",
+    "steps": [
+      {
+        "name": "wrappers.io deploy",
+        "id": "deploy.wrappers.io deploy",
+        "input": "wrap://fs/./build",
+        "result": "wrap://ipfs/QmdtRAEYDZ7BovMMi4JUEbKgkwRpjxTe9XpCuTXsHUGKnY"
+      }
+    ]
+  }
+]
