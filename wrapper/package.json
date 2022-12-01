@@ -13,10 +13,11 @@
     "test:e2e" : "jest --passWithNoTests --runInBand --verbose tests/e2e.simple.spec.ts",
     "test": "yarn test:codegen && yarn test:e2e",
     "codegen": "npx polywrap codegen",
-    "build": "npx polywrap build -s image --no-codegen"
+    "build": "npx polywrap build -s image --no-codegen",
+    "deploy": "npx polywrap deploy -o deployment.json"
   },
   "devDependencies": {
-    "ethereum-provider-js": "file:../provider/js",
+    "ethereum-provider-js": "file:../provider/implementations/js",
     "@polywrap/client-js": "0.9.4",
     "@polywrap/core-js": "0.9.4",
     "@polywrap/test-env-js": "0.9.4",

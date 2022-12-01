@@ -2858,7 +2858,7 @@ eth-ens-namehash@2.0.8:
     idna-uts46-hx "^2.3.1"
     js-sha3 "^0.5.7"
 
-"ethereum-provider-js@file:../provider/js":
+"ethereum-provider-js@file:../provider/implementations/js":
   version "0.1.0"
   dependencies:
     "@ethersproject/address" "5.7.0"

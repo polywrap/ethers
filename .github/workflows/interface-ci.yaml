@@ -1,0 +1,33 @@
+name: ethereum-provider-interface-ci
+
+on:
+  pull_request:
+    paths:
+      - "provider/interface/**"
+
+jobs:
+  ci:
+    name: ethereum-provider-interface-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+        working-directory: ./provider/interface
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./provider/interface
+
+      - name: Build
+        run: yarn build
+        working-directory: ./provider/interface

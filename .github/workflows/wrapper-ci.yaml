@@ -1,0 +1,42 @@
+name: ethereum-wrapper-ci
+
+on:
+  pull_request:
+    paths:
+      - "wrapper/**"
+
+jobs:
+  ci:
+    name: ethereum-wrapper-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+        working-directory: ./wrapper
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./wrapper
+
+      - name: Build
+        run: yarn build
+        working-directory: ./wrapper
+
+      # need to build ethereum-provider-js before testing wrapper
+      - name: Install plugin dependencies and build plugin
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline && yarn build
+        working-directory: ./provider/implementations/ethereum-provider-js
+
+      - name: Test
+        run: yarn test
+        working-directory: ./wrapper
