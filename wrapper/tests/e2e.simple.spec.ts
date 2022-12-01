@@ -1,6 +1,7 @@
 import { PolywrapClient } from "@polywrap/client-js";
 import { ensResolverPlugin } from "@polywrap/ens-resolver-plugin-js";
 import {
+  buildWrapper,
   ensAddresses,
   providers,
 } from "@polywrap/test-env-js";
@@ -8,7 +9,7 @@ import * as path from 'path'
 
 import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
-import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-plugin";
+import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-js";
 import * as Schema from "./types/wrap";
 import { initInfra, stopInfra } from "./utils/infra";
 
@@ -44,7 +45,15 @@ describe("Ethereum Wrapper", () => {
     // resolverAddress = ensAddresses.resolverAddress;
     registrarAddress = ensAddresses.registrarAddress;
 
+    const interfacePath = path.join(__dirname, "..", "..", "provider", "interface");
+    await buildWrapper(interfacePath);
+    const interfaceFsUri = `wrap://fs/${path.resolve(interfacePath)}/build`;
+
     client = new PolywrapClient({
+      redirects: [{
+        from: "wrap://ens/interface.ethereum-provider.polywrap.eth",
+        to: interfaceFsUri,
+      }],
       plugins: [
         {
           uri: "wrap://ens/ens-resolver.polywrap.eth",
@@ -55,7 +64,7 @@ describe("Ethereum Wrapper", () => {
           }),
         },
         {
-          uri: "wrap://ens/ethereum-provider.polywrap.eth",
+          uri: "wrap://ens/js.ethereum-provider.polywrap.eth",
           plugin: ethereumProviderPlugin({
             connections: new Connections({
               networks: {
@@ -71,6 +80,12 @@ describe("Ethereum Wrapper", () => {
           }),
         },
       ],
+      interfaces: [
+        {
+          interface: "wrap://ens/interface.ethereum-provider.polywrap.eth",
+          implementations: ["wrap://ens/js.ethereum-provider.polywrap.eth"]
+        }
+      ]
     });
   });
 

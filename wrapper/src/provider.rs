@@ -1,7 +1,8 @@
 use ethers_providers::{JsonRpcClient, ProviderError, Provider, Middleware};
 
 use super::wrap::imported::ArgsRequest;
-use super::wrap::{ProviderModule, ProviderConnection};
+use super::wrap::{IProviderModule, IProviderConnection};
+use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
 use ethers_core::types::BlockId;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
@@ -11,7 +12,8 @@ use crate::block_on;
 
 #[derive(Debug)]
 pub struct PolywrapProvider {
-    connection: Option<ProviderConnection>
+    connection: Option<IProviderConnection>,
+    iprovider: IProviderModule,
 }
 
 #[derive(Error, Debug)]
@@ -49,7 +51,7 @@ impl JsonRpcClient for PolywrapProvider {
         params: T,
     ) -> Result<R, Self::Error> {
         let params_s = serde_json::to_string(&params).unwrap();
-        let res = ProviderModule::request(&ArgsRequest {
+        let res = self.iprovider.request(&ArgsRequest {
             method: method.to_string(),
             params: Some(params_s),
             connection: self.connection.clone(),
@@ -64,18 +66,24 @@ impl JsonRpcClient for PolywrapProvider {
 }
 
 impl PolywrapProvider {
-    pub fn new(connection: &Option<ProviderConnection>) -> Self {
-        Self { connection: connection.clone() }
+    pub fn new(connection: &Option<IProviderConnection>) -> Self {
+        Self {
+            connection: connection.clone(),
+            iprovider: get_iprovider(),
+        }
     }
 
-    pub fn connection(&self) -> Option<ProviderConnection> {
+    pub fn connection(&self) -> Option<IProviderConnection> {
         self.connection.clone()
     }
 }
 
 impl Clone for PolywrapProvider {
     fn clone(&self) -> Self {
-        Self { connection: self.connection.clone() }
+        Self {
+            connection: self.connection.clone(),
+            iprovider: self.iprovider.clone(),
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "ethereum-provider-plugin",
+  "name": "ethereum-provider-js",
   "description": "Ethereum Provider Polywrap JS Plugin",
   "version": "0.1.0",
   "license": "MIT",
@@ -9,19 +9,20 @@
     "schema.graphql"
   ],
   "scripts": {
-    "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
+    "build": "rimraf ./build && yarn codegen && yarn fix:bindings && tsc --project tsconfig.build.json",
     "codegen": "yarn polywrap codegen",
     "lint": "eslint --color --ext .ts src/",
-    "test": "jest --passWithNoTests --runInBand --verbose"
+    "test": "jest --passWithNoTests --runInBand --verbose",
+    "fix:bindings": "ts-node ./scripts/fix-bindings.ts"
   },
   "dependencies": {
     "@ethersproject/address": "5.7.0",
     "@ethersproject/providers": "5.7.0",
-    "polywrap": "0.9.4",
     "@polywrap/core-js": "0.9.4",
     "ethers": "5.7.0"
   },
   "devDependencies": {
+    "polywrap": "0.9.4",
     "@types/jest": "26.0.8",
     "@polywrap/client-js": "0.9.4",
     "@polywrap/test-env-js": "0.9.4",

@@ -1,4 +1,5 @@
-#import { Module, Connection } into Provider from "wrap://ens/ethereum-provider.polywrap.eth"
+#import { Module, Connection } into IProvider from "wrap://ens/interface.ethereum-provider.polywrap.eth"
+#use { getImplementations } for IProvider
 
 type TxRequest {
     to: String
@@ -126,13 +127,13 @@ type Eip1559FeesEstimate {
 }
 
 type Module {
-  getChainId(connection: Provider_Connection): String!
+  getChainId(connection: IProvider_Connection): String!
 
   callContractView(
     address: String!
     method: String!
     args: [String!]
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 
   callContractStatic(
@@ -140,58 +141,58 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): StaticTxResult!
 
   encodeParams(
     types: [String!]!
     values: [String!]!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 
   encodeFunction(
     method: String!
     args: [String!]
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 
   decodeFunction(
     method: String!
     data: String!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): [String!]!
 
-  getSignerAddress(connection: Provider_Connection): String!
+  getSignerAddress(connection: IProvider_Connection): String!
 
   getSignerBalance(
     blockTag: BigInt
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): BigInt!
 
   getBalance(
     address: String!
     blockTag: BigInt
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): BigInt!
 
-  getGasPrice(connection: Provider_Connection): BigInt!
+  getGasPrice(connection: IProvider_Connection): BigInt!
 
-  estimateEip1559Fees(connection: Provider_Connection): Eip1559FeesEstimate!
+  estimateEip1559Fees(connection: IProvider_Connection): Eip1559FeesEstimate!
 
   sendRpc(
     method: String!
     params: [String!]!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 
   getSignerTransactionCount(
     blockTag: BigInt
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): BigInt!
 
   checkAddress(
     address: String!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): Boolean!
 
   toWei(eth: String!): String!
@@ -207,22 +208,22 @@ type Module {
 
   estimateTransactionGas(
     tx: TxRequest!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): BigInt!
 
   awaitTransaction(
     txHash: String!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): TxReceipt! # TODO: add timeout and confirmations
 
   sendTransaction(
     tx: TxRequest!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): TxResponse!
 
   sendTransactionAndWait(
     tx: TxRequest!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): TxReceipt!
 
   deployContract(
@@ -230,7 +231,7 @@ type Module {
     bytecode: String!
     args: [String!]
     options: TxOptions
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 
   estimateContractCallGas(
@@ -238,7 +239,7 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): BigInt!
 
   callContractMethod(
@@ -246,7 +247,7 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): TxResponse!
 
   callContractMethodAndWait(
@@ -254,11 +255,11 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): TxReceipt!
 
   signMessage(
     message: String!
-    connection: Provider_Connection
+    connection: IProvider_Connection
   ): String!
 }

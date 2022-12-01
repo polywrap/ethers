@@ -1,12 +1,12 @@
 import {
   Module,
   manifest,
-  Args_request,
-  Args_signMessage,
-  Args_signTransaction,
-  Args_address,
-  Args_chainId,
-  Connection as SchemaConnection
+  EthereumProvider_Module_Args_request as Args_request,
+  EthereumProvider_Module_Args_signMessage as Args_signMessage,
+  EthereumProvider_Module_Args_signTransaction as Args_signTransaction,
+  EthereumProvider_Module_Args_address as Args_address,
+  EthereumProvider_Module_Args_chainId as Args_chainId,
+  EthereumProvider_Connection as SchemaConnection
 } from "./wrap";
 import { Client, PluginFactory } from "@polywrap/core-js";
 import { Connection } from "./Connection";

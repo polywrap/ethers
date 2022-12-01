@@ -1,0 +1,17 @@
+{
+  "name": "ethereum-provider-interface",
+  "description": "Ethereum Provider Interface",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "npx polywrap build",
+    "deploy": "npx polywrap deploy"
+  },
+  "devDependencies": {
+    "polywrap": "0.9.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
+

@@ -3,7 +3,7 @@ project:
   name: Ethereum-Provider
   type: app/typescript
 source:
-  schema: ../../schema.graphql
+  schema: ../../src/schema.graphql
   import_abis:
-  - uri: wrap://ens/ethereum-provider.polywrap.eth
-    abi: ../../../provider/build/wrap.info
+  - uri: wrap://ens/interface.ethereum-provider.polywrap.eth
+    abi: ../../../provider/interface/src/schema.graphql

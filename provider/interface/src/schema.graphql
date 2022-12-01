@@ -3,10 +3,6 @@ type Connection {
   networkNameOrChainId: String
 }
 
-type Env {
-  connection: Connection
-}
-
 type Module {
   """
   Send a remote RPC request to the registered provider

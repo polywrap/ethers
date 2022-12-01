@@ -7,6 +7,7 @@ use ethers_middleware::SignerMiddleware;
 use ethers_providers::{Middleware, Provider};
 use ethers_signers::Signer;
 
+pub mod iprovider;
 pub mod provider;
 pub mod signer;
 pub mod wrap;

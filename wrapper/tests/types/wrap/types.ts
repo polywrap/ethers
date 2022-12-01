@@ -115,8 +115,8 @@ export interface Eip1559FeesEstimate {
 
 /// Imported Objects START ///
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-export interface Provider_Connection {
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+export interface IProvider_Connection {
   node?: Types.String | null;
   networkNameOrChainId?: Types.String | null;
 }
@@ -125,41 +125,41 @@ export interface Provider_Connection {
 
 /// Imported Modules START ///
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-interface Provider_Module_Args_request {
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+interface IProvider_Module_Args_request {
   method: Types.String;
   params?: Types.String | null;
-  connection?: Types.Provider_Connection | null;
+  connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-interface Provider_Module_Args_signMessage {
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+interface IProvider_Module_Args_signMessage {
   message: Types.Bytes;
-  connection?: Types.Provider_Connection | null;
+  connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-interface Provider_Module_Args_signTransaction {
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+interface IProvider_Module_Args_signTransaction {
   rlp: Types.Bytes;
-  connection?: Types.Provider_Connection | null;
+  connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-interface Provider_Module_Args_address {
-  connection?: Types.Provider_Connection | null;
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+interface IProvider_Module_Args_address {
+  connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-interface Provider_Module_Args_chainId {
-  connection?: Types.Provider_Connection | null;
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+interface IProvider_Module_Args_chainId {
+  connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/ethereum-provider.polywrap.eth" */
-export const Provider_Module = {
+/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+export const IProvider_Module = {
   request: async (
-    args: Provider_Module_Args_request,
+    args: IProvider_Module_Args_request,
     client: Client,
-    uri: string = "wrap://ens/ethereum-provider.polywrap.eth"
+    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
@@ -169,9 +169,9 @@ export const Provider_Module = {
   },
 
   signMessage: async (
-    args: Provider_Module_Args_signMessage,
+    args: IProvider_Module_Args_signMessage,
     client: Client,
-    uri: string = "wrap://ens/ethereum-provider.polywrap.eth"
+    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
@@ -181,9 +181,9 @@ export const Provider_Module = {
   },
 
   signTransaction: async (
-    args: Provider_Module_Args_signTransaction,
+    args: IProvider_Module_Args_signTransaction,
     client: Client,
-    uri: string = "wrap://ens/ethereum-provider.polywrap.eth"
+    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
@@ -193,9 +193,9 @@ export const Provider_Module = {
   },
 
   address: async (
-    args: Provider_Module_Args_address,
+    args: IProvider_Module_Args_address,
     client: Client,
-    uri: string = "wrap://ens/ethereum-provider.polywrap.eth"
+    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
@@ -205,9 +205,9 @@ export const Provider_Module = {
   },
 
   chainId: async (
-    args: Provider_Module_Args_chainId,
+    args: IProvider_Module_Args_chainId,
     client: Client,
-    uri: string = "wrap://ens/ethereum-provider.polywrap.eth"
+    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,

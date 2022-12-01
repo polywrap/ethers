@@ -1,4 +1,4 @@
-import { Connection } from "ethereum-provider-plugin";
+import { Connection } from "ethereum-provider-js";
 import { ContractFactory, Contract, Signer, ethers } from "ethers";
 import { providers } from "@polywrap/test-env-js";
 
