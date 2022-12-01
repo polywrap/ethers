@@ -1,6 +1,6 @@
 format: 0.2.0
 project:
-  name: EthereumProvider-js
+  name: ethereum-provider-js
   type: plugin/typescript
 source:
   module: ./src/index.ts

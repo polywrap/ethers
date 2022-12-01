@@ -1,7 +1,7 @@
-#import { Module, Connection } into EthereumProvider from "wrap://ens/interface.ethereum-provider.polywrap.eth"
+#import { Module, Connection } into IProvider from "wrap://ens/interface.ethereum-provider.polywrap.eth"
 
 type Env {
-  connection: EthereumProvider_Connection
+  connection: IProvider_Connection
 }
 
-type Module implements EthereumProvider {}
+type Module implements IProvider {}

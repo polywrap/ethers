@@ -1,5 +1,5 @@
 import { Connection, EthereumProvider } from "./Connection";
-import { EthereumProvider_Connection as SchemaConnection } from "./wrap";
+import { IProvider_Connection as SchemaConnection } from "./wrap";
 
 import { getNetwork } from "@ethersproject/providers";
 
