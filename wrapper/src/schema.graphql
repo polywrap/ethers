@@ -204,7 +204,7 @@ type Module {
   #   event: String!
   #   args: [String!]
   #   timeout: UInt32
-  # ): EventNotification! # TODO: add waitForEvent
+  # ): EventNotification!
 
   estimateTransactionGas(
     tx: TxRequest!
@@ -214,7 +214,7 @@ type Module {
   awaitTransaction(
     txHash: String!
     connection: IProvider_Connection
-  ): TxReceipt! # TODO: add timeout and confirmations
+  ): TxReceipt!
 
   sendTransaction(
     tx: TxRequest!

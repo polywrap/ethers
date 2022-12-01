@@ -29,7 +29,6 @@ export class Connections {
       this.setDefaultNetwork("mainnet", Connection.fromNetwork("mainnet"));
     }
 
-    // @TODO: Remove this once the Sha3 & Uts46 wrappers ENS have been moved to mainnet
     if (!this._connections["goerli"]) {
       this.set(
         "goerli",
