@@ -1,6 +1,6 @@
 format: 0.2.0
 jobs:
-  ipfs_deploy:
+  deploy:
     steps:
       - name: ipfs_deploy
         package: ipfs

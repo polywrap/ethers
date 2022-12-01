@@ -1,10 +1,10 @@
 format: 0.2.0
 jobs:
   deploy:
-    config:
-      gatewayUri: "https://ipfs.wrappers.io"
     steps:
-      - name: wrappers.io deploy
+      - name: ipfs_deploy
         package: ipfs
         uri: fs/./build
+        config:
+          gatewayUri: "https://ipfs.wrappers.io"
 
