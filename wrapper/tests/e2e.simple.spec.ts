@@ -30,7 +30,6 @@ jest.setTimeout(360000);
 describe("Ethereum Wrapper", () => {
   let client: PolywrapClient;
   let ensAddress: string;
-  // let resolverAddress: string;
   let registrarAddress: string;
   const signer = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
 
@@ -42,7 +41,6 @@ describe("Ethereum Wrapper", () => {
     await initInfra();
 
     ensAddress = ensAddresses.ensAddress;
-    // resolverAddress = ensAddresses.resolverAddress;
     registrarAddress = ensAddresses.registrarAddress;
 
     const interfacePath = path.join(__dirname, "..", "..", "provider", "interface");

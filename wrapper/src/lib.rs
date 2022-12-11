@@ -7,18 +7,16 @@ use ethers_middleware::SignerMiddleware;
 use ethers_providers::{Middleware, Provider};
 use ethers_signers::Signer;
 
-pub mod iprovider;
-pub mod provider;
-pub mod signer;
-pub mod wrap;
+mod wrap;
 use wrap::*;
 use crate::provider::{GasWorkaround, PolywrapProvider};
 use crate::signer::PolywrapSigner;
 
-pub mod api;
-pub mod error;
-pub mod format;
-pub mod mapping;
+mod api;
+mod polywrap_provider;
+mod helpers;
+use polywrap_provider::{iprovider, provider, signer, error};
+use helpers::{format, mapping};
 
 pub fn get_chain_id(args: wrap::ArgsGetChainId) -> String {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
@@ -94,7 +92,7 @@ pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
 
 pub fn encode_function(input: wrap::ArgsEncodeFunction) -> String {
     let args: Vec<String> = input.args.unwrap_or(vec![]);
-    let bytes: Bytes = api::encode_function(&input.method, args).into();
+    let bytes: Bytes = api::encode_function(&input.method, &args).into();
     format!("{}", bytes).to_string()
 }
 

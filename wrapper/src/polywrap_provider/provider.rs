@@ -1,7 +1,7 @@
 use ethers_providers::{JsonRpcClient, ProviderError, Provider, Middleware};
 
-use super::wrap::imported::ArgsRequest;
-use super::wrap::{IProviderModule, IProviderConnection};
+use crate::wrap::imported::ArgsRequest;
+use crate::wrap::{IProviderModule, IProviderConnection};
 use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
 use ethers_core::types::BlockId;

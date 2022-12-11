@@ -1,5 +1,5 @@
-use crate::provider::PolywrapProvider;
-use crate::signer::PolywrapSigner;
+use super::provider::PolywrapProvider;
+use super::signer::PolywrapSigner;
 use ethers_middleware::{signer::SignerMiddlewareError, SignerMiddleware};
 use thiserror::Error;
 

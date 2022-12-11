@@ -1,4 +1,4 @@
-use super::wrap::{IProvider, IProviderModule};
+use crate::wrap::{IProvider, IProviderModule};
 
 pub fn get_iprovider() -> IProviderModule {
     let impls = IProvider::get_implementations();

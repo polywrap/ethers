@@ -1,6 +1,7 @@
 import { PolywrapClient } from "@polywrap/client-js";
 import { ensResolverPlugin } from "@polywrap/ens-resolver-plugin-js";
 import {
+  buildWrapper,
   ensAddresses,
   providers,
 } from "@polywrap/test-env-js";
@@ -8,7 +9,7 @@ import * as path from 'path'
 
 import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
-import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-plugin";
+import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-js";
 import * as Schema from "./types/wrap";
 import { initInfra, stopInfra } from "./utils/infra";
 import {
@@ -61,7 +62,15 @@ describe("Ethereum Wrapper", () => {
     // resolverAddress = ensAddresses.resolverAddress;
     registrarAddress = ensAddresses.registrarAddress;
 
+    const interfacePath = path.join(__dirname, "..", "..", "provider", "interface");
+    await buildWrapper(interfacePath);
+    const interfaceFsUri = `wrap://fs/${path.resolve(interfacePath)}/build`;
+
     client = new PolywrapClient({
+      redirects: [{
+        from: "wrap://ens/interface.ethereum-provider.polywrap.eth",
+        to: interfaceFsUri,
+      }],
       plugins: [
         {
           uri: "wrap://ens/ens-resolver.polywrap.eth",
@@ -72,7 +81,7 @@ describe("Ethereum Wrapper", () => {
           }),
         },
         {
-          uri: "wrap://ens/ethereum-provider.polywrap.eth",
+          uri: "wrap://ens/js.ethereum-provider.polywrap.eth",
           plugin: ethereumProviderPlugin({
             connections: new Connections({
               networks: {
@@ -88,6 +97,12 @@ describe("Ethereum Wrapper", () => {
           }),
         },
       ],
+      interfaces: [
+        {
+          interface: "wrap://ens/interface.ethereum-provider.polywrap.eth",
+          implementations: ["wrap://ens/js.ethereum-provider.polywrap.eth"]
+        }
+      ]
     });
 
     const response = await client.invoke<string>({
@@ -842,7 +857,7 @@ describe("Ethereum Wrapper", () => {
     });
   });
 
-  describe("ViewMethods", () => {
+  describe.only("ViewMethods", () => {
 
     const testViewMethod = async (
       methodName: string,
@@ -857,7 +872,7 @@ describe("Ethereum Wrapper", () => {
           method: `function ${methodName}() public view returns (${returnType})`
         },
       });
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
       expect(response.value).toBe(returnValue);
     }
 
@@ -883,7 +898,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("ViewMethods - getAddress", async () => {
-      await testViewMethod("getAddress", "address", "0xdeAdbeeF3A5632f8A64D10B04Bf7e633A04bFb97");
+      await testViewMethod("getAddress", "address", "0xdeAdbeeF3A5632f8A64D10B04Bf7e633A04bFb97".toLowerCase());
     });
 
     it("ViewMethods - getBytes1", async () => {
@@ -920,9 +935,10 @@ describe("Ethereum Wrapper", () => {
       await testViewMethod("getArray3D", "uint8[3][3][2]", '[[[1,1,1],[2,2,2],[3,3,3]],[[6,6,6],[5,5,5],[4,4,4]]]');
     });
 
+    //     const getStructType = "(string,uint256,uint8)";
     const getStructType = "tuple(string foo, uint256 bar, uint8 baz)";
     const getStructResult = `["${getStringResult}","${getUint256Result}",1]`;
-    it("ViewMethods - getStruct", async () => {
+    it.only("ViewMethods - getStruct", async () => {
       await testViewMethod("getStruct", getStructType, getStructResult);
     });
 

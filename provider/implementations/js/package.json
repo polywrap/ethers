@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/ethereum-provider-js",
+  "name": "ethereum-provider-js",
   "description": "Ethereum Provider Polywrap JS Plugin",
   "version": "0.1.0",
   "license": "MIT",
