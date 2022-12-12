@@ -17,6 +17,7 @@ use crate::signer::PolywrapSigner;
 use crate::mapping::EthersTxOptions;
 
 use crate::api::abi::{tokenize_values, encode_function};
+use crate::api::get_gas_price;
 
 pub fn sign_message(signer: &PolywrapSigner, message: &str) -> Signature {
     block_on(async {
@@ -33,7 +34,7 @@ pub fn send_rpc(provider: &Provider<PolywrapProvider>, method: &str, params: Vec
 
 pub fn estimate_transaction_gas(provider: &Provider<PolywrapProvider>, tx: TypedTransaction) -> U256 {
     block_on(async {
-        provider.estimate_gas(&tx).await.unwrap()
+        provider.estimate_gas(&tx, None).await.unwrap()
     })
 }
 
@@ -78,9 +79,8 @@ pub fn create_deploy_contract_transaction(
 ) -> Result<TypedTransaction, WrapperError> {
     let data: Bytes = match (abi.constructor(), values.is_empty()) {
         (None, false) => {
-            return Err(WrapperError::ContractError(
-                ethers_contract::ContractError::ConstructorError,
-            ))
+            let error = "Constructor not found in contract ABI".to_string();
+            return Err(WrapperError::ContractError(error));
         },
         (None, true) => bytecode.clone(),
         (Some(constructor), _) => {
@@ -101,7 +101,7 @@ pub fn estimate_contract_call_gas(
     let data: Bytes = encode_function(method, args);
     let tx: TypedTransaction = create_transaction(Some(address), data, options);
     block_on(async {
-        provider.estimate_gas(&tx).await.unwrap()
+        provider.estimate_gas(&tx, None).await.unwrap()
     })
 }
 

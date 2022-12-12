@@ -12,16 +12,15 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.30"
 async-trait = "0.1.57"
-polywrap-wasm-rs = "0.9.3"
+polywrap-wasm-rs = "0.9.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.64", default-features = false, features = ["raw_value"] }
-ethers-providers = { version = "0.17.0", features = [] }
-ethers-core = { version = "0.17.0", features = [] }
-ethers-contract = { version = "0.17.0", features = [] }
-ethers-middleware = { version = "0.17.0", features = [] }
-ethers-signers = { version = "0.17.0", features = [] }
+ethers-providers = { version = "1.0.2", features = [] }
+ethers-core = { version = "1.0.2", features = [] }
+ethers-middleware = { version = "1.0.2", features = [] }
+ethers-signers = { version = "1.0.2", features = [] }
 futures = "0.3.24"
-ethabi = "17.2.0"
+ethabi = "18.0.0"
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
 
 [lib]

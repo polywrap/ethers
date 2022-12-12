@@ -4,11 +4,9 @@ use crate::wrap::imported::ArgsRequest;
 use crate::wrap::{IProviderModule, IProviderConnection};
 use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
-use ethers_core::types::BlockId;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
-use crate::block_on;
 
 #[derive(Debug)]
 pub struct PolywrapProvider {

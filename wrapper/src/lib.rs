@@ -168,10 +168,14 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
     let abi = serde_json::from_str(&args.abi).unwrap();
     let bytecode = Bytes::from_str(&args.bytecode).unwrap();
     let params: Vec<String> = args.args.unwrap_or(vec![]);
-    let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
+    let mut tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
+
+    // todo: implement custom gas price and fee estimation to work around wasm bindgen crashes
+    if tx_options.max_fee_per_gas.is_none() && tx_options.max_priority_fee_per_gas.is_none() && tx_options.gas_price.is_none() {
+        tx_options.gas_price = Some(api::get_gas_price(client.provider()));
+    }
 
     let mut tx = api::create_deploy_contract_transaction(abi, bytecode, &params, &tx_options).unwrap();
-    block_on(async { client.provider().fill_gas_fees(&mut tx).await.unwrap() });
 
     let tx_hash = api::sign_and_send_transaction(&client, &mut tx);
     let receipt = api::get_transaction_receipt(client.provider(), tx_hash);

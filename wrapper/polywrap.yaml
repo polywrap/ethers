@@ -9,4 +9,5 @@ source:
   - uri: wrap://ens/interface.ethereum-provider.polywrap.eth
     abi: ../provider/interface/src/schema.graphql
 extensions:
+  build: ./polywrap.build.yaml
   deploy: ./polywrap.deploy.yaml

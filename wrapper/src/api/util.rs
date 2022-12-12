@@ -4,7 +4,7 @@ use ethers_core::{
 };
 use ethers_providers::{Middleware, Provider};
 use crate::block_on;
-use crate::provider::{GasWorkaround, PolywrapProvider};
+use crate::provider::{PolywrapProvider};
 
 
 pub fn get_chain_id(provider: &Provider<PolywrapProvider>) -> U256 {

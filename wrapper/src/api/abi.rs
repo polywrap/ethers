@@ -1,7 +1,6 @@
-use ethabi::{Function};
 use ethabi::token::Tokenizer;
 use ethers_core::{
-    abi::{Param, ParamType, Token, encode, Abi, AbiParser, HumanReadableParser},
+    abi::{Param, Token, encode, AbiParser, HumanReadableParser},
     types::{Bytes}
 };
 

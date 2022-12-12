@@ -22,11 +22,7 @@ pub enum WrapperError {
     ),
     /// Error type from abi parsing
     #[error("ContractError Error: {0:?}")]
-    ContractError(
-        ethers_contract::ContractError<
-            SignerMiddleware<ethers_providers::Provider<PolywrapProvider>, PolywrapSigner>,
-        >,
-    ),
+    ContractError(String),
 }
 
 impl From<ethabi::Error> for WrapperError {
