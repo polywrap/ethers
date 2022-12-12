@@ -110,7 +110,11 @@ describe("Ethereum Wrapper", () => {
       method: "deployContract",
       args: {
         abi: JSON.stringify(contracts.ViewMethods.abi),
-        bytecode: contracts.ViewMethods.bytecode
+        bytecode: contracts.ViewMethods.bytecode,
+        options: {
+          maxPriorityFeePerGas: "40000000",
+          maxFeePerGas: "400000000",
+        }
       }
     });
 
@@ -458,10 +462,6 @@ describe("Ethereum Wrapper", () => {
         args: {
           abi: JSON.stringify(contracts.SimpleStorage.abi),
           bytecode: contracts.SimpleStorage.bytecode,
-          options: {
-            maxPriorityFeePerGas: "40000000",
-            maxFeePerGas: "400000000",
-          }
         }
       });
 
@@ -605,7 +605,7 @@ describe("Ethereum Wrapper", () => {
     });
   });
 
-  describe("callContractView with complex ABI", () => {
+  describe.skip("callContractView with complex ABI", () => {
     it("callContractView (primitive value - string ABI)", async () => {
       const storageAddress = await deployStorage(
         contracts.SimpleStorage.abi,
@@ -627,7 +627,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
       expect(response.value).toEqual("100");
     });
 
@@ -652,7 +652,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
       expect(response.value).toEqual("100");
     });
 
@@ -682,7 +682,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
 
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
@@ -690,8 +690,8 @@ describe("Ethereum Wrapper", () => {
       const result = JSON.parse(response.value);
 
       expect(result.length).toEqual(2);
-      expect(result[0]).toEqual("100");
-      expect(result[1]).toEqual("90");
+      expect(result[0]).toEqual(100);
+      expect(result[1]).toEqual(90);
     });
 
     it("callContractView (primitives array - JSON ABI)", async () => {
@@ -720,7 +720,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
 
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
@@ -758,7 +758,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
 
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
@@ -786,7 +786,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
       expect(response.value).toEqual("[]");
     });
 
@@ -810,7 +810,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
 
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
@@ -842,7 +842,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      if (!response.ok) fail(response.error);
+      if (!response.ok) throw response.error;
 
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
@@ -857,7 +857,7 @@ describe("Ethereum Wrapper", () => {
     });
   });
 
-  describe.only("ViewMethods", () => {
+  describe("ViewMethods", () => {
 
     const testViewMethod = async (
       methodName: string,
@@ -935,10 +935,9 @@ describe("Ethereum Wrapper", () => {
       await testViewMethod("getArray3D", "uint8[3][3][2]", '[[[1,1,1],[2,2,2],[3,3,3]],[[6,6,6],[5,5,5],[4,4,4]]]');
     });
 
-    //     const getStructType = "(string,uint256,uint8)";
     const getStructType = "tuple(string foo, uint256 bar, uint8 baz)";
     const getStructResult = `["${getStringResult}","${getUint256Result}",1]`;
-    it.only("ViewMethods - getStruct", async () => {
+    it("ViewMethods - getStruct", async () => {
       await testViewMethod("getStruct", getStructType, getStructResult);
     });
 

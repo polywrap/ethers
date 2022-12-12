@@ -208,7 +208,6 @@ pub fn call_contract_view(args: wrap::ArgsCallContractView) -> String {
 
     let tokens = api::call_contract_view(&provider, address, &args.method, &params);
     format::format_tokens(&tokens)
-
 }
 
 pub fn call_contract_static(args: ArgsCallContractStatic) -> wrap::StaticTxResult {
