@@ -1,5 +1,5 @@
 use ethers_core::{
-    abi::{Abi, Token, HumanReadableParser, Function},
+    abi::{Abi, Token, Function},
     types::{
         transaction::eip2718::TypedTransaction, Address, Bytes, Signature,
         Transaction, TransactionReceipt, TransactionRequest, H256, U256, Eip1559TransactionRequest,
@@ -72,7 +72,7 @@ pub fn sign_and_send_transaction(client: &SignerMiddleware<Provider<PolywrapProv
 }
 
 pub fn create_deploy_contract_transaction(
-    abi: Abi,
+    abi: &Abi,
     bytecode: Bytes,
     values: &Vec<String>,
     options: &EthersTxOptions

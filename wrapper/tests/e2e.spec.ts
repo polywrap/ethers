@@ -58,9 +58,9 @@ describe("Ethereum Wrapper", () => {
   beforeAll(async () => {
     await initInfra();
 
-    ensAddress = ensAddresses.ensAddress;
+    ensAddress = ensAddresses.ensAddress.toLowerCase();
     // resolverAddress = ensAddresses.resolverAddress;
-    registrarAddress = ensAddresses.registrarAddress;
+    registrarAddress = ensAddresses.registrarAddress.toLowerCase();
 
     const interfacePath = path.join(__dirname, "..", "..", "provider", "interface");
     await buildWrapper(interfacePath);
@@ -119,7 +119,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     if (!response.ok) throw response.error;
-    viewMethodsAddress = response.value;
+    viewMethodsAddress = response.value.toLowerCase();
   });
 
   afterAll(async () => {
@@ -605,7 +605,7 @@ describe("Ethereum Wrapper", () => {
     });
   });
 
-  describe.only("callContractView with complex ABI", () => {
+  describe("callContractView with complex ABI", () => {
     it("callContractView (primitive value - string ABI)", async () => {
       const storageAddress = await deployStorage(
         contracts.SimpleStorage.abi,
@@ -728,8 +728,8 @@ describe("Ethereum Wrapper", () => {
       const result = JSON.parse(response.value);
 
       expect(result.length).toEqual(2);
-      expect(result[0]).toEqual("100");
-      expect(result[1]).toEqual("90");
+      expect(result[0]).toEqual(100);
+      expect(result[1]).toEqual(90);
     });
 
     it("callContractView (primitives array - non-array JSON ABI)", async () => {
@@ -766,15 +766,15 @@ describe("Ethereum Wrapper", () => {
       const result = JSON.parse(response.value);
 
       expect(result.length).toEqual(2);
-      expect(result[0]).toEqual("100");
-      expect(result[1]).toEqual("90");
+      expect(result[0]).toEqual(100);
+      expect(result[1]).toEqual(90);
     });
 
     it("callContractView (struct array empty)", async () => {
-      const queueAddress = await deployStorage(
+      const queueAddress = (await deployStorage(
         contracts.SimpleStorage.abi,
         contracts.SimpleStorage.bytecode
-      );
+      )).toLowerCase();
 
       const response = await client.invoke<string>({
         uri,
@@ -791,10 +791,10 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("callContractView (struct array single element)", async () => {
-      const queueAddress = await deployStorage(
+      const queueAddress = (await deployStorage(
         contracts.SimpleStorage.abi,
         contracts.SimpleStorage.bytecode
-      );
+      )).toLowerCase();
       await addStructToStorage(contracts.SimpleStorage.abi, queueAddress, [
         queueAddress,
         "100",
@@ -815,14 +815,14 @@ describe("Ethereum Wrapper", () => {
       if (!response.value) {
         throw new Error("Empty data on view call, expecting JSON");
       }
-      expect(response.value).toEqual(`[["${queueAddress}","100"]]`)
+      expect(response.value).toEqual(`[["${queueAddress}",100]]`)
     });
 
     it("callContractView (struct array multiple elements)", async () => {
-      const queueAddress = await deployStorage(
+      const queueAddress = (await deployStorage(
         contracts.SimpleStorage.abi,
         contracts.SimpleStorage.bytecode
-      );
+      )).toLowerCase();
       await addStructToStorage(contracts.SimpleStorage.abi, queueAddress, [
         queueAddress,
         "100",
@@ -851,9 +851,9 @@ describe("Ethereum Wrapper", () => {
 
       expect(result.length).toEqual(2);
       expect(result[0][0]).toEqual(queueAddress);
-      expect(result[0][1]).toEqual("100");
+      expect(result[0][1]).toEqual(100);
       expect(result[1][0]).toEqual(ensAddress);
-      expect(result[1][1]).toEqual("99");
+      expect(result[1][1]).toEqual(99);
     });
   });
 

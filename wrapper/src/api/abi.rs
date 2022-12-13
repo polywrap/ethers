@@ -2,6 +2,7 @@ use ethers_core::{
     abi::{Param, Token, encode, AbiParser, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function},
     types::{Bytes}
 };
+use ethers_core::abi::Abi;
 use crate::polywrap_provider::error::WrapperError;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
@@ -18,16 +19,14 @@ pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
 }
 
 pub fn encode_function(method: &str, args: &Vec<String>) -> Result<(Function, Bytes), WrapperError> {
-    let function = HumanReadableParser::parse_function(method).map_err(|e| {
-        WrapperError::LexerError(format!("{:?}", e))
-    })?;
+    let function: Function = parse_method(method)?;
     let tokens: Vec<Token> = tokenize_values(&args, &function.inputs);
     let bytes: Bytes = function.encode_input(&tokens).map(Into::into)?;
     Ok((function, bytes))
 }
 
 pub fn decode_function(method: &str, data: Vec<u8>) -> Vec<Token> {
-    let function = HumanReadableParser::parse_function(method).unwrap();
+    let function: Function = parse_method(method).unwrap();
     let sig = function.short_signature();
     let mut has_sig = false;
 
@@ -49,4 +48,27 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
         .zip(values.iter())
         .map(|(param, arg)| LenientTokenizer::tokenize(&param.kind, arg).unwrap())
         .collect()
+}
+
+fn parse_method(method: &str) -> Result<Function, WrapperError> {
+    let parse_result = HumanReadableParser::parse_function(method).map_err(|e| {
+        WrapperError::LexerError(format!("{:?}", e))
+    });
+    if parse_result.is_ok() {
+        parse_result
+    } else {
+        let json_parse: Result<Abi, serde_json::Error>;
+        if !(method.starts_with("[") && method.ends_with("]")) {
+            let abi_str = format!("[{}]", method);
+            json_parse = serde_json::from_str(&abi_str);
+        } else {
+            json_parse = serde_json::from_str(&method);
+        }
+        let abi: Abi = json_parse.map_err(|e| {
+            WrapperError::SerdeError(format!("{:?}", e))
+        })?;
+        let (_, functions): (&String, &Vec<Function>) = abi.functions.iter().next().unwrap();
+        let function: Function = functions.get(0).unwrap().clone();
+        Ok(function)
+    }
 }

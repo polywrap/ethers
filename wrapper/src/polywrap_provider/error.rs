@@ -26,6 +26,9 @@ pub enum WrapperError {
     /// Error type from abi parsing
     #[error("ContractError Error: {0:?}")]
     ContractError(String),
+    /// Error type from abi parsing
+    #[error("SerdeError Error: {0:?}")]
+    SerdeError(String),
 }
 
 impl From<ethers_core::abi::Error> for WrapperError {

@@ -1,7 +1,7 @@
 use futures::executor::block_on;
 
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{Function, HumanReadableParser};
+use ethers_core::abi::{Abi, Function, HumanReadableParser};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_middleware::SignerMiddleware;
@@ -166,7 +166,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
     let signer = PolywrapSigner::new(&args.connection);
     let client = SignerMiddleware::new(provider, signer);
 
-    let abi = serde_json::from_str(&args.abi).unwrap();
+    let abi: Abi = serde_json::from_str(&args.abi).unwrap();
     let bytecode = Bytes::from_str(&args.bytecode).unwrap();
     let params: Vec<String> = args.args.unwrap_or(vec![]);
     let mut tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
@@ -176,7 +176,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
         tx_options.gas_price = Some(api::get_gas_price(client.provider()));
     }
 
-    let mut tx = api::create_deploy_contract_transaction(abi, bytecode, &params, &tx_options).unwrap();
+    let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 
     let tx_hash = api::sign_and_send_transaction(&client, &mut tx);
     let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
