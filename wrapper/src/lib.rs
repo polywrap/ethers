@@ -1,7 +1,7 @@
 use futures::executor::block_on;
 
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{Function};
+use ethers_core::abi::{Function, HumanReadableParser};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_middleware::SignerMiddleware;

@@ -605,7 +605,7 @@ describe("Ethereum Wrapper", () => {
     });
   });
 
-  describe.skip("callContractView with complex ABI", () => {
+  describe.only("callContractView with complex ABI", () => {
     it("callContractView (primitive value - string ABI)", async () => {
       const storageAddress = await deployStorage(
         contracts.SimpleStorage.abi,
@@ -935,7 +935,7 @@ describe("Ethereum Wrapper", () => {
       await testViewMethod("getArray3D", "uint8[3][3][2]", '[[[1,1,1],[2,2,2],[3,3,3]],[[6,6,6],[5,5,5],[4,4,4]]]');
     });
 
-    const getStructType = "tuple(string foo, uint256 bar, uint8 baz)";
+    const getStructType = "(string,uint256,uint8)";
     const getStructResult = `["${getStringResult}","${getUint256Result}",1]`;
     it("ViewMethods - getStruct", async () => {
       await testViewMethod("getStruct", getStructType, getStructResult);

@@ -10,18 +10,18 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
-thiserror = "1.0.30"
-async-trait = "0.1.57"
+thiserror = "1.0.37"
+async-trait = "0.1.59"
 polywrap-wasm-rs = "0.9.4"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.64", default-features = false, features = ["raw_value"] }
+serde = { version = "1.0.150", features = ["derive"] }
+serde_json = { version = "1.0.89", default-features = false, features = ["raw_value"] }
 ethers-providers = { version = "1.0.2", features = [] }
 ethers-core = { version = "1.0.2", features = [] }
 ethers-middleware = { version = "1.0.2", features = [] }
 ethers-signers = { version = "1.0.2", features = [] }
-futures = "0.3.24"
+futures = "0.3.25"
 ethabi = "18.0.0"
-hex = { version = "0.4", default-features = false, features = ["alloc"] }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
