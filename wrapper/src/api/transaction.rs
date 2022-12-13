@@ -15,6 +15,7 @@ use crate::error::WrapperError;
 use crate::provider::{GasWorkaround, PolywrapProvider};
 use crate::signer::PolywrapSigner;
 use crate::mapping::EthersTxOptions;
+use crate::{println};
 
 use crate::api::abi::{tokenize_values, encode_function};
 use crate::api::get_gas_price;
@@ -112,7 +113,9 @@ pub fn call_contract_view(
     args: &Vec<String>
 ) -> Vec<Token> {
     let function = AbiParser::default().parse_function(method).unwrap();
+    println!("function {}", format!("{:#?}", function));
     let tokens: Vec<Token> = tokenize_values(args, &function.inputs);
+    println!("tokens {}", format!("{:#?}", tokens));
     let data: Bytes = function.encode_input(&tokens).unwrap().into();
 
     let tx: TypedTransaction = TransactionRequest {

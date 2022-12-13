@@ -11,3 +11,4 @@ source:
 extensions:
   build: ./polywrap.build.yaml
   deploy: ./polywrap.deploy.yaml
+  infra: ./polywrap.infra.yaml

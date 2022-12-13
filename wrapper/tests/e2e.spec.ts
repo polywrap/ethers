@@ -937,7 +937,7 @@ describe("Ethereum Wrapper", () => {
 
     const getStructType = "tuple(string foo, uint256 bar, uint8 baz)";
     const getStructResult = `["${getStringResult}","${getUint256Result}",1]`;
-    it("ViewMethods - getStruct", async () => {
+    it.only("ViewMethods - getStruct", async () => {
       await testViewMethod("getStruct", getStructType, getStructResult);
     });
 

@@ -207,6 +207,7 @@ pub fn call_contract_view(args: wrap::ArgsCallContractView) -> String {
     let params: Vec<String> = args.args.unwrap_or(vec![]);
 
     let tokens = api::call_contract_view(&provider, address, &args.method, &params);
+    println!("{}", format!("{:#?}", tokens));
     format::format_tokens(&tokens)
 }
 
