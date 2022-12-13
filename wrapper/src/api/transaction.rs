@@ -1,5 +1,5 @@
 use ethers_core::{
-    abi::{AbiParser, Abi, Token},
+    abi::{Abi, Token, HumanReadableParser, Function},
     types::{
         transaction::eip2718::TypedTransaction, Address, Bytes, Signature,
         Transaction, TransactionReceipt, TransactionRequest, H256, U256, Eip1559TransactionRequest,
@@ -98,7 +98,7 @@ pub fn estimate_contract_call_gas(
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions) -> U256 {
-    let data: Bytes = encode_function(method, args);
+    let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let tx: TypedTransaction = create_transaction(Some(address), data, options);
     block_on(async {
         provider.estimate_gas(&tx, None).await.unwrap()
@@ -111,9 +111,7 @@ pub fn call_contract_view(
     method: &str,
     args: &Vec<String>
 ) -> Vec<Token> {
-    let function = AbiParser::default().parse_function(method).unwrap();
-    let tokens: Vec<Token> = tokenize_values(args, &function.inputs);
-    let data: Bytes = function.encode_input(&tokens).unwrap().into();
+    let (function, data): (Function, Bytes) = encode_function(method, args).unwrap();
 
     let tx: TypedTransaction = TransactionRequest {
         to: Some(address.into()),
@@ -133,9 +131,7 @@ pub fn call_contract_static(
     args: &Vec<String>,
     options: &EthersTxOptions,
 ) -> Result<Vec<Token>, WrapperError> {
-    let function = AbiParser::default().parse_function(method)?;
-    let tokens: Vec<Token> = tokenize_values(&args, &function.inputs);
-    let data: Bytes = function.encode_input(&tokens).map(Into::into)?;
+    let (function, data): (Function, Bytes) = encode_function(method, args)?;
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
 
@@ -160,7 +156,7 @@ pub fn call_contract_method(
     args: &Vec<String>,
     options: &EthersTxOptions,
 ) -> H256 {
-    let data: Bytes = encode_function(method, args);
+    let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
     let tx_hash: H256 = sign_and_send_transaction(client, &mut tx);
     tx_hash

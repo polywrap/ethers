@@ -6,12 +6,15 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
 pub enum WrapperError {
-    /// Error type from ethabi
+    /// Error type from ethabi (ethers re-export)
     #[error("Ethabi Error: {0:?}")]
-    EthabiError(ethabi::Error),
+    EthabiError(ethers_core::abi::Error),
     /// Error type from abi parsing
     #[error("Parsing Error: {0:?}")]
     ParseError(ethers_core::abi::ParseError),
+    /// Error type from abi parsing
+    #[error("LexerError Error: {0:?}")]
+    LexerError(String),
     /// Error type from abi parsing
     #[error("Provider Error: {0:?}")]
     ProviderError(ethers_providers::ProviderError),
@@ -25,8 +28,8 @@ pub enum WrapperError {
     ContractError(String),
 }
 
-impl From<ethabi::Error> for WrapperError {
-    fn from(src: ethabi::Error) -> Self {
+impl From<ethers_core::abi::Error> for WrapperError {
+    fn from(src: ethers_core::abi::Error) -> Self {
         match src {
             _ => WrapperError::EthabiError(src),
         }

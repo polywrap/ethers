@@ -1,6 +1,7 @@
 use futures::executor::block_on;
 
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
+use ethers_core::abi::{Function};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_middleware::SignerMiddleware;
@@ -92,7 +93,7 @@ pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
 
 pub fn encode_function(input: wrap::ArgsEncodeFunction) -> String {
     let args: Vec<String> = input.args.unwrap_or(vec![]);
-    let bytes: Bytes = api::encode_function(&input.method, &args).into();
+    let (_, bytes): (Function, Bytes) = api::encode_function(&input.method, &args).unwrap();
     format!("{}", bytes).to_string()
 }
 
