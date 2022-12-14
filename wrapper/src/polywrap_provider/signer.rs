@@ -1,5 +1,5 @@
 use crate::wrap::imported::{ArgsAddress, ArgsChainId, ArgsSignMessage, ArgsSignTransaction};
-use crate::wrap::{IProviderModule, IProviderConnection};
+use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use super::iprovider::get_iprovider;
 use async_trait::async_trait;
 use ethers_core::types::{transaction::{eip2718::TypedTransaction, eip712::Eip712}, Address, Signature};
@@ -27,15 +27,19 @@ pub enum SignerError {
 }
 
 impl PolywrapSigner {
-    pub fn new(connection: &Option<IProviderConnection>) -> Self {
+    pub fn new(connection: &Option<Connection>) -> Self {
+        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+            network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
+            node: conn.node.clone(),
+        });
         let iprovider = get_iprovider();
-        let address = iprovider.address(&ArgsAddress { connection: connection.clone() }).unwrap();
-        let chain_id = iprovider.chain_id(&ArgsChainId { connection: connection.clone() })
+        let address = iprovider.address(&ArgsAddress { connection: iprovider_connection.clone() }).unwrap();
+        let chain_id = iprovider.chain_id(&ArgsChainId { connection: iprovider_connection.clone() })
             .expect("failed to obtain signer chain id from provider plugin");
         Self {
             address: Address::from_str(&address).unwrap(),
             chain_id: u64::from_str(&chain_id).unwrap(),
-            connection: connection.clone(),
+            connection: iprovider_connection,
             iprovider,
         }
     }

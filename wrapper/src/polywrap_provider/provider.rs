@@ -1,7 +1,7 @@
 use ethers_providers::{JsonRpcClient, ProviderError, Provider, Middleware};
 
 use crate::wrap::imported::ArgsRequest;
-use crate::wrap::{IProviderModule, IProviderConnection};
+use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
@@ -64,9 +64,13 @@ impl JsonRpcClient for PolywrapProvider {
 }
 
 impl PolywrapProvider {
-    pub fn new(connection: &Option<IProviderConnection>) -> Self {
+    pub fn new(connection: &Option<Connection>) -> Self {
+        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+            network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
+            node: conn.node.clone(),
+        });
         Self {
-            connection: connection.clone(),
+            connection: iprovider_connection,
             iprovider: get_iprovider(),
         }
     }
