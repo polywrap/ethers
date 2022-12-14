@@ -1,4 +1,4 @@
-#import { Module, Connection } into IProvider from "wrap://ens/interface.ethereum-provider.polywrap.eth"
+#import { Module, Connection } into IProvider from "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
 #use { getImplementations } for IProvider
 
 type TxRequest {
