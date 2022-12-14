@@ -1,5 +1,10 @@
-#import { Module, Connection } into IProvider from "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
+#import { Module } into IProvider from "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
 #use { getImplementations } for IProvider
+
+type Connection {
+    node: String
+    networkNameOrChainId: String
+}
 
 type TxRequest {
     to: String
@@ -127,13 +132,13 @@ type Eip1559FeesEstimate {
 }
 
 type Module {
-  getChainId(connection: IProvider_Connection): String!
+  getChainId(connection: Connection): String!
 
   callContractView(
     address: String!
     method: String!
     args: [String!]
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 
   callContractStatic(
@@ -141,58 +146,58 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: IProvider_Connection
+    connection: Connection
   ): StaticTxResult!
 
   encodeParams(
     types: [String!]!
     values: [String!]!
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 
   encodeFunction(
     method: String!
     args: [String!]
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 
   decodeFunction(
     method: String!
     data: String!
-    connection: IProvider_Connection
+    connection: Connection
   ): [String!]!
 
-  getSignerAddress(connection: IProvider_Connection): String!
+  getSignerAddress(connection: Connection): String!
 
   getSignerBalance(
     blockTag: BigInt
-    connection: IProvider_Connection
+    connection: Connection
   ): BigInt!
 
   getBalance(
     address: String!
     blockTag: BigInt
-    connection: IProvider_Connection
+    connection: Connection
   ): BigInt!
 
-  getGasPrice(connection: IProvider_Connection): BigInt!
+  getGasPrice(connection: Connection): BigInt!
 
-  estimateEip1559Fees(connection: IProvider_Connection): Eip1559FeesEstimate!
+  estimateEip1559Fees(connection: Connection): Eip1559FeesEstimate!
 
   sendRpc(
     method: String!
     params: [String!]!
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 
   getSignerTransactionCount(
     blockTag: BigInt
-    connection: IProvider_Connection
+    connection: Connection
   ): BigInt!
 
   checkAddress(
     address: String!
-    connection: IProvider_Connection
+    connection: Connection
   ): Boolean!
 
   toWei(eth: String!): String!
@@ -208,22 +213,22 @@ type Module {
 
   estimateTransactionGas(
     tx: TxRequest!
-    connection: IProvider_Connection
+    connection: Connection
   ): BigInt!
 
   awaitTransaction(
     txHash: String!
-    connection: IProvider_Connection
+    connection: Connection
   ): TxReceipt!
 
   sendTransaction(
     tx: TxRequest!
-    connection: IProvider_Connection
+    connection: Connection
   ): TxResponse!
 
   sendTransactionAndWait(
     tx: TxRequest!
-    connection: IProvider_Connection
+    connection: Connection
   ): TxReceipt!
 
   deployContract(
@@ -231,7 +236,7 @@ type Module {
     bytecode: String!
     args: [String!]
     options: TxOptions
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 
   estimateContractCallGas(
@@ -239,7 +244,7 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: IProvider_Connection
+    connection: Connection
   ): BigInt!
 
   callContractMethod(
@@ -247,7 +252,7 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: IProvider_Connection
+    connection: Connection
   ): TxResponse!
 
   callContractMethodAndWait(
@@ -255,11 +260,11 @@ type Module {
     method: String!
     args: [String!]
     options: TxOptions
-    connection: IProvider_Connection
+    connection: Connection
   ): TxReceipt!
 
   signMessage(
     message: String!
-    connection: IProvider_Connection
+    connection: Connection
   ): String!
 }
