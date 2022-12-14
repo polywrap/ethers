@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test:codegen": "polywrap codegen -m tests/types/polywrap.app.yaml -g tests/types/wrap",
-    "test:e2e" : "jest --passWithNoTests --runInBand --verbose tests/e2e.spec.ts",
+    "test:e2e" : "jest --passWithNoTests --runInBand --verbose",
     "test": "yarn test:codegen && yarn test:e2e",
     "codegen": "npx polywrap codegen",
     "build": "npx polywrap build -s image --no-codegen",
