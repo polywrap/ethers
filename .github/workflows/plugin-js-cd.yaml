@@ -1,0 +1,50 @@
+name: ethereum-plugin-js-cd
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - "plugin-js/**"
+
+jobs:
+  cd:
+    name: ethereum-plugin-js-cd
+    if: |
+      github.event.pull_request.merged &&
+      github.event.pull_request.user.login != 'github-actions'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+        working-directory: ./plugin-js
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./plugin-js
+
+      - name: Build
+        run: yarn build
+        working-directory: ./plugin-js
+
+      - name: Auth into NPM
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set //registry.npmjs.org/:_authToken=${{secrets.POLYWRAP_BUILD_BOT_NPM_PAT}}
+          echo $(npm whoami --registry https://registry.npmjs.org/)
+        working-directory: ./plugin-js
+
+      - name: Publish to NPM
+        run: yarn publish:npm
+        working-directory: ./plugin-js
+        env:
+          NPM_AUTH_TOKEN: ${{secrets.POLYWRAP_BUILD_BOT_NPM_PAT}}
