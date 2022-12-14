@@ -10,8 +10,7 @@ export async function main() {
 
     const moduleFilePath = path.resolve(path.join(__dirname, "..", "src", "wrap", "module.ts"));
     let moduleContent: string = fs.readFileSync(moduleFilePath, "utf-8");
-    moduleContent = moduleContent.replace("Client,\n", "");
-    moduleContent = moduleContent.replace("MaybeAsync\n", "");
+    moduleContent = moduleContent.replace("import { CoreClient, MaybeAsync } from \"@polywrap/core-js\";\n", "");
     fs.writeFileSync(moduleFilePath, moduleContent);
 }
 

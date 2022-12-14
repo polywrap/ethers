@@ -1,6 +1,7 @@
 import {
   Module,
   manifest,
+  CoreClient,
   IProvider_Module_Args_request as Args_request,
   IProvider_Module_Args_signMessage as Args_signMessage,
   IProvider_Module_Args_signTransaction as Args_signTransaction,
@@ -8,7 +9,7 @@ import {
   IProvider_Module_Args_chainId as Args_chainId,
   IProvider_Connection as SchemaConnection
 } from "./wrap";
-import { Client, PluginFactory } from "@polywrap/core-js";
+import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
 import { Connections } from "./Connections";
 import { ethers } from "ethers";
@@ -29,7 +30,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async request(
     args: Args_request,
-    _client: Client
+    _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     const params = JSON.parse(args?.params ?? "[]");
@@ -39,7 +40,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signMessage(
     args: Args_signMessage,
-    _client: Client
+    _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     return await connection.getSigner().signMessage(args.message);
@@ -47,7 +48,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signTransaction(
     args: Args_signTransaction,
-    _client: Client
+    _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     const request = this._parseTransaction(args.rlp);
@@ -58,7 +59,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async address(
     args: Args_address,
-    _client: Client
+    _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     return await connection.getSigner().getAddress();
@@ -66,7 +67,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async chainId(
     args: Args_chainId,
-    _client: Client
+    _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     const network = await connection.getProvider().getNetwork();
@@ -95,13 +96,8 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 }
 
 export const ethereumProviderPlugin: PluginFactory<ProviderConfig> = (
-  pluginConfig: ProviderConfig
-) => {
-  return {
-    factory: () => new EthereumProviderPlugin(pluginConfig),
-    manifest,
-  };
-} 
+  config: ProviderConfig
+) => new PluginPackage<ProviderConfig>(new EthereumProviderPlugin(config), manifest);
 
 export const plugin = ethereumProviderPlugin;
 
