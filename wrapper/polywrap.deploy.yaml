@@ -6,4 +6,4 @@ jobs:
         package: ipfs
         uri: fs/./build
         config:
-          gatewayUri: "https://ipfs.wrappers.io"
+          gatewayUri: https://ipfs.wrappers.io

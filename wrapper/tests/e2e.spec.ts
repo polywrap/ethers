@@ -68,21 +68,21 @@ describe("Ethereum Wrapper", () => {
 
     client = new PolywrapClient({
       redirects: [{
-        from: "wrap://ens/interface.ethereum-provider.polywrap.eth",
+        from: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0",
         to: interfaceFsUri,
       }],
-      plugins: [
+      packages: [
         {
           uri: "wrap://ens/ens-resolver.polywrap.eth",
-          plugin: ensResolverPlugin({
+          package: ensResolverPlugin({
             addresses: {
               testnet: ensAddress,
             },
           }),
         },
         {
-          uri: "wrap://ens/js.ethereum-provider.polywrap.eth",
-          plugin: ethereumProviderPlugin({
+          uri: "wrap://ens/ethereum-provider-js.polywrap.eth",
+          package: ethereumProviderPlugin({
             connections: new Connections({
               networks: {
                 testnet: new Connection({
@@ -99,8 +99,8 @@ describe("Ethereum Wrapper", () => {
       ],
       interfaces: [
         {
-          interface: "wrap://ens/interface.ethereum-provider.polywrap.eth",
-          implementations: ["wrap://ens/js.ethereum-provider.polywrap.eth"]
+          interface: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0",
+          implementations: ["wrap://ens/ethereum-provider-js.polywrap.eth"]
         }
       ]
     });

@@ -3,7 +3,7 @@ import * as Types from "./";
 
 // @ts-ignore
 import {
-  Client,
+  CoreClient,
   InvokeResult
 } from "@polywrap/core-js";
 
@@ -115,7 +115,7 @@ export interface Eip1559FeesEstimate {
 
 /// Imported Objects START ///
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 export interface IProvider_Connection {
   node?: Types.String | null;
   networkNameOrChainId?: Types.String | null;
@@ -125,96 +125,96 @@ export interface IProvider_Connection {
 
 /// Imported Modules START ///
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 interface IProvider_Module_Args_request {
   method: Types.String;
   params?: Types.String | null;
   connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 interface IProvider_Module_Args_signMessage {
   message: Types.Bytes;
   connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 interface IProvider_Module_Args_signTransaction {
   rlp: Types.Bytes;
   connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 interface IProvider_Module_Args_address {
   connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 interface IProvider_Module_Args_chainId {
   connection?: Types.IProvider_Connection | null;
 }
 
-/* URI: "wrap://ens/interface.ethereum-provider.polywrap.eth" */
+/* URI: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0" */
 export const IProvider_Module = {
   request: async (
     args: IProvider_Module_Args_request,
-    client: Client,
-    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
+    client: CoreClient,
+    uri: string = "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
       method: "request",
-      args: args as unknown as Record<string, unknown>
+      args: (args as unknown) as Record<string, unknown>,
     });
   },
 
   signMessage: async (
     args: IProvider_Module_Args_signMessage,
-    client: Client,
-    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
+    client: CoreClient,
+    uri: string = "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
       method: "signMessage",
-      args: args as unknown as Record<string, unknown>
+      args: (args as unknown) as Record<string, unknown>,
     });
   },
 
   signTransaction: async (
     args: IProvider_Module_Args_signTransaction,
-    client: Client,
-    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
+    client: CoreClient,
+    uri: string = "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
       method: "signTransaction",
-      args: args as unknown as Record<string, unknown>
+      args: (args as unknown) as Record<string, unknown>,
     });
   },
 
   address: async (
     args: IProvider_Module_Args_address,
-    client: Client,
-    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
+    client: CoreClient,
+    uri: string = "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
       method: "address",
-      args: args as unknown as Record<string, unknown>
+      args: (args as unknown) as Record<string, unknown>,
     });
   },
 
   chainId: async (
     args: IProvider_Module_Args_chainId,
-    client: Client,
-    uri: string = "wrap://ens/interface.ethereum-provider.polywrap.eth"
+    client: CoreClient,
+    uri: string = "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
   ): Promise<InvokeResult<Types.String>> => {
     return client.invoke<Types.String>({
       uri,
       method: "chainId",
-      args: args as unknown as Record<string, unknown>
+      args: (args as unknown) as Record<string, unknown>,
     });
   }
-}
+};
 
 /// Imported Modules END ///
