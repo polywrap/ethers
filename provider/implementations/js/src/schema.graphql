@@ -1,4 +1,4 @@
-#import { Module, Connection } into IProvider from "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0"
+#import { Module, Connection } into IProvider from "wrap://ens/goerli/ethereum.wrappers.eth:iprovider"
 
 type Env {
   connection: IProvider_Connection
