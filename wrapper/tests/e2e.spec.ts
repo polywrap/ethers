@@ -81,7 +81,7 @@ describe("Ethereum Wrapper", () => {
           }),
         },
         {
-          uri: "wrap://ens/ethereum-provider-js.polywrap.eth",
+          uri: "wrap://plugin/ethereum-provider",
           package: ethereumProviderPlugin({
             connections: new Connections({
               networks: {
@@ -100,7 +100,7 @@ describe("Ethereum Wrapper", () => {
       interfaces: [
         {
           interface: "wrap://ens/iprovider.polywrap.eth",
-          implementations: ["wrap://ens/ethereum-provider-js.polywrap.eth"]
+          implementations: ["wrap://plugin/ethereum-provider"]
         }
       ]
     });
