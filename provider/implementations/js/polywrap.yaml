@@ -1,4 +1,4 @@
-format: 0.2.0
+format: 0.3.0
 project:
   name: ethereum-provider-js
   type: plugin/typescript
@@ -6,5 +6,5 @@ source:
   module: ./src/index.ts
   schema: ./src/schema.graphql
   import_abis:
-    - uri: wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0
+    - uri: wrap://ens/iprovider.polywrap.eth
       abi: ../../interface/src/schema.graphql

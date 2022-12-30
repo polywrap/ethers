@@ -68,7 +68,7 @@ describe("Ethereum Wrapper", () => {
 
     client = new PolywrapClient({
       redirects: [{
-        from: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0",
+        from: "wrap://ens/iprovider.polywrap.eth",
         to: interfaceFsUri,
       }],
       packages: [
@@ -99,7 +99,7 @@ describe("Ethereum Wrapper", () => {
       ],
       interfaces: [
         {
-          interface: "wrap://ens/goerli/ethereum.wrappers.eth:provider@0.10.0",
+          interface: "wrap://ens/iprovider.polywrap.eth",
           implementations: ["wrap://ens/ethereum-provider-js.polywrap.eth"]
         }
       ]
