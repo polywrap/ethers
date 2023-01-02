@@ -75,6 +75,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   }
 
   private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {
+     console.log(connection);
     return this._connections.getConnection(connection ?? this.env.connection);
   }
 

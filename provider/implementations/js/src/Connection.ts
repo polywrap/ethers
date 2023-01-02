@@ -123,16 +123,4 @@ export class Connection {
       );
     }
   }
-
-  public getContract(
-    address: Address,
-    abi: string[],
-    signer = true
-  ): ethers.Contract {
-    if (signer) {
-      return new ethers.Contract(address, abi, this.getSigner());
-    } else {
-      return new ethers.Contract(address, abi, this._client);
-    }
-  }
 }
