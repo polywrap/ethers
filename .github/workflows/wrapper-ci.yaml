@@ -35,7 +35,7 @@ jobs:
       # need to build ethereum-provider-js before testing wrapper
       - name: Install plugin dependencies and build plugin
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline && yarn build
-        working-directory: ./provider/implementations/ethereum-provider-js
+        working-directory: ./provider/implementations/js
 
       - name: Test
         run: yarn test
