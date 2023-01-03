@@ -204,13 +204,6 @@ type Module {
 
   toEth(wei: String!): String!
 
-  # waitForEvent(
-  #   address: String!
-  #   event: String!
-  #   args: [String!]
-  #   timeout: UInt32
-  # ): EventNotification!
-
   estimateTransactionGas(
     tx: TxRequest!
     connection: Connection
@@ -267,4 +260,23 @@ type Module {
     message: String!
     connection: Connection
   ): String!
+
+# TODO: implement the following methods
+
+#  signMessageBytes(
+#    bytes: Bytes!
+#    connection: Connection
+#  ): String!
+
+#    signTypedData(
+#        payload: JSON!
+#        connection: Connection
+#    ): String
+
+#     waitForEvent(
+#       address: String!
+#       event: String!
+#       args: [String!]
+#       timeout: UInt32
+#     ): EventNotification!
 }

@@ -142,7 +142,7 @@ pub fn send_transaction(args: wrap::ArgsSendTransaction) -> wrap::TxResponse {
 
     let mut tx = mapping::from_wrap_request(args.tx);
 
-    let tx_hash = api::sign_and_send_transaction(&client, &mut tx);
+    let tx_hash = api::send_transaction(&client, &mut tx);
     let response = api::get_transaction_response(client.provider(), tx_hash);
     let tx_response = mapping::to_wrap_response(client.provider(), response);
     tx_response
@@ -155,7 +155,7 @@ pub fn send_transaction_and_wait(args: wrap::ArgsSendTransactionAndWait) -> wrap
 
     let mut tx = mapping::from_wrap_request(args.tx);
 
-    let tx_hash = api::sign_and_send_transaction(&client, &mut tx);
+    let tx_hash = api::send_transaction(&client, &mut tx);
     let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
@@ -178,7 +178,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
 
     let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 
-    let tx_hash = api::sign_and_send_transaction(&client, &mut tx);
+    let tx_hash = api::send_transaction(&client, &mut tx);
     let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
     let address = receipt.contract_address.expect("Contract failed to deploy.");
     format!("{:#x}", address)

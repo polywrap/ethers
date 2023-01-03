@@ -54,17 +54,14 @@ pub fn get_transaction_receipt(provider: &Provider<PolywrapProvider>, tx_hash: H
     })
 }
 
-pub fn sign_and_send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {
+pub fn send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {
     block_on(async {
-        let address = client.signer().address();
         client.provider().fill_gas_fees(tx).await.unwrap();
         client.fill_transaction(tx, None).await.unwrap();
-        let signature = client.sign_transaction(&tx, address).await.unwrap();
-        let signed_tx: Bytes = tx.rlp_signed(&signature);
-        let rlp = serialize(&signed_tx);
+        let rlp = serialize(tx);
         let tx_hash: H256 = client
             .inner()
-            .request("eth_sendRawTransaction", [rlp])
+            .request("eth_sendTransaction", [rlp])
             .await
             .unwrap();
         tx_hash
@@ -158,7 +155,7 @@ pub fn call_contract_method(
 ) -> H256 {
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
-    let tx_hash: H256 = sign_and_send_transaction(client, &mut tx);
+    let tx_hash: H256 = send_transaction(client, &mut tx);
     tx_hash
 }
 
