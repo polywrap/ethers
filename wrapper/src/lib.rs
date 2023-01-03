@@ -1,7 +1,7 @@
 use futures::executor::block_on;
 
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{Abi, Function, HumanReadableParser};
+use ethers_core::abi::{Abi, Function};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_middleware::SignerMiddleware;
@@ -10,18 +10,18 @@ use ethers_signers::Signer;
 
 mod wrap;
 use wrap::*;
-use crate::provider::{GasWorkaround, PolywrapProvider};
+use crate::provider::{PolywrapProvider};
 use crate::signer::PolywrapSigner;
 
 mod api;
 mod polywrap_provider;
 mod helpers;
-use polywrap_provider::{iprovider, provider, signer, error};
+use polywrap_provider::{iprovider, provider, signer, error, sync_provider::SyncProvider};
 use helpers::{format, mapping};
 
 pub fn get_chain_id(args: wrap::ArgsGetChainId) -> String {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
-    api::get_chain_id(&provider).to_string()
+    provider.get_chainid_sync().unwrap().to_string()
 }
 
 pub fn get_balance(args: wrap::ArgsGetBalance) -> BigInt {
@@ -31,7 +31,7 @@ pub fn get_balance(args: wrap::ArgsGetBalance) -> BigInt {
         Err(e) => panic!("Invalid address: {}. Error: {}", &args.address, e),
     };
     let block_tag: BlockId = BlockNumber::Latest.into();
-    let balance = api::get_balance(&provider, address, block_tag);
+    let balance = provider.get_balance_sync(address, Some(block_tag)).unwrap();
     BigInt::from_str(&balance.to_string()).unwrap()
 }
 
@@ -44,13 +44,13 @@ pub fn check_address(args: wrap::ArgsCheckAddress) -> bool {
 
 pub fn get_gas_price(args: wrap::ArgsGetGasPrice) -> BigInt {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
-    let price = api::get_gas_price(&provider);
+    let price = provider.get_gas_price_sync().unwrap();
     BigInt::from_str(&price.to_string()).unwrap()
 }
 
 pub fn estimate_eip1559_fees(args: wrap::ArgsEstimateEip1559Fees) -> wrap::Eip1559FeesEstimate {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
-    let price = api::estimate_eip1559_fees(&provider);
+    let price = provider.estimate_eip1559_fees_sync(None).unwrap();
     wrap::Eip1559FeesEstimate {
         max_fee_per_gas: BigInt::from_str(&price.0.to_string()).unwrap(),
         max_priority_fee_per_gas: BigInt::from_str(&price.1.to_string()).unwrap(),
@@ -66,7 +66,7 @@ pub fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> BigInt {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
     let address = PolywrapSigner::new(&args.connection).address();
     let block_tag: BlockId = BlockNumber::Latest.into();
-    let balance = api::get_signer_balance(&provider, address, block_tag);
+    let balance = provider.get_balance_sync(address, Some(block_tag)).unwrap();
     BigInt::from_str(&balance.to_string()).unwrap()
 }
 
@@ -74,9 +74,8 @@ pub fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
     let address = PolywrapSigner::new(&args.connection).address();
     let block_tag: BlockId = BlockNumber::Latest.into();
-    let count = api::get_signer_transaction_count(&provider, address, block_tag);
+    let count = provider.get_transaction_count_sync(address, Some(block_tag)).unwrap();
     BigInt::from_str(&count.to_string()).unwrap()
-
 }
 
 pub fn sign_message(args: wrap::ArgsSignMessage) -> String {
@@ -116,14 +115,14 @@ pub fn to_eth(input: ArgsToEth) -> String {
 
 pub fn send_rpc(args: wrap::ArgsSendRpc) -> String {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
-    let response = api::send_rpc(&provider, &args.method, args.params);
-    response
+    let res: serde_json::Value = provider.request_sync(&args.method, args.params).unwrap();
+    res.to_string()
 }
 
 pub fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> BigInt {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
     let tx = mapping::from_wrap_request(args.tx);
-    let gas = api::estimate_transaction_gas(&provider, tx);
+    let gas = provider.estimate_gas_sync(&tx, None).unwrap();
     BigInt::from_str(&gas.to_string()).unwrap()
 }
 
@@ -169,12 +168,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
     let abi: Abi = serde_json::from_str(&args.abi).unwrap();
     let bytecode = Bytes::from_str(&args.bytecode).unwrap();
     let params: Vec<String> = args.args.unwrap_or(vec![]);
-    let mut tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
-
-    // todo: implement custom gas price and fee estimation to work around wasm bindgen crashes
-    if tx_options.max_fee_per_gas.is_none() && tx_options.max_priority_fee_per_gas.is_none() && tx_options.gas_price.is_none() {
-        tx_options.gas_price = Some(api::get_gas_price(client.provider()));
-    }
+    let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
     let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 

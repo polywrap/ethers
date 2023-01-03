@@ -1,6 +1,6 @@
 use super::provider::PolywrapProvider;
 use super::signer::PolywrapSigner;
-use ethers_middleware::{signer::SignerMiddlewareError, SignerMiddleware};
+use ethers_middleware::{signer::SignerMiddlewareError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

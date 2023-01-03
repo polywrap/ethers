@@ -12,29 +12,17 @@ use ethers_signers::Signer;
 use crate::block_on;
 
 use crate::error::WrapperError;
-use crate::provider::{GasWorkaround, PolywrapProvider};
+use crate::provider::{PolywrapProvider};
 use crate::signer::PolywrapSigner;
+use crate::polywrap_provider::sync_provider::SyncProvider;
 use crate::mapping::EthersTxOptions;
 
 use crate::api::abi::{tokenize_values, encode_function};
-use crate::api::get_gas_price;
+use crate::polywrap_provider::sync_signer::SyncSigner;
 
 pub fn sign_message(signer: &PolywrapSigner, message: &str) -> Signature {
     block_on(async {
         signer.sign_message(message).await.unwrap()
-    })
-}
-
-pub fn send_rpc(provider: &Provider<PolywrapProvider>, method: &str, params: Vec<String>) -> String {
-    block_on(async {
-        let res: serde_json::Value = provider.request(method, params).await.unwrap();
-        res
-    }).to_string()
-}
-
-pub fn estimate_transaction_gas(provider: &Provider<PolywrapProvider>, tx: TypedTransaction) -> U256 {
-    block_on(async {
-        provider.estimate_gas(&tx, None).await.unwrap()
     })
 }
 
@@ -55,17 +43,13 @@ pub fn get_transaction_receipt(provider: &Provider<PolywrapProvider>, tx_hash: H
 }
 
 pub fn send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {
-    block_on(async {
-        client.provider().fill_gas_fees(tx).await.unwrap();
-        client.fill_transaction(tx, None).await.unwrap();
-        let rlp = serialize(tx);
-        let tx_hash: H256 = client
-            .inner()
-            .request("eth_sendTransaction", [rlp])
-            .await
-            .unwrap();
-        tx_hash
-    })
+    client.fill_transaction_sync(tx, None).unwrap();
+    let rlp = serialize(tx);
+    let tx_hash: H256 = client
+        .inner()
+        .request_sync("eth_sendTransaction", [rlp])
+        .unwrap();
+    tx_hash
 }
 
 pub fn create_deploy_contract_transaction(
@@ -97,9 +81,7 @@ pub fn estimate_contract_call_gas(
     options: &EthersTxOptions) -> U256 {
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let tx: TypedTransaction = create_transaction(Some(address), data, options);
-    block_on(async {
-        provider.estimate_gas(&tx, None).await.unwrap()
-    })
+    provider.estimate_gas_sync(&tx, None).unwrap()
 }
 
 pub fn call_contract_view(
@@ -131,10 +113,9 @@ pub fn call_contract_static(
     let (function, data): (Function, Bytes) = encode_function(method, args)?;
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
+    client.fill_transaction_sync(&mut tx, None)?;
 
     let bytes: Result<Bytes, WrapperError> = block_on(async {
-        client.provider().fill_gas_fees(&mut tx).await?;
-        client.fill_transaction(&mut tx, None).await?;
         client.inner().call(&tx, None).await.map_err(|e| e.into())
     });
 

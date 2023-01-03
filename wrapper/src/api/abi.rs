@@ -1,5 +1,5 @@
 use ethers_core::{
-    abi::{Param, Token, encode, AbiParser, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function},
+    abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function},
     types::{Bytes}
 };
 use ethers_core::abi::Abi;

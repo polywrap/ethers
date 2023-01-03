@@ -1,5 +1,5 @@
 use ethers_core::abi::Token;
-use ethers_core::types::{I256, U256};
+use ethers_core::types::{I256};
 
 // format tokens to json
 pub fn format_tokens(tokens: &Vec<Token>) -> String {

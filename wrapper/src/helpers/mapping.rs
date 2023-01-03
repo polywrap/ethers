@@ -1,4 +1,3 @@
-use std::ops::Mul;
 use crate::provider::PolywrapProvider;
 use crate::wrap::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
 use ethers_core::types::{
