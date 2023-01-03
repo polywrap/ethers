@@ -1,3 +1,4 @@
+use std::ops::Mul;
 use crate::provider::PolywrapProvider;
 use crate::wrap::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
 use ethers_core::types::{
@@ -19,14 +20,18 @@ pub struct EthersTxOptions {
     pub nonce: Option<U256>,
 }
 
+fn bigint_to_u256(big_int: &BigInt) -> U256 {
+    U256::from_str_radix(&big_int.to_string(), 10).unwrap()
+}
+
 pub fn from_wrap_tx_options(maybe_options: Option<TxOptions>) -> EthersTxOptions {
     match maybe_options {
         Some(options) => EthersTxOptions {
-            gas_limit: options.gas_limit.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            max_fee_per_gas: options.max_fee_per_gas.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            max_priority_fee_per_gas: options.max_priority_fee_per_gas.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            gas_price: options.gas_price.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            value: options.value.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
+            gas_limit: options.gas_limit.map(|big_int| bigint_to_u256(&big_int)),
+            max_fee_per_gas: options.max_fee_per_gas.map(|big_int| bigint_to_u256(&big_int)),
+            max_priority_fee_per_gas: options.max_priority_fee_per_gas.map(|big_int| bigint_to_u256(&big_int)),
+            gas_price: options.gas_price.map(|big_int| bigint_to_u256(&big_int)),
+            value: options.value.map(|big_int| bigint_to_u256(&big_int)),
             nonce: options.nonce.map(Into::into),
         },
         None => EthersTxOptions {
@@ -49,15 +54,15 @@ pub fn from_wrap_request(request: TxRequest) -> TypedTransaction {
                 .map(|v| NameOrAddress::Address(H160::from_str(&v).unwrap())),
             gas: request
                 .gas_limit
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             value: request
                 .value
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             data: request.data.map(|v| Bytes::from_str(&v).unwrap()),
             nonce: request.nonce.map(Into::into),
             gas_price: request
                 .gas_price
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             chain_id: request
                 .chain_id
                 .map(|v| U64::from_str(&v.to_string()).unwrap()),
@@ -87,19 +92,19 @@ pub fn from_wrap_request(request: TxRequest) -> TypedTransaction {
                 .map(|v| NameOrAddress::Address(H160::from_str(&v).unwrap())),
             gas: request
                 .gas_limit
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             value: request
                 .value
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             data: request.data.map(|v| Bytes::from_str(&v).unwrap()),
             nonce: request.nonce.map(Into::into),
             access_list: access_list,
             max_fee_per_gas: request
                 .max_fee_per_gas
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             max_priority_fee_per_gas: request
                 .max_priority_fee_per_gas
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             chain_id: request
                 .chain_id
                 .map(|v| U64::from_str(&v.to_string()).unwrap()),
