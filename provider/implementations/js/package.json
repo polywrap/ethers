@@ -9,11 +9,10 @@
     "schema.graphql"
   ],
   "scripts": {
-    "build": "rimraf ./build && yarn codegen && yarn fix:bindings && tsc --project tsconfig.build.json",
+    "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
     "codegen": "yarn polywrap codegen",
     "lint": "eslint --color --ext .ts src/",
-    "test": "jest --passWithNoTests --runInBand --verbose",
-    "fix:bindings": "ts-node ./scripts/fix-bindings.ts"
+    "test": "jest --passWithNoTests --runInBand --verbose"
   },
   "dependencies": {
     "@ethersproject/address": "5.7.0",
