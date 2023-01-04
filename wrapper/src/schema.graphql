@@ -266,12 +266,6 @@ type Module {
     connection: Connection
   ): String!
 
-  resolveEnsName(
-    name: String!
-    ensAddress: String!
-    connection: Connection
-  ): String!
-
 # TODO: implement the following methods
 
 #    signTypedData(
