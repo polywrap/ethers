@@ -107,6 +107,8 @@ pub trait SyncProvider {
 }
 
 impl SyncProvider for Provider<PolywrapProvider> {
+
+    /// Sends a POST request with the provided method and the params serialized as JSON over HTTP
     fn request_sync<T: Serialize + Send + Sync, R: DeserializeOwned>(
         &self,
         method: &str,

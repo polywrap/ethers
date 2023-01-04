@@ -67,24 +67,11 @@ impl Clone for PolywrapProvider {
 impl JsonRpcClient for PolywrapProvider {
     type Error = ClientError;
 
-    /// Sends a POST request with the provided method and the params serialized as JSON
-    /// over HTTP
     async fn request<T: Serialize + Send + Sync, R: DeserializeOwned>(
         &self,
-        method: &str,
-        params: T,
+        _method: &str,
+        _params: T,
     ) -> Result<R, Self::Error> {
-        let params_s = serde_json::to_string(&params).unwrap();
-        let res = self.iprovider.request(&ArgsRequest {
-            method: method.to_string(),
-            params: Some(params_s),
-            connection: self.connection.clone(),
-        })
-        .map_err(|err| ClientError::Error(err))?;
-        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
-            err,
-            text: "from str failed".to_string(),
-        })?;
-        Ok(res)
+        panic!("{} Not implemented. Use {} instead.", "PolywrapProvider.request", "PolywrapProvider.request_sync");
     }
 }

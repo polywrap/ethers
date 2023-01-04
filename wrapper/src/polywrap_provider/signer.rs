@@ -64,39 +64,23 @@ impl PolywrapSigner {
 impl Signer for PolywrapSigner {
     type Error = SignerError;
 
-    // TODO: format errors correctly for Eip712 spec
-
     async fn sign_message<S: Send + Sync + AsRef<[u8]>>(
         &self,
-        message: S,
+        _message: S,
     ) -> Result<Signature, Self::Error> {
-        let bytes = message.as_ref().to_vec();
-        self.sign_bytes(bytes).map_err(|e| SignerError::Eip712Error(e))
+        panic!("{} Not implemented. Use {} instead.", "PolywrapSigner.sign_message", "PolywrapSigner.sign_message_sync");
     }
 
-    async fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, Self::Error> {
-        // rlp must have the same chain id as v in the signature
-        let chain_id = tx.chain_id().map(|id| id.as_u64()).unwrap_or(self.chain_id);
-        let mut tx = tx.clone();
-        tx.set_chain_id(chain_id);
-        let rlp = tx.rlp().to_vec();
-
-        match self.sign_rlp(rlp) {
-            Ok(mut sig) => {
-                // sign_hash sets `v` to recid + 27, so we need to subtract 27 before normalizing
-                sig.v = to_eip155_v(sig.v as u8 - 27, chain_id);
-                Ok(sig)
-            },
-            Err(e) => Err(SignerError::Eip712Error(e))
-        }
+    async fn sign_transaction(&self, _tx: &TypedTransaction) -> Result<Signature, Self::Error> {
+        panic!("{} Not implemented. Use {} instead.", "PolywrapSigner.sign_transaction", "PolywrapSigner.sign_transaction_sync");
     }
 
     async fn sign_typed_data<T: Eip712 + Send + Sync>(
         &self,
-        payload: &T,
+        _payload: &T,
     ) -> Result<Signature, Self::Error> {
-        return Err(SignerError::Eip712Error("not implemented".to_string()));
-        // TODO: need to turn encoded into a form that can be signed with sign_bytes or sign_rlp
+        panic!("{} Not implemented.", "PolywrapSigner.sign_typed_data");
+        // TODO: implement sign_typed_data
         // let encoded = payload
         //     .encode_eip712()
         //     .map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
