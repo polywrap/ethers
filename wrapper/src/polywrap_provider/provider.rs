@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use ethers_providers::{JsonRpcClient, ProviderError};
+use ethers_providers::{ProviderError};
 
 use crate::wrap::imported::ArgsRequest;
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};

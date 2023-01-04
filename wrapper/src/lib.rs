@@ -265,13 +265,3 @@ pub fn call_contract_method_and_wait(
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }
-
-pub fn resolve_ens_name(args: wrap::ArgsResolveEnsName) -> String {
-    let provider = PolywrapProvider::new(&args.connection);
-    let ens_address = match Address::from_str(&args.ens_address) {
-        Ok(addr) => addr,
-        Err(e) => panic!("Invalid ENS address: {}. Error: {}", &args.ens_address, e),
-    };
-    let address = provider.resolve_name_sync(args.name.as_ref(), Some(ens_address)).unwrap();
-    format!("{:#x}", address)
-}
