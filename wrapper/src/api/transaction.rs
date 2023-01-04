@@ -1,71 +1,27 @@
 use ethers_core::{
     abi::{Abi, Token, Function},
     types::{
-        transaction::eip2718::TypedTransaction, Address, Bytes, Signature,
-        Transaction, TransactionReceipt, TransactionRequest, H256, U256, Eip1559TransactionRequest,
+        transaction::eip2718::TypedTransaction, Address, Bytes,
+        TransactionRequest, H256, U256, Eip1559TransactionRequest,
     },
     utils::{serialize},
 };
-use ethers_middleware::SignerMiddleware;
-use ethers_providers::{Middleware, Provider};
-use ethers_signers::Signer;
-use crate::block_on;
+use ethers_core::types::{BlockId, Chain};
+use ethers_providers::ProviderError;
 
 use crate::error::WrapperError;
-use crate::provider::{GasWorkaround, PolywrapProvider};
+use crate::provider::{PolywrapProvider};
 use crate::signer::PolywrapSigner;
+use crate::polywrap_provider::sync_provider::SyncProvider;
 use crate::mapping::EthersTxOptions;
 
 use crate::api::abi::{tokenize_values, encode_function};
-use crate::api::get_gas_price;
 
-pub fn sign_message(signer: &PolywrapSigner, message: &str) -> Signature {
-    block_on(async {
-        signer.sign_message(message).await.unwrap()
-    })
-}
-
-pub fn send_rpc(provider: &Provider<PolywrapProvider>, method: &str, params: Vec<String>) -> String {
-    block_on(async {
-        let res: serde_json::Value = provider.request(method, params).await.unwrap();
-        res
-    }).to_string()
-}
-
-pub fn estimate_transaction_gas(provider: &Provider<PolywrapProvider>, tx: TypedTransaction) -> U256 {
-    block_on(async {
-        provider.estimate_gas(&tx, None).await.unwrap()
-    })
-}
-
-pub fn get_transaction_response(provider: &Provider<PolywrapProvider>, tx_hash: H256) -> Transaction {
-    block_on(async {
-        provider.get_transaction(tx_hash).await.unwrap().unwrap()
-    })
-}
-
-pub fn get_transaction_receipt(provider: &Provider<PolywrapProvider>, tx_hash: H256) -> TransactionReceipt {
-    block_on(async {
-        provider
-            .get_transaction_receipt(tx_hash)
-            .await
-            .unwrap()
-            .unwrap()
-    })
-}
-
-pub fn send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {
-    block_on(async {
-        client.provider().fill_gas_fees(tx).await.unwrap();
-        client.fill_transaction(tx, None).await.unwrap();
-        let rlp = serialize(tx);
-        let tx_hash: H256 = client
-            .inner()
-            .request("eth_sendTransaction", [rlp])
-            .await
-            .unwrap();
-        tx_hash
-    })
+pub fn send_transaction(provider: &PolywrapProvider, signer: &PolywrapSigner, tx: &mut TypedTransaction) -> H256 {
+    fill_transaction_sync(provider, signer, tx, None).unwrap();
+    let rlp = serialize(tx);
+    let tx_hash: H256 = provider.request_sync("eth_sendTransaction", [rlp]).unwrap();
+    tx_hash
 }
 
 pub fn create_deploy_contract_transaction(
@@ -90,20 +46,18 @@ pub fn create_deploy_contract_transaction(
 }
 
 pub fn estimate_contract_call_gas(
-    provider: &Provider<PolywrapProvider>,
+    provider: &PolywrapProvider,
     address: Address,
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions) -> U256 {
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let tx: TypedTransaction = create_transaction(Some(address), data, options);
-    block_on(async {
-        provider.estimate_gas(&tx, None).await.unwrap()
-    })
+    provider.estimate_gas_sync(&tx, None).unwrap()
 }
 
 pub fn call_contract_view(
-    provider: &Provider<PolywrapProvider>,
+    provider: &PolywrapProvider,
     address: Address,
     method: &str,
     args: &Vec<String>
@@ -116,13 +70,14 @@ pub fn call_contract_view(
         ..Default::default()
     }.into();
 
-    let bytes: Bytes = block_on(async { provider.call(&tx, None).await.unwrap() });
+    let bytes: Bytes = provider.call_sync(&tx, None).unwrap();
     let tokens: Vec<Token> = function.decode_output(&bytes).unwrap();
     tokens
 }
 
 pub fn call_contract_static(
-    client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>,
+    provider: &PolywrapProvider,
+    signer: &PolywrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
@@ -131,12 +86,8 @@ pub fn call_contract_static(
     let (function, data): (Function, Bytes) = encode_function(method, args)?;
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
-
-    let bytes: Result<Bytes, WrapperError> = block_on(async {
-        client.provider().fill_gas_fees(&mut tx).await?;
-        client.fill_transaction(&mut tx, None).await?;
-        client.inner().call(&tx, None).await.map_err(|e| e.into())
-    });
+    fill_transaction_sync(provider, signer, &mut tx, None)?;
+    let bytes: Result<Bytes, WrapperError> = provider.call_sync(&tx, None).map_err(|e| e.into());
 
     if bytes.is_err() {
         Err(bytes.unwrap_err())
@@ -147,7 +98,8 @@ pub fn call_contract_static(
 }
 
 pub fn call_contract_method(
-    client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>,
+    provider: &PolywrapProvider,
+    signer: &PolywrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
@@ -155,7 +107,7 @@ pub fn call_contract_method(
 ) -> H256 {
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
-    let tx_hash: H256 = send_transaction(client, &mut tx);
+    let tx_hash: H256 = send_transaction(provider, signer, &mut tx);
     tx_hash
 }
 
@@ -181,4 +133,50 @@ fn create_transaction(address: Option<Address>, data: Bytes, options: &EthersTxO
         nonce: options.nonce,
         ..Default::default()
     }.into()
+}
+
+/// Helper for filling a transaction's nonce using the wallet
+fn fill_transaction_sync(
+    provider: &PolywrapProvider,
+    signer: &PolywrapSigner,
+    tx: &mut TypedTransaction,
+    block: Option<BlockId>,
+) -> Result<(), ProviderError> {
+    // get the `from` field's nonce if it's set, else get the signer's nonce
+    let from = if tx.from().is_some() && tx.from() != Some(&signer.address()) {
+        *tx.from().unwrap()
+    } else {
+        signer.address()
+    };
+    tx.set_from(from);
+
+    // get the signer's chain_id if the transaction does not set it
+    let chain_id = signer.chain_id();
+    if tx.chain_id().is_none() {
+        tx.set_chain_id(chain_id);
+    }
+
+    // If a chain_id is matched to a known chain that doesn't support EIP-1559, automatically
+    // change transaction to be Legacy type.
+    if let Some(chain_id) = tx.chain_id() {
+        let chain = Chain::try_from(chain_id.as_u64());
+        if chain.unwrap_or_default().is_legacy() {
+            if let TypedTransaction::Eip1559(inner) = tx {
+                let tx_req: TransactionRequest = inner.clone().into();
+                *tx = TypedTransaction::Legacy(tx_req);
+            }
+        }
+    }
+
+    let nonce = if tx.nonce().is_some() {
+        tx.nonce().cloned().unwrap()
+    } else {
+        provider
+            .get_transaction_count_sync(from, block)?
+    };
+    tx.set_nonce(nonce);
+
+    provider
+        .fill_transaction_sync(tx, block)?;
+    Ok(())
 }

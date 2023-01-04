@@ -1,13 +1,10 @@
 {
   "name": "@polywrap/ethereum-wrapper",
-  "description": "Polywrap Ethereum Rust Wrapper",
+  "description": "Ethereum Wrapper that can be invoked from any language with a Polywrap client",
   "version": "0.1.1",
   "license": "MIT",
   "main": "build/index.js",
-  "files": [
-    "build",
-    "schema.graphql"
-  ],
+  "files": ["build"],
   "scripts": {
     "test:codegen": "polywrap codegen -m tests/types/polywrap.app.yaml -g tests/types/wrap",
     "test:e2e" : "jest --passWithNoTests --runInBand --verbose",

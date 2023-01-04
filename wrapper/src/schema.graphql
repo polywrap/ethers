@@ -261,12 +261,18 @@ type Module {
     connection: Connection
   ): String!
 
-# TODO: implement the following methods
+  signMessageBytes(
+    bytes: Bytes!
+    connection: Connection
+  ): String!
 
-#  signMessageBytes(
-#    bytes: Bytes!
-#    connection: Connection
-#  ): String!
+  resolveEnsName(
+    name: String!
+    ensAddress: String!
+    connection: Connection
+  ): String!
+
+# TODO: implement the following methods
 
 #    signTypedData(
 #        payload: JSON!

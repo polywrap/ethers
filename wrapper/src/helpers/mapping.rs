@@ -4,11 +4,10 @@ use ethers_core::types::{
     transaction::eip2718::TypedTransaction, Bytes, Log, NameOrAddress, Address, Transaction,
     TransactionReceipt, TransactionRequest, H160, H256, U64, U256, Eip1559TransactionRequest
 };
-use ethers_providers::{Middleware, Provider};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_core::types::transaction::eip2930::{AccessList, AccessListItem};
-use crate::block_on;
+use crate::polywrap_provider::sync_provider::SyncProvider;
 
 pub struct EthersTxOptions {
     pub gas_limit: Option<U256>,
@@ -19,14 +18,18 @@ pub struct EthersTxOptions {
     pub nonce: Option<U256>,
 }
 
+fn bigint_to_u256(big_int: &BigInt) -> U256 {
+    U256::from_str_radix(&big_int.to_string(), 10).unwrap()
+}
+
 pub fn from_wrap_tx_options(maybe_options: Option<TxOptions>) -> EthersTxOptions {
     match maybe_options {
         Some(options) => EthersTxOptions {
-            gas_limit: options.gas_limit.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            max_fee_per_gas: options.max_fee_per_gas.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            max_priority_fee_per_gas: options.max_priority_fee_per_gas.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            gas_price: options.gas_price.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
-            value: options.value.map(|big_int| U256::from_str_radix(&big_int.to_string(), 10).unwrap()),
+            gas_limit: options.gas_limit.map(|big_int| bigint_to_u256(&big_int)),
+            max_fee_per_gas: options.max_fee_per_gas.map(|big_int| bigint_to_u256(&big_int)),
+            max_priority_fee_per_gas: options.max_priority_fee_per_gas.map(|big_int| bigint_to_u256(&big_int)),
+            gas_price: options.gas_price.map(|big_int| bigint_to_u256(&big_int)),
+            value: options.value.map(|big_int| bigint_to_u256(&big_int)),
             nonce: options.nonce.map(Into::into),
         },
         None => EthersTxOptions {
@@ -49,15 +52,15 @@ pub fn from_wrap_request(request: TxRequest) -> TypedTransaction {
                 .map(|v| NameOrAddress::Address(H160::from_str(&v).unwrap())),
             gas: request
                 .gas_limit
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             value: request
                 .value
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             data: request.data.map(|v| Bytes::from_str(&v).unwrap()),
             nonce: request.nonce.map(Into::into),
             gas_price: request
                 .gas_price
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             chain_id: request
                 .chain_id
                 .map(|v| U64::from_str(&v.to_string()).unwrap()),
@@ -87,19 +90,19 @@ pub fn from_wrap_request(request: TxRequest) -> TypedTransaction {
                 .map(|v| NameOrAddress::Address(H160::from_str(&v).unwrap())),
             gas: request
                 .gas_limit
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             value: request
                 .value
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             data: request.data.map(|v| Bytes::from_str(&v).unwrap()),
             nonce: request.nonce.map(Into::into),
             access_list: access_list,
             max_fee_per_gas: request
                 .max_fee_per_gas
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             max_priority_fee_per_gas: request
                 .max_priority_fee_per_gas
-                .map(|v| U256::from_str(&v.to_string()).unwrap()),
+                .map(|v| bigint_to_u256(&v)),
             chain_id: request
                 .chain_id
                 .map(|v| U64::from_str(&v.to_string()).unwrap()),
@@ -156,57 +159,55 @@ pub fn to_wrap_receipt(receipt: TransactionReceipt) -> TxReceipt {
 }
 
 pub fn to_wrap_response(
-    provider: &Provider<PolywrapProvider>,
+    provider: &PolywrapProvider,
     response: Transaction,
 ) -> TxResponse {
-    block_on(async {
-        let block = match response.block_hash {
-            Some(h) => provider.get_block(h).await.ok(),
-            None => None,
-        }.flatten();
-        let chain_id = provider.get_chainid().await.unwrap();
-        let max_fee_per_gas = response
-            .max_fee_per_gas
-            .map(|v| BigInt::from_str(&v.to_string()).unwrap());
-        let max_priority_fee_per_gas = response
-            .max_priority_fee_per_gas
-            .map(|v| BigInt::from_str(&v.to_string()).unwrap());
-        let gas_price = response
-            .gas_price
-            .map(|v| BigInt::from_str(&v.to_string()).unwrap());
-        let access_list: Option<Vec<AccessItem>> = response.access_list.as_ref().map(|v| {
-            v.0.iter()
-                .map(|i| AccessItem {
-                    address: serde_json::to_string(&i.address).unwrap(),
-                    storage_keys: i
-                        .storage_keys
-                        .iter()
-                        .map(|k| serde_json::to_string(&k).unwrap())
-                        .collect(),
-                })
-                .collect()
-        });
-        TxResponse {
-            hash: format!("{:?}", response.hash),
-            to: response.to.map(|v| format!("{:?}", v)),
-            from: format!("{:?}", response.from),
-            nonce: response.nonce.as_u32(),
-            gas_limit: BigInt::from_str(&response.gas.to_string()).unwrap(),
-            max_fee_per_gas,
-            max_priority_fee_per_gas,
-            gas_price,
-            value: BigInt::from_str(&response.value.to_string()).unwrap(),
-            chain_id: BigInt::from_str(&response.chain_id.unwrap_or(chain_id).to_string()).unwrap(),
-            block_number: response
-                .block_number
-                .map(|n| BigInt::from_str(&n.to_string()).unwrap()),
-            block_hash: response.block_hash.map(|v| format!("{:?}", v)),
-            timestamp: block.map(|v| v.timestamp.as_u32()),
-            r: Some(response.v.to_string()),
-            s: Some(response.v.to_string()),
-            v: Some(response.v.as_u32()),
-            _type: response.transaction_type.map(|v| v.as_u32()),
-            access_list,
-        }
-    })
+    let block = match response.block_hash {
+        Some(h) => provider.get_block_sync(h).ok(),
+        None => None,
+    }.flatten();
+    let chain_id = provider.get_chainid_sync().unwrap();
+    let max_fee_per_gas = response
+        .max_fee_per_gas
+        .map(|v| BigInt::from_str(&v.to_string()).unwrap());
+    let max_priority_fee_per_gas = response
+        .max_priority_fee_per_gas
+        .map(|v| BigInt::from_str(&v.to_string()).unwrap());
+    let gas_price = response
+        .gas_price
+        .map(|v| BigInt::from_str(&v.to_string()).unwrap());
+    let access_list: Option<Vec<AccessItem>> = response.access_list.as_ref().map(|v| {
+        v.0.iter()
+            .map(|i| AccessItem {
+                address: serde_json::to_string(&i.address).unwrap(),
+                storage_keys: i
+                    .storage_keys
+                    .iter()
+                    .map(|k| serde_json::to_string(&k).unwrap())
+                    .collect(),
+            })
+            .collect()
+    });
+    TxResponse {
+        hash: format!("{:?}", response.hash),
+        to: response.to.map(|v| format!("{:?}", v)),
+        from: format!("{:?}", response.from),
+        nonce: response.nonce.as_u32(),
+        gas_limit: BigInt::from_str(&response.gas.to_string()).unwrap(),
+        max_fee_per_gas,
+        max_priority_fee_per_gas,
+        gas_price,
+        value: BigInt::from_str(&response.value.to_string()).unwrap(),
+        chain_id: BigInt::from_str(&response.chain_id.unwrap_or(chain_id).to_string()).unwrap(),
+        block_number: response
+            .block_number
+            .map(|n| BigInt::from_str(&n.to_string()).unwrap()),
+        block_hash: response.block_hash.map(|v| format!("{:?}", v)),
+        timestamp: block.map(|v| v.timestamp.as_u32()),
+        r: Some(response.v.to_string()),
+        s: Some(response.v.to_string()),
+        v: Some(response.v.as_u32()),
+        _type: response.transaction_type.map(|v| v.as_u32()),
+        access_list,
+    }
 }
