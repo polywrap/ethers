@@ -1,5 +1,3 @@
-use futures::executor::block_on;
-
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function};
 use polywrap_wasm_rs::BigInt;
@@ -18,6 +16,7 @@ mod polywrap_provider;
 mod helpers;
 use polywrap_provider::{iprovider, provider, signer, error, sync_provider::SyncProvider};
 use helpers::{format, mapping};
+use crate::polywrap_provider::sync_signer::SyncSigner;
 
 pub fn get_chain_id(args: wrap::ArgsGetChainId) -> String {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
@@ -80,7 +79,14 @@ pub fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -
 
 pub fn sign_message(args: wrap::ArgsSignMessage) -> String {
     let signer = PolywrapSigner::new(&args.connection);
-    let signature = api::sign_message(&signer, &args.message);
+    let signature = signer.sign_message_sync(&args.message).unwrap();
+    let bytes: Bytes = signature.to_vec().into();
+    format!("{}", bytes).to_string()
+}
+
+pub fn sign_message_bytes(args: wrap::ArgsSignMessageBytes) -> String {
+    let signer = PolywrapSigner::new(&args.connection);
+    let signature = signer.sign_message_sync(&args.bytes).unwrap();
     let bytes: Bytes = signature.to_vec().into();
     format!("{}", bytes).to_string()
 }
@@ -129,7 +135,7 @@ pub fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> BigIn
 pub fn await_transaction(args: wrap::ArgsAwaitTransaction) -> wrap::TxReceipt {
     let provider = Provider::new(PolywrapProvider::new(&args.connection));
     let tx_hash = H256::from_str(&args.tx_hash).unwrap();
-    let receipt = api::get_transaction_receipt(&provider, tx_hash);
+    let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }
@@ -142,7 +148,7 @@ pub fn send_transaction(args: wrap::ArgsSendTransaction) -> wrap::TxResponse {
     let mut tx = mapping::from_wrap_request(args.tx);
 
     let tx_hash = api::send_transaction(&client, &mut tx);
-    let response = api::get_transaction_response(client.provider(), tx_hash);
+    let response = client.provider().get_transaction_sync(tx_hash).unwrap().unwrap();
     let tx_response = mapping::to_wrap_response(client.provider(), response);
     tx_response
 }
@@ -155,7 +161,7 @@ pub fn send_transaction_and_wait(args: wrap::ArgsSendTransactionAndWait) -> wrap
     let mut tx = mapping::from_wrap_request(args.tx);
 
     let tx_hash = api::send_transaction(&client, &mut tx);
-    let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
+    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }
@@ -173,7 +179,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
     let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 
     let tx_hash = api::send_transaction(&client, &mut tx);
-    let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
+    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let address = receipt.contract_address.expect("Contract failed to deploy.");
     format!("{:#x}", address)
 }
@@ -244,7 +250,7 @@ pub fn call_contract_method(args: wrap::ArgsCallContractMethod) -> wrap::TxRespo
 
     let tx_hash = api::call_contract_method(&client, address, &args.method, &params, &tx_options);
 
-    let response = api::get_transaction_response(client.provider(), tx_hash);
+    let response = client.provider().get_transaction_sync(tx_hash).unwrap().unwrap();
     let tx_response = mapping::to_wrap_response(client.provider(), response);
     tx_response
 }
@@ -264,7 +270,7 @@ pub fn call_contract_method_and_wait(
     let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
     let tx_hash = api::call_contract_method(&client, address, &args.method, &params, &tx_options);
-    let receipt = api::get_transaction_receipt(client.provider(), tx_hash);
+    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }

@@ -45,12 +45,12 @@ impl PolywrapSigner {
         }
     }
 
-    fn sign_rlp(&self, rlp: Vec<u8>) -> Result<Signature, String> {
+    pub(super) fn sign_rlp(&self, rlp: Vec<u8>) -> Result<Signature, String> {
         let signature = self.iprovider.sign_transaction(&ArgsSignTransaction { rlp, connection: self.connection.clone(), })?;
         Ok(Signature::from_str(&signature).unwrap())
     }
 
-    fn sign_bytes(&self, message: Vec<u8>) -> Result<Signature, String> {
+    pub(super) fn sign_bytes(&self, message: Vec<u8>) -> Result<Signature, String> {
         let signature = self.iprovider.sign_message(&ArgsSignMessage { message, connection: self.connection.clone(), })?;
         Ok(Signature::from_str(&signature).unwrap())
     }

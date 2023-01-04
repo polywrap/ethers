@@ -6,7 +6,7 @@ use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
-use ethers_core::types::{Address, Block, BlockId, BlockNumber, FeeHistory, NameOrAddress, TxHash, U256};
+use ethers_core::types::{Address, Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Transaction, TransactionReceipt, TxHash, U256};
 use ethers_core::utils;
 use futures::executor::block_on;
 use serde::{de::DeserializeOwned, Serialize};
@@ -72,6 +72,24 @@ pub trait SyncProvider {
         from: T,
         block: Option<BlockId>,
     ) -> Result<U256, ProviderError>;
+
+    fn get_transaction_sync<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+    ) -> Result<Option<Transaction>, ProviderError>;
+
+    fn get_transaction_receipt_sync<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+    ) -> Result<Option<TransactionReceipt>, ProviderError>;
+
+    fn call_sync(
+        &self,
+        tx: &TypedTransaction,
+        block: Option<BlockId>,
+    ) -> Result<Bytes, ProviderError>;
+
+    fn resolve_name_sync(&self, ens_name: &str) -> Result<Address, ProviderError>;
 }
 
 impl SyncProvider for Provider<PolywrapProvider> {
@@ -300,5 +318,46 @@ impl SyncProvider for Provider<PolywrapProvider> {
         let from = utils::serialize(&from);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
         self.request_sync("eth_getBalance", [from, block])
+    }
+
+    /// Gets the transaction with `transaction_hash`
+    fn get_transaction_sync<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+    ) -> Result<Option<Transaction>, ProviderError> {
+        let hash = transaction_hash.into();
+        self.request_sync("eth_getTransactionByHash", [hash])
+    }
+
+    /// Gets the transaction receipt with `transaction_hash`
+    fn get_transaction_receipt_sync<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+    ) -> Result<Option<TransactionReceipt>, ProviderError> {
+        let hash = transaction_hash.into();
+        self.request_sync("eth_getTransactionReceipt", [hash])
+    }
+
+    /// Sends the read-only (constant) transaction to a single Ethereum node and return the result
+    /// (as bytes) of executing it. This is free, since it does not change any state on the
+    /// blockchain.
+    fn call_sync(
+        &self,
+        tx: &TypedTransaction,
+        block: Option<BlockId>,
+    ) -> Result<Bytes, ProviderError> {
+        let tx = utils::serialize(tx);
+        let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
+        self.request_sync("eth_call", [tx, block])
+    }
+
+    /// Returns the address that the `ens_name` resolves to (or None if not configured).
+    ///
+    /// # Panics
+    ///
+    /// If the bytes returned from the ENS registrar/resolver cannot be interpreted as
+    /// an address. This should theoretically never happen.
+    fn resolve_name_sync(&self, ens_name: &str) -> Result<Address, ProviderError> {
+        block_on(async { self.resolve_name(ens_name).await })
     }
 }

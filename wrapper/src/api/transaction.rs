@@ -9,7 +9,6 @@ use ethers_core::{
 use ethers_middleware::SignerMiddleware;
 use ethers_providers::{Middleware, Provider};
 use ethers_signers::Signer;
-use crate::block_on;
 
 use crate::error::WrapperError;
 use crate::provider::{PolywrapProvider};
@@ -19,34 +18,13 @@ use crate::mapping::EthersTxOptions;
 
 use crate::api::abi::{tokenize_values, encode_function};
 use crate::polywrap_provider::sync_signer::SyncSigner;
-
-pub fn sign_message(signer: &PolywrapSigner, message: &str) -> Signature {
-    block_on(async {
-        signer.sign_message(message).await.unwrap()
-    })
-}
-
-pub fn get_transaction_response(provider: &Provider<PolywrapProvider>, tx_hash: H256) -> Transaction {
-    block_on(async {
-        provider.get_transaction(tx_hash).await.unwrap().unwrap()
-    })
-}
-
-pub fn get_transaction_receipt(provider: &Provider<PolywrapProvider>, tx_hash: H256) -> TransactionReceipt {
-    block_on(async {
-        provider
-            .get_transaction_receipt(tx_hash)
-            .await
-            .unwrap()
-            .unwrap()
-    })
-}
+use crate::polywrap_provider::sync_signer_middleware::SyncSignerMiddleware;
 
 pub fn send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {
     client.fill_transaction_sync(tx, None).unwrap();
     let rlp = serialize(tx);
     let tx_hash: H256 = client
-        .inner()
+        .provider()
         .request_sync("eth_sendTransaction", [rlp])
         .unwrap();
     tx_hash
@@ -98,7 +76,7 @@ pub fn call_contract_view(
         ..Default::default()
     }.into();
 
-    let bytes: Bytes = block_on(async { provider.call(&tx, None).await.unwrap() });
+    let bytes: Bytes = provider.call_sync(&tx, None).unwrap();
     let tokens: Vec<Token> = function.decode_output(&bytes).unwrap();
     tokens
 }
@@ -114,10 +92,7 @@ pub fn call_contract_static(
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
     client.fill_transaction_sync(&mut tx, None)?;
-
-    let bytes: Result<Bytes, WrapperError> = block_on(async {
-        client.inner().call(&tx, None).await.map_err(|e| e.into())
-    });
+    let bytes: Result<Bytes, WrapperError> = client.provider().call_sync(&tx, None).map_err(|e| e.into());
 
     if bytes.is_err() {
         Err(bytes.unwrap_err())
