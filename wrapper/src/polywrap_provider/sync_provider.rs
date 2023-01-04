@@ -1,23 +1,15 @@
 use std::fmt::Debug;
-use ethers_providers::{ProviderError, Provider, Middleware, ens};
+use ethers_providers::{ProviderError, ens};
 
-use crate::wrap::imported::ArgsRequest;
-use ethabi::ParamType;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
 use ethers_core::types::{Address, Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Selector, Transaction, TransactionReceipt, TxHash, U256};
 use ethers_core::{abi, utils};
-use ethers_core::abi::Detokenize;
+use ethers_core::abi::{Detokenize, ParamType};
 use serde::{de::DeserializeOwned, Serialize};
 use crate::api::decode_bytes;
-use crate::polywrap_provider::provider::{ClientError, PolywrapProvider};
+use crate::polywrap_provider::provider::{PolywrapProvider};
 
 pub trait SyncProvider {
-    fn request_sync<T: Serialize + Send + Sync, R: DeserializeOwned>(
-        &self,
-        method: &str,
-        params: T,
-    ) -> Result<R, ProviderError>;
-
     fn get_transaction_count_sync<T: Into<NameOrAddress> + Send + Sync>(
         &self,
         from: T,
@@ -106,28 +98,7 @@ pub trait SyncProvider {
     ) -> Result<(), ProviderError>;
 }
 
-impl SyncProvider for Provider<PolywrapProvider> {
-
-    /// Sends a POST request with the provided method and the params serialized as JSON over HTTP
-    fn request_sync<T: Serialize + Send + Sync, R: DeserializeOwned>(
-        &self,
-        method: &str,
-        params: T,
-    ) -> Result<R, ProviderError> {
-        let params_s = serde_json::to_string(&params).unwrap();
-        let res = self.as_ref().iprovider.request(&ArgsRequest {
-            method: method.to_string(),
-            params: Some(params_s),
-            connection: self.as_ref().connection.clone(),
-        })
-            .map_err(|err| ClientError::Error(err))?;
-        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
-            err,
-            text: "from str failed".to_string(),
-        })?;
-        Ok(res)
-    }
-
+impl SyncProvider for PolywrapProvider {
     /// Returns the nonce of the address
     fn get_transaction_count_sync<T: Into<NameOrAddress> + Send + Sync>(
         &self,
@@ -289,11 +260,6 @@ impl SyncProvider for Provider<PolywrapProvider> {
         tx: &mut TypedTransaction,
         block: Option<BlockId>,
     ) -> Result<(), ProviderError> {
-        if let Some(default_sender) = self.default_sender() {
-            if tx.from().is_none() {
-                tx.set_from(default_sender);
-            }
-        }
 
         // set the ENS name
         if let Some(NameOrAddress::Name(ref ens_name)) = tx.to() {

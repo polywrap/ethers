@@ -4,7 +4,6 @@ use ethers_core::types::{
     transaction::eip2718::TypedTransaction, Bytes, Log, NameOrAddress, Address, Transaction,
     TransactionReceipt, TransactionRequest, H160, H256, U64, U256, Eip1559TransactionRequest
 };
-use ethers_providers::{Provider};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_core::types::transaction::eip2930::{AccessList, AccessListItem};
@@ -160,7 +159,7 @@ pub fn to_wrap_receipt(receipt: TransactionReceipt) -> TxReceipt {
 }
 
 pub fn to_wrap_response(
-    provider: &Provider<PolywrapProvider>,
+    provider: &PolywrapProvider,
     response: Transaction,
 ) -> TxResponse {
     let block = match response.block_hash {

@@ -1,9 +1,7 @@
 use crate::wrap::imported::{ArgsAddress, ArgsChainId, ArgsSignMessage, ArgsSignTransaction};
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use super::iprovider::get_iprovider;
-use async_trait::async_trait;
-use ethers_core::types::{transaction::{eip2718::TypedTransaction, eip712::Eip712}, Address, Signature};
-use ethers_signers::{to_eip155_v, Signer};
+use ethers_core::types::{Address, Signature};
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -54,51 +52,12 @@ impl PolywrapSigner {
         Ok(Signature::from_str(&signature).unwrap())
     }
 
-    fn connection(&self) -> Option<IProviderConnection> {
-        self.connection.clone()
-    }
-}
-
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl Signer for PolywrapSigner {
-    type Error = SignerError;
-
-    async fn sign_message<S: Send + Sync + AsRef<[u8]>>(
-        &self,
-        _message: S,
-    ) -> Result<Signature, Self::Error> {
-        panic!("{} Not implemented. Use {} instead.", "PolywrapSigner.sign_message", "PolywrapSigner.sign_message_sync");
-    }
-
-    async fn sign_transaction(&self, _tx: &TypedTransaction) -> Result<Signature, Self::Error> {
-        panic!("{} Not implemented. Use {} instead.", "PolywrapSigner.sign_transaction", "PolywrapSigner.sign_transaction_sync");
-    }
-
-    async fn sign_typed_data<T: Eip712 + Send + Sync>(
-        &self,
-        _payload: &T,
-    ) -> Result<Signature, Self::Error> {
-        panic!("{} Not implemented.", "PolywrapSigner.sign_typed_data");
-        // TODO: implement sign_typed_data
-        // let encoded = payload
-        //     .encode_eip712()
-        //     .map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
-        // self.sign_bytes(encoded.to_vec().unwrap()).map_err(|e| SignerError::Eip712Error(e))
-    }
-
-    fn address(&self) -> Address {
+    pub fn address(&self) -> Address {
         self.address
     }
 
     /// Gets the wallet's chain id
-    fn chain_id(&self) -> u64 {
+    pub fn chain_id(&self) -> u64 {
         self.chain_id
-    }
-
-    /// Sets the wallet's chain_id, used in conjunction with EIP-155 signing
-    fn with_chain_id<T: Into<u64>>(mut self, chain_id: T) -> Self {
-        self.chain_id = chain_id.into();
-        self
     }
 }

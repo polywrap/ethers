@@ -1,6 +1,7 @@
 use crate::polywrap_provider::signer::{PolywrapSigner, SignerError};
 use ethers_core::types::{transaction::{eip2718::TypedTransaction}, Signature};
-use ethers_signers::{to_eip155_v, Signer};
+use ethers_core::types::transaction::eip712::Eip712;
+use ethers_signers::{to_eip155_v};
 
 pub trait SyncSigner {
     fn sign_message_sync<S: Send + Sync + AsRef<[u8]>>(
@@ -9,6 +10,11 @@ pub trait SyncSigner {
     ) -> Result<Signature, SignerError>;
 
     fn sign_transaction_sync(&self, tx: &TypedTransaction) -> Result<Signature, SignerError>;
+
+    fn sign_typed_data_sync<T: Eip712 + Send + Sync>(
+        &self,
+        _payload: &T,
+    ) -> Result<Signature, SignerError>;
 }
 
 impl SyncSigner for PolywrapSigner {
@@ -35,5 +41,17 @@ impl SyncSigner for PolywrapSigner {
             },
             Err(e) => Err(SignerError::Eip712Error(e))
         }
+    }
+
+    fn sign_typed_data_sync<T: Eip712 + Send + Sync>(
+        &self,
+        _payload: &T,
+    ) -> Result<Signature, SignerError> {
+        panic!("{} Not implemented.", "PolywrapSigner.sign_typed_data");
+        // TODO: implement sign_typed_data
+        // let encoded = payload
+        //     .encode_eip712()
+        //     .map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
+        // self.sign_bytes(encoded.to_vec().unwrap()).map_err(|e| SignerError::Eip712Error(e))
     }
 }

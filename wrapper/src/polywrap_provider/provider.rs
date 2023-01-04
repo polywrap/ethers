@@ -4,15 +4,8 @@ use ethers_providers::{JsonRpcClient, ProviderError};
 use crate::wrap::imported::ArgsRequest;
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use crate::iprovider::get_iprovider;
-use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
-
-#[derive(Debug)]
-pub struct PolywrapProvider {
-    pub(super) connection: Option<IProviderConnection>,
-    pub(super) iprovider: IProviderModule,
-}
 
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
@@ -36,6 +29,12 @@ impl From<ClientError> for ProviderError {
     }
 }
 
+#[derive(Debug)]
+pub struct PolywrapProvider {
+    pub(super) connection: Option<IProviderConnection>,
+    pub(super) iprovider: IProviderModule,
+}
+
 impl PolywrapProvider {
     pub fn new(connection: &Option<Connection>) -> Self {
         let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
@@ -48,30 +47,22 @@ impl PolywrapProvider {
         }
     }
 
-    pub fn connection(&self) -> Option<IProviderConnection> {
-        self.connection.clone()
-    }
-}
-
-impl Clone for PolywrapProvider {
-    fn clone(&self) -> Self {
-        Self {
-            connection: self.connection.clone(),
-            iprovider: self.iprovider.clone(),
-        }
-    }
-}
-
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl JsonRpcClient for PolywrapProvider {
-    type Error = ClientError;
-
-    async fn request<T: Serialize + Send + Sync, R: DeserializeOwned>(
+    pub fn request_sync<T: Serialize + Send + Sync, R: DeserializeOwned>(
         &self,
-        _method: &str,
-        _params: T,
-    ) -> Result<R, Self::Error> {
-        panic!("{} Not implemented. Use {} instead.", "PolywrapProvider.request", "PolywrapProvider.request_sync");
+        method: &str,
+        params: T,
+    ) -> Result<R, ProviderError> {
+        let params_s = serde_json::to_string(&params).unwrap();
+        let res = self.iprovider.request(&ArgsRequest {
+            method: method.to_string(),
+            params: Some(params_s),
+            connection: self.connection.clone(),
+        })
+            .map_err(|err| ClientError::Error(err))?;
+        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
+            err,
+            text: "from str failed".to_string(),
+        })?;
+        Ok(res)
     }
 }

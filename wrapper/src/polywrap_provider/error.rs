@@ -1,6 +1,3 @@
-use super::provider::PolywrapProvider;
-use super::signer::PolywrapSigner;
-use ethers_middleware::{signer::SignerMiddlewareError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -18,11 +15,6 @@ pub enum WrapperError {
     /// Error type from abi parsing
     #[error("Provider Error: {0:?}")]
     ProviderError(ethers_providers::ProviderError),
-    /// Error type from abi parsing
-    #[error("Middleware Error: {0:?}")]
-    MiddlewareError(
-        SignerMiddlewareError<ethers_providers::Provider<PolywrapProvider>, PolywrapSigner>,
-    ),
     /// Error type from abi parsing
     #[error("ContractError Error: {0:?}")]
     ContractError(String),
@@ -51,18 +43,6 @@ impl From<ethers_providers::ProviderError> for WrapperError {
     fn from(src: ethers_providers::ProviderError) -> Self {
         match src {
             _ => WrapperError::ProviderError(src),
-        }
-    }
-}
-
-impl From<SignerMiddlewareError<ethers_providers::Provider<PolywrapProvider>, PolywrapSigner>>
-    for WrapperError
-{
-    fn from(
-        src: SignerMiddlewareError<ethers_providers::Provider<PolywrapProvider>, PolywrapSigner>,
-    ) -> Self {
-        match src {
-            _ => WrapperError::MiddlewareError(src),
         }
     }
 }

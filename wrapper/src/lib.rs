@@ -2,9 +2,6 @@ use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
-use ethers_middleware::SignerMiddleware;
-use ethers_providers::{Middleware, Provider};
-use ethers_signers::Signer;
 
 mod wrap;
 use wrap::*;
@@ -19,12 +16,12 @@ use helpers::{format, mapping};
 use crate::polywrap_provider::sync_signer::SyncSigner;
 
 pub fn get_chain_id(args: wrap::ArgsGetChainId) -> String {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     provider.get_chainid_sync().unwrap().to_string()
 }
 
 pub fn get_balance(args: wrap::ArgsGetBalance) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
         Err(e) => panic!("Invalid address: {}. Error: {}", &args.address, e),
@@ -42,13 +39,13 @@ pub fn check_address(args: wrap::ArgsCheckAddress) -> bool {
 }
 
 pub fn get_gas_price(args: wrap::ArgsGetGasPrice) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let price = provider.get_gas_price_sync().unwrap();
     BigInt::from_str(&price.to_string()).unwrap()
 }
 
 pub fn estimate_eip1559_fees(args: wrap::ArgsEstimateEip1559Fees) -> wrap::Eip1559FeesEstimate {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let price = provider.estimate_eip1559_fees_sync(None).unwrap();
     wrap::Eip1559FeesEstimate {
         max_fee_per_gas: BigInt::from_str(&price.0.to_string()).unwrap(),
@@ -62,7 +59,7 @@ pub fn get_signer_address(args: wrap::ArgsGetSignerAddress) -> String {
 }
 
 pub fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let address = PolywrapSigner::new(&args.connection).address();
     let block_tag: BlockId = BlockNumber::Latest.into();
     let balance = provider.get_balance_sync(address, Some(block_tag)).unwrap();
@@ -70,7 +67,7 @@ pub fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> BigInt {
 }
 
 pub fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let address = PolywrapSigner::new(&args.connection).address();
     let block_tag: BlockId = BlockNumber::Latest.into();
     let count = provider.get_transaction_count_sync(address, Some(block_tag)).unwrap();
@@ -120,20 +117,20 @@ pub fn to_eth(input: ArgsToEth) -> String {
 }
 
 pub fn send_rpc(args: wrap::ArgsSendRpc) -> String {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let res: serde_json::Value = provider.request_sync(&args.method, args.params).unwrap();
     res.to_string()
 }
 
 pub fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let tx = mapping::from_wrap_request(args.tx);
     let gas = provider.estimate_gas_sync(&tx, None).unwrap();
     BigInt::from_str(&gas.to_string()).unwrap()
 }
 
 pub fn await_transaction(args: wrap::ArgsAwaitTransaction) -> wrap::TxReceipt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let tx_hash = H256::from_str(&args.tx_hash).unwrap();
     let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
@@ -141,35 +138,32 @@ pub fn await_transaction(args: wrap::ArgsAwaitTransaction) -> wrap::TxReceipt {
 }
 
 pub fn send_transaction(args: wrap::ArgsSendTransaction) -> wrap::TxResponse {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let mut tx = mapping::from_wrap_request(args.tx);
 
-    let tx_hash = api::send_transaction(&client, &mut tx);
-    let response = client.provider().get_transaction_sync(tx_hash).unwrap().unwrap();
-    let tx_response = mapping::to_wrap_response(client.provider(), response);
+    let tx_hash = api::send_transaction(&provider, &signer, &mut tx);
+    let response = provider.get_transaction_sync(tx_hash).unwrap().unwrap();
+    let tx_response = mapping::to_wrap_response(&provider, response);
     tx_response
 }
 
 pub fn send_transaction_and_wait(args: wrap::ArgsSendTransactionAndWait) -> wrap::TxReceipt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let mut tx = mapping::from_wrap_request(args.tx);
 
-    let tx_hash = api::send_transaction(&client, &mut tx);
-    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
+    let tx_hash = api::send_transaction(&provider, &signer, &mut tx);
+    let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }
 
 pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let abi: Abi = serde_json::from_str(&args.abi).unwrap();
     let bytecode = Bytes::from_str(&args.bytecode).unwrap();
@@ -178,14 +172,14 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
 
     let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 
-    let tx_hash = api::send_transaction(&client, &mut tx);
-    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
+    let tx_hash = api::send_transaction(&provider, &signer, &mut tx);
+    let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let address = receipt.contract_address.expect("Contract failed to deploy.");
     format!("{:#x}", address)
 }
 
 pub fn estimate_contract_call_gas(args: wrap::ArgsEstimateContractCallGas) -> BigInt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -199,7 +193,7 @@ pub fn estimate_contract_call_gas(args: wrap::ArgsEstimateContractCallGas) -> Bi
 }
 
 pub fn call_contract_view(args: wrap::ArgsCallContractView) -> String {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -212,9 +206,8 @@ pub fn call_contract_view(args: wrap::ArgsCallContractView) -> String {
 }
 
 pub fn call_contract_static(args: ArgsCallContractStatic) -> wrap::StaticTxResult {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -223,7 +216,7 @@ pub fn call_contract_static(args: ArgsCallContractStatic) -> wrap::StaticTxResul
     let params: Vec<String> = args.args.unwrap_or(vec![]);
     let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
-    let result = api::call_contract_static(&client, address, &args.method, &params, &tx_options);
+    let result = api::call_contract_static(&provider, &signer, address, &args.method, &params, &tx_options);
     match result {
         Ok(tokens) => wrap::StaticTxResult {
             result: format::format_tokens(&tokens),
@@ -237,9 +230,8 @@ pub fn call_contract_static(args: ArgsCallContractStatic) -> wrap::StaticTxResul
 }
 
 pub fn call_contract_method(args: wrap::ArgsCallContractMethod) -> wrap::TxResponse {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -248,19 +240,18 @@ pub fn call_contract_method(args: wrap::ArgsCallContractMethod) -> wrap::TxRespo
     let params: Vec<String> = args.args.unwrap_or(vec![]);
     let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
-    let tx_hash = api::call_contract_method(&client, address, &args.method, &params, &tx_options);
+    let tx_hash = api::call_contract_method(&provider, &signer, address, &args.method, &params, &tx_options);
 
-    let response = client.provider().get_transaction_sync(tx_hash).unwrap().unwrap();
-    let tx_response = mapping::to_wrap_response(client.provider(), response);
+    let response = provider.get_transaction_sync(tx_hash).unwrap().unwrap();
+    let tx_response = mapping::to_wrap_response(&provider, response);
     tx_response
 }
 
 pub fn call_contract_method_and_wait(
     args: wrap::ArgsCallContractMethodAndWait,
 ) -> wrap::TxReceipt {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let signer = PolywrapSigner::new(&args.connection);
-    let client = SignerMiddleware::new(provider, signer);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -269,14 +260,14 @@ pub fn call_contract_method_and_wait(
     let params: Vec<String> = args.args.unwrap_or(vec![]);
     let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
-    let tx_hash = api::call_contract_method(&client, address, &args.method, &params, &tx_options);
-    let receipt = client.provider().get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
+    let tx_hash = api::call_contract_method(&provider, &signer, address, &args.method, &params, &tx_options);
+    let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt);
     tx_receipt
 }
 
 pub fn resolve_ens_name(args: wrap::ArgsResolveEnsName) -> String {
-    let provider = Provider::new(PolywrapProvider::new(&args.connection));
+    let provider = PolywrapProvider::new(&args.connection);
     let ens_address = match Address::from_str(&args.ens_address) {
         Ok(addr) => addr,
         Err(e) => panic!("Invalid ENS address: {}. Error: {}", &args.ens_address, e),
