@@ -5,7 +5,6 @@ use async_trait::async_trait;
 use ethers_core::types::{transaction::{eip2718::TypedTransaction, eip712::Eip712}, Address, Signature};
 use ethers_signers::{to_eip155_v, Signer};
 use std::str::FromStr;
-use ethers_providers::{Middleware};
 use thiserror::Error;
 
 #[derive(Clone, Debug)]

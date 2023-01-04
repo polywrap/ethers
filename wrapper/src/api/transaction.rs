@@ -1,14 +1,13 @@
 use ethers_core::{
     abi::{Abi, Token, Function},
     types::{
-        transaction::eip2718::TypedTransaction, Address, Bytes, Signature,
-        Transaction, TransactionReceipt, TransactionRequest, H256, U256, Eip1559TransactionRequest,
+        transaction::eip2718::TypedTransaction, Address, Bytes,
+        TransactionRequest, H256, U256, Eip1559TransactionRequest,
     },
     utils::{serialize},
 };
 use ethers_middleware::SignerMiddleware;
 use ethers_providers::{Middleware, Provider};
-use ethers_signers::Signer;
 
 use crate::error::WrapperError;
 use crate::provider::{PolywrapProvider};
@@ -17,7 +16,6 @@ use crate::polywrap_provider::sync_provider::SyncProvider;
 use crate::mapping::EthersTxOptions;
 
 use crate::api::abi::{tokenize_values, encode_function};
-use crate::polywrap_provider::sync_signer::SyncSigner;
 use crate::polywrap_provider::sync_signer_middleware::SyncSignerMiddleware;
 
 pub fn send_transaction(client: &SignerMiddleware<Provider<PolywrapProvider>, PolywrapSigner>, tx: &mut TypedTransaction) -> H256 {

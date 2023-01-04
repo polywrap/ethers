@@ -1,16 +1,14 @@
 use std::fmt::Debug;
-use ethers_providers::{JsonRpcClient, ProviderError, Provider, Middleware};
+use ethers_providers::{ProviderError, Provider, Middleware, ens};
 
 use crate::wrap::imported::ArgsRequest;
-use crate::wrap::{IProviderModule, IProviderConnection, Connection};
-use crate::iprovider::get_iprovider;
-use async_trait::async_trait;
+use ethabi::ParamType;
 use ethers_core::types::transaction::eip2718::TypedTransaction;
-use ethers_core::types::{Address, Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Transaction, TransactionReceipt, TxHash, U256};
-use ethers_core::utils;
-use futures::executor::block_on;
+use ethers_core::types::{Address, Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Selector, Transaction, TransactionReceipt, TxHash, U256};
+use ethers_core::{abi, utils};
+use ethers_core::abi::Detokenize;
 use serde::{de::DeserializeOwned, Serialize};
-use thiserror::Error;
+use crate::api::decode_bytes;
 use crate::polywrap_provider::provider::{ClientError, PolywrapProvider};
 
 pub trait SyncProvider {
@@ -89,7 +87,23 @@ pub trait SyncProvider {
         block: Option<BlockId>,
     ) -> Result<Bytes, ProviderError>;
 
-    fn resolve_name_sync(&self, ens_name: &str) -> Result<Address, ProviderError>;
+    fn resolve_name_sync(&self, ens_name: &str, ens_address: Option<Address>) -> Result<Address, ProviderError>;
+
+    fn query_resolver_parameters_sync<T: Detokenize>(
+        &self,
+        param: ParamType,
+        ens_name: &str,
+        selector: Selector,
+        parameters: Option<&[u8]>,
+        ens_address: Option<Address>,
+    ) -> Result<T, ProviderError>;
+
+    fn validate_resolver_sync(
+        &self,
+        resolver_address: Address,
+        selector: Selector,
+        ens_name: &str,
+    ) -> Result<(), ProviderError>;
 }
 
 impl SyncProvider for Provider<PolywrapProvider> {
@@ -119,7 +133,7 @@ impl SyncProvider for Provider<PolywrapProvider> {
         block: Option<BlockId>,
     ) -> Result<U256, ProviderError> {
         let from = match from.into() {
-            NameOrAddress::Name(ens_name) => block_on(async { self.resolve_name(&ens_name).await })?,
+            NameOrAddress::Name(ens_name) => self.resolve_name_sync(&ens_name, None)?,
             NameOrAddress::Address(addr) => addr,
         };
 
@@ -281,7 +295,7 @@ impl SyncProvider for Provider<PolywrapProvider> {
 
         // set the ENS name
         if let Some(NameOrAddress::Name(ref ens_name)) = tx.to() {
-            let addr = block_on(async { self.resolve_name(&ens_name).await })?;
+            let addr = self.resolve_name_sync(&ens_name, None)?;
             tx.set_to(addr);
         }
 
@@ -311,7 +325,7 @@ impl SyncProvider for Provider<PolywrapProvider> {
         block: Option<BlockId>,
     ) -> Result<U256, ProviderError> {
         let from = match from.into() {
-            NameOrAddress::Name(ens_name) => block_on(async { self.resolve_name(&ens_name).await })?,
+            NameOrAddress::Name(ens_name) => self.resolve_name_sync(&ens_name, None)?,
             NameOrAddress::Address(addr) => addr,
         };
 
@@ -357,7 +371,76 @@ impl SyncProvider for Provider<PolywrapProvider> {
     ///
     /// If the bytes returned from the ENS registrar/resolver cannot be interpreted as
     /// an address. This should theoretically never happen.
-    fn resolve_name_sync(&self, ens_name: &str) -> Result<Address, ProviderError> {
-        block_on(async { self.resolve_name(ens_name).await })
+    fn resolve_name_sync(&self, ens_name: &str, ens_address: Option<Address>) -> Result<Address, ProviderError> {
+        self.query_resolver_parameters_sync(ParamType::Address, ens_name, ens::ADDR_SELECTOR, None, ens_address)
+    }
+
+    fn query_resolver_parameters_sync<T: Detokenize>(
+        &self,
+        param: ParamType,
+        ens_name: &str,
+        selector: Selector,
+        parameters: Option<&[u8]>,
+        ens_address: Option<Address>,
+    ) -> Result<T, ProviderError> {
+        // Get the ENS address, prioritize the local override variable
+        let ens_addr = ens_address.unwrap_or(ens::ENS_ADDRESS);
+
+        // first get the resolver responsible for this name
+        // the call will return a Bytes array which we convert to an address
+        let data = self.call_sync(&ens::get_resolver(ens_addr, ens_name).into(), None)?;
+
+        // otherwise, decode_bytes panics
+        if data.0.is_empty() {
+            return Err(ProviderError::EnsError(ens_name.to_string()))
+        }
+
+        let resolver_address: Address = decode_bytes(ParamType::Address, data);
+        if resolver_address == Address::zero() {
+            return Err(ProviderError::EnsError(ens_name.to_string()))
+        }
+
+        if let ParamType::Address = param {
+            // Reverse resolver reverts when calling `supportsInterface(bytes4)`
+            self.validate_resolver_sync(resolver_address, selector, ens_name)?;
+        }
+
+        // resolve
+        let data = self.call_sync(&ens::resolve(resolver_address, selector, ens_name, parameters).into(), None)?;
+
+        Ok(decode_bytes(param, data))
+    }
+
+    /// Validates that the resolver supports `selector`.
+    fn validate_resolver_sync(
+        &self,
+        resolver_address: Address,
+        selector: Selector,
+        ens_name: &str,
+    ) -> Result<(), ProviderError> {
+        let data =
+            self.call_sync(&ens::supports_interface(resolver_address, selector).into(), None)?;
+
+        if data.is_empty() {
+            return Err(ProviderError::EnsError(format!(
+                "`{}` resolver ({:?}) is invalid.",
+                ens_name, resolver_address
+            )))
+        }
+
+        let supports_selector = abi::decode(&[ParamType::Bool], data.as_ref())
+            .map(|token| token[0].clone().into_bool().unwrap_or_default())
+            .unwrap_or_default();
+
+        if !supports_selector {
+            return Err(ProviderError::EnsError(format!(
+                "`{}` resolver ({:?}) does not support selector {}.",
+                ens_name,
+                resolver_address,
+                hex::encode(selector)
+            )))
+        }
+
+        Ok(())
     }
 }

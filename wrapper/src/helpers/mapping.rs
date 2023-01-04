@@ -4,7 +4,7 @@ use ethers_core::types::{
     transaction::eip2718::TypedTransaction, Bytes, Log, NameOrAddress, Address, Transaction,
     TransactionReceipt, TransactionRequest, H160, H256, U64, U256, Eip1559TransactionRequest
 };
-use ethers_providers::{Middleware, Provider};
+use ethers_providers::{Provider};
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_core::types::transaction::eip2930::{AccessList, AccessListItem};

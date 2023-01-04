@@ -1,8 +1,4 @@
-use ethers_core::{
-    abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function},
-    types::{Bytes}
-};
-use ethers_core::abi::Abi;
+use ethers_core::{abi::{Param, ParamType, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function, Abi, Detokenize}, abi, types::{Bytes}};
 use crate::polywrap_provider::error::WrapperError;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
@@ -48,6 +44,17 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
         .zip(values.iter())
         .map(|(param, arg)| LenientTokenizer::tokenize(&param.kind, arg).unwrap())
         .collect()
+}
+
+/// infallible conversion of Bytes to Address/String
+///
+/// # Panics
+///
+/// If the provided bytes were not an interpretation of an address
+pub fn decode_bytes<T: Detokenize>(param: ParamType, bytes: Bytes) -> T {
+    let tokens = abi::decode(&[param], bytes.as_ref())
+        .expect("could not abi-decode bytes to address tokens");
+    T::from_tokens(tokens).expect("could not parse tokens as address")
 }
 
 fn parse_method(method: &str) -> Result<Function, WrapperError> {

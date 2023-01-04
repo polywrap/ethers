@@ -1,13 +1,10 @@
 use std::fmt::Debug;
-use ethers_providers::{JsonRpcClient, ProviderError, Provider, Middleware};
+use ethers_providers::{JsonRpcClient, ProviderError};
 
 use crate::wrap::imported::ArgsRequest;
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use crate::iprovider::get_iprovider;
 use async_trait::async_trait;
-use ethers_core::types::transaction::eip2718::TypedTransaction;
-use ethers_core::types::{Block, BlockId, BlockNumber, FeeHistory, NameOrAddress, TxHash, U256};
-use ethers_core::utils;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
 

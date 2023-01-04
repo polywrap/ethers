@@ -1,5 +1,5 @@
 use crate::polywrap_provider::signer::{PolywrapSigner, SignerError};
-use ethers_core::types::{transaction::{eip2718::TypedTransaction, eip712::Eip712}, Address, Signature};
+use ethers_core::types::{transaction::{eip2718::TypedTransaction}, Signature};
 use ethers_signers::{to_eip155_v, Signer};
 
 pub trait SyncSigner {

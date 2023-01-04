@@ -1,10 +1,7 @@
 use ethers_core::{
-    types::{Address, BlockId, U256},
+    types::{U256},
     utils::{format_ether, parse_ether},
 };
-use ethers_providers::{Middleware, Provider};
-use crate::polywrap_provider::sync_provider::SyncProvider;
-use crate::provider::{PolywrapProvider};
 
 pub fn to_wei(eth: String) -> U256 {
     match parse_ether(eth) {
