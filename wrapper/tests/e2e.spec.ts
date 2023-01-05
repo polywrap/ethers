@@ -216,6 +216,7 @@ describe("Ethereum Wrapper", () => {
       if (!response.ok) throw response.error;
       expect(response.value).toBeDefined();
       expect(response.value?.startsWith("0x")).toBe(true);
+      expect(response.value?.length).toBe(42);
     });
 
     it("getSignerBalance", async () => {
