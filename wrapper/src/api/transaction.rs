@@ -168,14 +168,6 @@ fn fill_transaction_sync(
         }
     }
 
-    let nonce = if tx.nonce().is_some() {
-        tx.nonce().cloned().unwrap()
-    } else {
-        provider
-            .get_transaction_count_sync(from, block)?
-    };
-    tx.set_nonce(nonce);
-
     provider
         .fill_transaction_sync(tx, block)?;
     Ok(())
