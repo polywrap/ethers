@@ -5,5 +5,5 @@ project:
 source:
   schema: ../../src/schema.graphql
   import_abis:
-  - uri: wrap://ens/iprovider.polywrap.eth
+  - uri: wrap://ens/wrappers.polywrap.eth:ethereum-provider@1.0.0
     abi: ../../../provider/interface/src/schema.graphql

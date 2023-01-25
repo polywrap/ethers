@@ -1,10 +1,6 @@
 import { PolywrapClient } from "@polywrap/client-js";
 import { ensResolverPlugin } from "@polywrap/ens-resolver-plugin-js";
-import {
-  buildWrapper,
-  ensAddresses,
-  providers,
-} from "@polywrap/test-env-js";
+import {ensAddresses, providers} from "@polywrap/test-env-js";
 import * as path from 'path'
 
 import { ethers, Wallet } from "ethers";
@@ -46,7 +42,6 @@ jest.setTimeout(360000);
 describe("Ethereum Wrapper", () => {
   let client: PolywrapClient;
   let ensAddress: string;
-  // let resolverAddress: string;
   let registrarAddress: string;
   let viewMethodsAddress: string;
   const signer = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
@@ -59,18 +54,9 @@ describe("Ethereum Wrapper", () => {
     await initInfra();
 
     ensAddress = ensAddresses.ensAddress.toLowerCase();
-    // resolverAddress = ensAddresses.resolverAddress;
     registrarAddress = ensAddresses.registrarAddress.toLowerCase();
 
-    const interfacePath = path.join(__dirname, "..", "..", "provider", "interface");
-    await buildWrapper(interfacePath);
-    const interfaceFsUri = `wrap://fs/${path.resolve(interfacePath)}/build`;
-
     client = new PolywrapClient({
-      redirects: [{
-        from: "wrap://ens/iprovider.polywrap.eth",
-        to: interfaceFsUri,
-      }],
       packages: [
         {
           uri: "wrap://ens/ens-resolver.polywrap.eth",
@@ -99,7 +85,7 @@ describe("Ethereum Wrapper", () => {
       ],
       interfaces: [
         {
-          interface: "wrap://ens/iprovider.polywrap.eth",
+          interface: "wrap://ens/wrappers.polywrap.eth:ethereum-provider@1.0.0",
           implementations: ["wrap://plugin/ethereum-provider"]
         }
       ]
@@ -113,8 +99,8 @@ describe("Ethereum Wrapper", () => {
         bytecode: contracts.ViewMethods.bytecode,
         options: {
           maxPriorityFeePerGas: "40000000",
-          maxFeePerGas: "400000000",
-        }
+          maxFeePerGas: "4000000000",
+        },
       }
     });
 
@@ -567,7 +553,7 @@ describe("Ethereum Wrapper", () => {
           method: "function register(bytes32 label, address owner)",
           args: [label, signer],
           options: {
-            maxFeePerGas: "400000000",
+            maxFeePerGas: "4000000000",
             gasLimit: "1",
           },
         },
@@ -589,7 +575,7 @@ describe("Ethereum Wrapper", () => {
           args: [label, signer],
           options: {
             maxPriorityFeePerGas: "40000000",
-            maxFeePerGas: "400000000",
+            maxFeePerGas: "4000000000",
             gasLimit: "200000"
           },
         },
@@ -609,7 +595,7 @@ describe("Ethereum Wrapper", () => {
           method: "function register(bytes32 label, address owner)",
           args: [label, signer],
           options: {
-            gasPrice: "400000000",
+            gasPrice: "4000000000",
             gasLimit: "200000"
           },
         }

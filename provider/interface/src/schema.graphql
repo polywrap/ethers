@@ -24,5 +24,8 @@ type Module {
   """
   address(connection: Connection): String!
 
+  """
+  Get the chain id of the signer's connection. Throws if signer is missing.
+  """
   chainId(connection: Connection): String!
 }
