@@ -16,6 +16,8 @@ type Module {
 
   """
   Sign a serialized unsigned transaction and return the signature. Throws if signer is missing.
+  This method requires a wallet-based signer with a private key, and is not needed for most use cases.
+  Typically, transactions are sent by `request` and signed by the wallet.
   """
   signTransaction(rlp: Bytes!, connection: Connection): String!
 
