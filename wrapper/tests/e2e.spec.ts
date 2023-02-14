@@ -85,7 +85,7 @@ describe("Ethereum Wrapper", () => {
       ],
       interfaces: [
         {
-          interface: "wrap://ens/wrappers.polywrap.eth:ethereum-provider@1.0.0",
+          interface: "wrap://ens/wraps.eth:ethereum-provider@1.0.0",
           implementations: ["wrap://plugin/ethereum-provider"]
         }
       ]

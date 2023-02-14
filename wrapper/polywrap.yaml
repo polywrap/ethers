@@ -6,7 +6,7 @@ source:
   module: ./Cargo.toml
   schema: ./src/schema.graphql
   import_abis:
-    - uri: wrap://ens/wrappers.polywrap.eth:ethereum-provider@1.0.0
+    - uri: wrap://ens/wraps.eth:ethereum-provider@1.0.0
       abi: ../provider/interface/src/schema.graphql
 extensions:
   build: ./polywrap.build.yaml
