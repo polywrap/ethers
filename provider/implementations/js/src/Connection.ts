@@ -3,10 +3,10 @@ import {
   ExternalProvider,
   JsonRpcProvider,
   Web3Provider,
-  Networkish,
   WebSocketProvider,
 } from "@ethersproject/providers";
 import { getAddress } from "@ethersproject/address";
+import {KnownNetwork, KnownNetworkId} from "./networks";
 
 export type Address = string;
 export type AccountIndex = number;
@@ -31,21 +31,10 @@ export class Connection {
     this.setProvider(provider, signer);
   }
 
-  static fromNetwork(networkish: Networkish): Connection {
-    if (typeof networkish === "string") {
-      networkish = networkish.toLowerCase();
-    }
-
-    const provider = (ethers.providers.getDefaultProvider(
-      ethers.providers.getNetwork(networkish),
-      {
-        infura: "1ef7451bee5e458eb26738e521ad3074",
-      }
-    ) as unknown) as JsonRpcProvider;
-
-    return new Connection({
-      provider,
-    });
+  static fromNetwork(networkish: KnownNetwork): Connection {
+    const network: string = typeof networkish === "number" ? KnownNetworkId[networkish] : networkish;
+    const provider = `https://${network}.infura.io/v3/1ef7451bee5e458eb26738e521ad3074`;
+    return new Connection({ provider });
   }
 
   static fromNode(node: string): Connection {

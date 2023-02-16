@@ -2,6 +2,7 @@ import { Connection, EthereumProvider } from "./Connection";
 import { IProvider_Connection as SchemaConnection } from "./wrap";
 
 import { getNetwork } from "@ethersproject/providers";
+import {KnownNetwork, KnownNetworkId} from "./networks";
 
 type Networks = {
   [network: string]: Connection;
@@ -27,13 +28,6 @@ export class Connections {
       this.setDefaultNetwork("mainnet");
     } else {
       this.setDefaultNetwork("mainnet", Connection.fromNetwork("mainnet"));
-    }
-
-    if (!this._connections["goerli"]) {
-      this.set(
-        "goerli",
-        "https://goerli.infura.io/v3/1ef7451bee5e458eb26738e521ad3074"
-      );
     }
   }
 
@@ -94,7 +88,7 @@ export class Connections {
     }
 
     const { networkNameOrChainId, node } = connection;
-    let result: Connection;
+    let result: Connection | undefined;
 
     // If a custom network is provided, either get an already
     // established connection, or a create a new one
@@ -107,12 +101,12 @@ export class Connections {
 
         if (!isNaN(chainId)) {
           result = Connection.fromNetwork(chainId);
+        } else if (networkStr in KnownNetworkId) {
+          result = Connection.fromNetwork(networkStr as KnownNetwork);
         } else {
-          result = Connection.fromNetwork(networkStr);
+          result = this.get(this._defaultNetwork) as Connection;
         }
       }
-    } else {
-      result = this.get(this._defaultNetwork) as Connection;
     }
 
     // If a custom node endpoint is provided, create a combined
@@ -136,6 +130,6 @@ export class Connections {
       result = nodeConnection;
     }
 
-    return result;
+    return result ?? (this.get(this._defaultNetwork) as Connection);
   }
 }
