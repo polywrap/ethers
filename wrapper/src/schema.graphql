@@ -1,4 +1,4 @@
-#import { Module } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.0.0"
+#import { Module } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.1.0"
 #use { getImplementations } for IProvider
 
 type Connection {
@@ -211,6 +211,8 @@ type Module {
 
   awaitTransaction(
     txHash: String!
+    confirmations: UInt32!
+    timeout: UInt32
     connection: Connection
   ): TxReceipt!
 
@@ -263,6 +265,14 @@ type Module {
 
   signMessageBytes(
     bytes: Bytes!
+    connection: Connection
+  ): String!
+
+  """
+  Sign a transaction and return the signature. Requires wallet signer (i.e. signer with private key)
+  """
+  signTransaction(
+    tx: TxRequest!
     connection: Connection
   ): String!
 

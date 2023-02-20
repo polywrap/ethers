@@ -85,7 +85,7 @@ describe("Ethereum Wrapper", () => {
       ],
       interfaces: [
         {
-          interface: "wrap://ens/wraps.eth:ethereum-provider@1.0.0",
+          interface: "wrap://ens/wraps.eth:ethereum-provider@1.1.0",
           implementations: ["wrap://plugin/ethereum-provider"]
         }
       ]
@@ -393,18 +393,31 @@ describe("Ethereum Wrapper", () => {
       expect(response.value.hash).toBeTruthy();
       const txHash = response.value.hash as string;
 
+      // make ganache mine a block
+      const label = "0x" + keccak256("testwhatever");
+      await client.invoke({
+        uri,
+        method: "callContractMethod",
+        args: {
+          address: registrarAddress,
+          method: "function register(bytes32 label, address owner)",
+          args: [label, signer],
+        },
+      });
+
       const awaitResponse = await client.invoke<Schema.TxReceipt>({
         uri,
         method: "awaitTransaction",
         args: {
           txHash: txHash,
-          // timeout: 60000,
+          confirmations: 2,
         },
       });
 
       if (!awaitResponse.ok) throw awaitResponse.error;
       expect(awaitResponse.value).toBeDefined();
       expect(awaitResponse.value.transactionHash).toBeDefined();
+      expect(awaitResponse.value.confirmations).toEqual(2);
     });
 
     it("sendTransaction", async () => {

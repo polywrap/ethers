@@ -2933,10 +2933,10 @@ eth-ens-namehash@2.0.8:
     idna-uts46-hx "^2.3.1"
     js-sha3 "^0.5.7"
 
-ethereum-provider-js@0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/ethereum-provider-js/-/ethereum-provider-js-0.1.4.tgz#c372a011005dfd854dab97f7b8774d542917b2ec"
-  integrity sha512-TxABRi+Dp+ZBTHdLj5btGc7xwWNBTxJrRxp+0fK5ovUBfgnuCyMQuUOT48JNJybhALqiU9iZUPN1g0/MXhnQEg==
+ethereum-provider-js@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/ethereum-provider-js/-/ethereum-provider-js-0.2.0.tgz#f8511dcbaa8e1d51e65c496cf31a1883b25c0058"
+  integrity sha512-cPsf0y+JIQAWVqqnbLQVXsNhNg67esBJk1OGPk5t+vMb0JcZnZy0+fdpfXglj59KyopaygsTWBbus4diqNGdiQ==
   dependencies:
     "@ethersproject/address" "5.7.0"
     "@ethersproject/providers" "5.7.0"

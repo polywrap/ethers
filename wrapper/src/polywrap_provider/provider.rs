@@ -1,11 +1,13 @@
 use std::fmt::Debug;
 use ethers_providers::{ProviderError};
 
-use crate::wrap::imported::ArgsRequest;
+use crate::wrap::imported::{ArgsRequest, ArgsWaitForTransaction};
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use crate::iprovider::get_iprovider;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
+
+use ethers_core::types::{TxHash};
 
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
@@ -63,6 +65,24 @@ impl PolywrapProvider {
             err,
             text: "from str failed".to_string(),
         })?;
+        Ok(res)
+    }
+
+    pub fn await_transaction_sync<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+        confirmations: u32,
+        timeout: Option<u32>,
+    ) -> Result<bool, ProviderError> {
+        let hash = transaction_hash.into();
+
+        let res = self.iprovider.wait_for_transaction(&ArgsWaitForTransaction {
+            tx_hash: format!("{:#x}", hash),
+            confirmations,
+            timeout,
+            connection: self.connection.clone(),
+        })
+            .map_err(|err| ClientError::Error(err))?;
         Ok(res)
     }
 }

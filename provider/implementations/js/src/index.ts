@@ -7,6 +7,7 @@ import {
   IProvider_Module_Args_signTransaction as Args_signTransaction,
   IProvider_Module_Args_address as Args_address,
   IProvider_Module_Args_chainId as Args_chainId,
+  IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
   IProvider_Connection as SchemaConnection
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
@@ -36,6 +37,22 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const params = JSON.parse(args?.params ?? "[]");
     const req = await connection.getProvider().send(args.method, params);
     return JSON.stringify(req);
+  }
+
+  async waitForTransaction(
+    args: Args_waitForTransaction,
+    _client: CoreClient
+  ): Promise<boolean> {
+    const connection = await this._getConnection(args.connection);
+    const provider = connection.getProvider();
+
+    await provider.waitForTransaction(
+      args.txHash,
+      args.confirmations,
+      args.timeout ?? undefined
+    );
+
+    return true;
   }
 
   public async signMessage(
