@@ -67,7 +67,7 @@ describe("Ethereum Wrapper", () => {
           }),
         },
         {
-          uri: "wrap://plugin/ethereum-provider",
+          uri: "wrap://package/ethereum-provider",
           package: ethereumProviderPlugin({
             connections: new Connections({
               networks: {
@@ -86,7 +86,7 @@ describe("Ethereum Wrapper", () => {
       interfaces: [
         {
           interface: "wrap://ens/wraps.eth:ethereum-provider@1.1.0",
-          implementations: ["wrap://plugin/ethereum-provider"]
+          implementations: ["wrap://package/ethereum-provider"]
         }
       ]
     });
@@ -377,25 +377,8 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("awaitTransaction", async () => {
-      const data = contracts.SimpleStorage.bytecode;
-
-      const response = await client.invoke<Schema.TxResponse>({
-        uri,
-        method: "sendTransaction",
-        args: {
-          tx: {
-            data: data,
-          },
-        },
-      });
-
-      if (!response.ok) throw response.error;
-      expect(response.value.hash).toBeTruthy();
-      const txHash = response.value.hash as string;
-
-      // make ganache mine a block
       const label = "0x" + keccak256("testwhatever");
-      await client.invoke({
+      const response = await client.invoke<Schema.TxResponse>({
         uri,
         method: "callContractMethod",
         args: {
@@ -405,19 +388,32 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      const awaitResponse = await client.invoke<Schema.TxReceipt>({
+      if (!response.ok) throw response.error;
+      expect(response.value.hash).toBeTruthy();
+      const txHash = response.value.hash as string;
+
+      const confirmations = 4;
+
+      const awaitResponsePromise = client.invoke<Schema.TxReceipt>({
         uri,
         method: "awaitTransaction",
-        args: {
-          txHash: txHash,
-          confirmations: 2,
-        },
+        args: { txHash, confirmations },
       });
+
+      for (let i = 0; i < confirmations; i++) {
+        await client.invoke({
+          uri: "wrap://package/ethereum-provider",
+          method: "request",
+          args: { method: "evm_mine" }
+        });
+      }
+
+      const awaitResponse = await awaitResponsePromise;
 
       if (!awaitResponse.ok) throw awaitResponse.error;
       expect(awaitResponse.value).toBeDefined();
       expect(awaitResponse.value.transactionHash).toBeDefined();
-      expect(awaitResponse.value.confirmations).toEqual(2);
+      expect(awaitResponse.value.confirmations).toEqual(4);
     });
 
     it("sendTransaction", async () => {

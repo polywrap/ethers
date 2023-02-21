@@ -183,6 +183,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
     let mut tx = api::create_deploy_contract_transaction(&abi, bytecode, &params, &tx_options).unwrap();
 
     let tx_hash = api::send_transaction(&provider, &signer, &mut tx);
+    provider.await_transaction_sync(tx_hash.clone(), 1, None).unwrap();
     let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let address = receipt.contract_address.expect("Contract failed to deploy.");
     format!("{:#x}", address)

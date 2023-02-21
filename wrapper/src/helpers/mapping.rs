@@ -113,13 +113,13 @@ pub fn from_wrap_request(request: TxRequest) -> TypedTransaction {
 fn to_wrap_log(log: &Log) -> TxLog {
     TxLog {
         block_number: BigInt::from_str(&log.block_number.unwrap().to_string()).unwrap(),
-        block_hash: log.block_hash.unwrap().to_string(),
+        block_hash: format!("{:#x}", log.block_hash.unwrap()),
         transaction_index: log.transaction_index.unwrap().as_u32(),
         removed: log.removed.unwrap(),
-        address: format!("{:?}", log.address),
+        address: format!("{:#x}", log.address),
         data: format!("{:?}", log.data),
-        topics: log.topics.iter().map(|v| v.to_string()).collect(),
-        transaction_hash: log.transaction_hash.unwrap().to_string(),
+        topics: log.topics.iter().map(|v| format!("{:#x}", v)).collect(),
+        transaction_hash: format!("{:#x}", log.transaction_hash.unwrap()),
         log_index: log.log_index.unwrap().as_u32(),
     }
 }
@@ -127,22 +127,22 @@ fn to_wrap_log(log: &Log) -> TxLog {
 pub fn to_wrap_receipt(receipt: TransactionReceipt, confirmations: u32) -> TxReceipt {
     TxReceipt {
         to: match receipt.to {
-            Some(addr) => addr.to_string(),
+            Some(addr) => format!("{:#x}", addr),
             None => "".to_owned(),
         },
-        from: receipt.from.to_string(),
+        from: format!("{:#x}", receipt.from),
         contract_address: match receipt.contract_address {
-            Some(addr) => addr.to_string(),
+            Some(addr) => format!("{:#x}", addr),
             None => "".to_owned(),
         },
         transaction_index: receipt.transaction_index.as_u32(),
-        root: receipt.root.map(|v| v.to_string()),
+        root: receipt.root.map(|v| format!("{:#x}", v)),
         gas_used: BigInt::from_str(&receipt.gas_used.unwrap().to_string()).unwrap(),
-        logs_bloom: format!("{}", receipt.logs_bloom),
-        transaction_hash: receipt.transaction_hash.to_string(),
-        logs: receipt.logs.iter().map(|v| to_wrap_log(v)).collect(),
+        logs_bloom: format!("{:#x}", receipt.logs_bloom),
+        transaction_hash: format!("{:#x}", receipt.transaction_hash),
+        logs: receipt.logs.iter().map(to_wrap_log).collect(),
         block_number: BigInt::from_str(&receipt.block_number.unwrap().to_string()).unwrap(),
-        block_hash: receipt.block_hash.unwrap().to_string(),
+        block_hash: format!("{:#x}", receipt.block_hash.unwrap()),
         confirmations,
         cumulative_gas_used: BigInt::from_str(&receipt.cumulative_gas_used.to_string()).unwrap(),
         effective_gas_price: BigInt::from_str(&match receipt.effective_gas_price {
@@ -189,9 +189,9 @@ pub fn to_wrap_response(
             .collect()
     });
     TxResponse {
-        hash: format!("{:?}", response.hash),
-        to: response.to.map(|v| format!("{:?}", v)),
-        from: format!("{:?}", response.from),
+        hash: format!("{:#x}", response.hash),
+        to: response.to.map(|v| format!("{:#x}", v)),
+        from: format!("{:#x}", response.from),
         nonce: response.nonce.as_u32(),
         gas_limit: BigInt::from_str(&response.gas.to_string()).unwrap(),
         max_fee_per_gas,
@@ -202,7 +202,7 @@ pub fn to_wrap_response(
         block_number: response
             .block_number
             .map(|n| BigInt::from_str(&n.to_string()).unwrap()),
-        block_hash: response.block_hash.map(|v| format!("{:?}", v)),
+        block_hash: response.block_hash.map(|v| format!("{:#x}", v)),
         timestamp: block.map(|v| v.timestamp.as_u32()),
         r: Some(response.v.to_string()),
         s: Some(response.v.to_string()),
