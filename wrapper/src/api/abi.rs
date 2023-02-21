@@ -61,7 +61,7 @@ fn parse_method(method: &str) -> Result<Function, WrapperError> {
             json_parse = serde_json::from_str(&method);
         }
         let abi: Abi = json_parse.map_err(|e| {
-            WrapperError::SerdeError(format!("{:?}", e))
+            WrapperError::SerdeError(format!("Failed to parse ABI. {:?}", e))
         })?;
         let (_, functions): (&String, &Vec<Function>) = abi.functions.iter().next().unwrap();
         let function: Function = functions.get(0).unwrap().clone();
