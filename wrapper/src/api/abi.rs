@@ -1,4 +1,6 @@
-use ethers_core::{abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function, Abi}, types::{Bytes}};
+use ethers_core::{abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function, Abi, ParamType, Address}, types::{Bytes}};
+use polywrap_wasm_rs::{wrap_debug_log};
+use serde_json::Value;
 use crate::polywrap_provider::error::WrapperError;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
@@ -17,7 +19,9 @@ pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
 pub fn encode_function(method: &str, args: &Vec<String>) -> Result<(Function, Bytes), WrapperError> {
     let function: Function = parse_method(method)?;
     let tokens: Vec<Token> = tokenize_values(&args, &function.inputs);
+    wrap_debug_log("before getting bytes");
     let bytes: Bytes = function.encode_input(&tokens).map(Into::into)?;
+    wrap_debug_log("after getting bytes");
     Ok((function, bytes))
 }
 
@@ -42,7 +46,14 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
     params
         .iter()
         .zip(values.iter())
-        .map(|(param, arg)| LenientTokenizer::tokenize(&param.kind, arg).unwrap())
+        .map(|(param, arg)| {
+            if let ParamType::Array(addresses) = &param.kind {
+                if let ParamType::Address = addresses.as_ref() {
+                    return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap()
+                };
+            }
+            LenientTokenizer::tokenize(&param.kind, arg).unwrap()
+        })
         .collect()
 }
 
@@ -50,14 +61,18 @@ fn parse_method(method: &str) -> Result<Function, WrapperError> {
     let parse_result = HumanReadableParser::parse_function(method).map_err(|e| {
         WrapperError::LexerError(format!("{:?}", e))
     });
+    wrap_debug_log("parsing method!!");
+    wrap_debug_log(method);
     if parse_result.is_ok() {
         parse_result
     } else {
         let json_parse: Result<Abi, serde_json::Error>;
         if !(method.starts_with("[") && method.ends_with("]")) {
             let abi_str = format!("[{}]", method);
+            wrap_debug_log(&abi_str);
             json_parse = serde_json::from_str(&abi_str);
         } else {
+            wrap_debug_log(&method);
             json_parse = serde_json::from_str(&method);
         }
         let abi: Abi = json_parse.map_err(|e| {

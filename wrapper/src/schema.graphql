@@ -273,6 +273,14 @@ type Module {
     connection: Connection
   ): String!
 
+  solidityKeccak256Bytes(bytes: String!): Bytes!
+
+  generateCreate2Address(
+    address: String!
+    salt: String!
+    initCode: String!
+  ): String!
+
 # TODO: implement the following methods
 
 #    signTypedData(
