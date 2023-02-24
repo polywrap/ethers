@@ -273,7 +273,7 @@ type Module {
     connection: Connection
   ): String!
 
-  solidityKeccak256Bytes(bytes: String!): Bytes!
+  solidityKeccak256Bytes(bytes: String!): String!
 
   generateCreate2Address(
     address: String!

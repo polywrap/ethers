@@ -280,9 +280,12 @@ pub fn call_contract_method_and_wait(
     tx_receipt
 }
 
-pub fn solidity_keccak256_bytes(args: wrap::ArgsSolidityKeccak256Bytes) -> Vec<u8> {
+pub fn solidity_keccak256_bytes(args: wrap::ArgsSolidityKeccak256Bytes) -> String {
     let value = Token::Bytes(args.bytes.as_bytes().to_vec());
-    keccak256(encode(&[value])).into()
+    let hash = hex::encode(keccak256(encode(&[value])));
+    wrap_debug_log(&hash);
+
+    hash
 }
 
 pub fn generate_create2_address(
@@ -291,9 +294,17 @@ pub fn generate_create2_address(
     let address: Address = args.address.parse().unwrap();
     let salt = solidity_keccak256_bytes(wrap::module::serialization::ArgsSolidityKeccak256Bytes { bytes: args.salt });
     let init_code = solidity_keccak256_bytes(wrap::module::serialization::ArgsSolidityKeccak256Bytes { bytes: args.init_code });
-    get_create2_address(
+    let generated_address = get_create2_address(
         address,
-        salt,
-        init_code
-    ).to_string()
+        salt.as_bytes().to_vec(),
+        init_code.as_bytes().to_vec(),
+    );
+    // wrap_debug_log("generated address as address!!");
+    // wrap_debug_log(String::from_utf8(generated_address.as_bytes().to_vec()).unwrap().as_str());
+
+
+    let generated_address_as_string = generated_address.to_string();
+    wrap_debug_log("generated address as string!!");
+    wrap_debug_log(&generated_address_as_string);
+    generated_address_as_string
 }
