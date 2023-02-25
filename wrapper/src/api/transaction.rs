@@ -8,6 +8,7 @@ use ethers_core::{
 };
 use ethers_core::types::{BlockId, Chain};
 use ethers_providers::ProviderError;
+// use polywrap_wasm_rs::wrap_debug_log;
 
 use crate::error::WrapperError;
 use crate::provider::{PolywrapProvider};
@@ -105,8 +106,13 @@ pub fn call_contract_method(
     args: &Vec<String>,
     options: &EthersTxOptions,
 ) -> H256 {
-    let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
-    let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
+    let (_, encode_data): (Function, Bytes) = encode_function(method, args).unwrap();
+
+    let mut tx: TypedTransaction = create_transaction(
+        Some(address),
+        Bytes::from(encode_data),
+        options
+    );
     let tx_hash: H256 = send_transaction(provider, signer, &mut tx);
     tx_hash
 }

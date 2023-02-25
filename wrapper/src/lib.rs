@@ -1,7 +1,6 @@
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function, Token, encode};
 use ethers_core::utils::{keccak256, get_create2_address};
-use polywrap_wasm_rs::{BigInt, wrap_debug_log};
 use std::str::FromStr;
 
 mod wrap;
@@ -104,7 +103,6 @@ pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
 
 pub fn encode_function(input: wrap::ArgsEncodeFunction) -> String {
     let args: Vec<String> = input.args.unwrap_or(vec![]);
-    wrap_debug_log(args.concat().as_str());
     let (_, bytes): (Function, Bytes) = api::encode_function(&input.method, &args).unwrap();
     format!("{}", bytes).to_string()
 }
@@ -283,7 +281,6 @@ pub fn call_contract_method_and_wait(
 pub fn solidity_keccak256_bytes(args: wrap::ArgsSolidityKeccak256Bytes) -> String {
     let value = Token::Bytes(args.bytes.as_bytes().to_vec());
     let hash = hex::encode(keccak256(encode(&[value])));
-    wrap_debug_log(&hash);
 
     hash
 }
@@ -299,12 +296,6 @@ pub fn generate_create2_address(
         salt.as_bytes().to_vec(),
         init_code.as_bytes().to_vec(),
     );
-    // wrap_debug_log("generated address as address!!");
-    // wrap_debug_log(String::from_utf8(generated_address.as_bytes().to_vec()).unwrap().as_str());
 
-
-    let generated_address_as_string = generated_address.to_string();
-    wrap_debug_log("generated address as string!!");
-    wrap_debug_log(&generated_address_as_string);
-    generated_address_as_string
+    format!("{:?}", generated_address)
 }
