@@ -14,7 +14,7 @@
     "deploy": "npx polywrap deploy -o deployment.json"
   },
   "devDependencies": {
-    "ethereum-provider-js": "../provider/implementations/js",
+    "ethereum-provider-js": "0.2.1",
     "@polywrap/client-js": "0.10.0-pre.7",
     "@polywrap/core-js": "0.10.0-pre.7",
     "@polywrap/test-env-js": "0.10.0-pre.7",
