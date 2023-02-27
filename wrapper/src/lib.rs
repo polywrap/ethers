@@ -1,11 +1,12 @@
 use cbrzn_ethers_core::types::U256;
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function, Token, encode};
-use cbrzn_ethers_core::abi::{encode_packed, FixedBytes};
 use ethers_core::utils::{keccak256, get_create2_address};
-use polywrap_wasm_rs::{BigInt, wrap_debug_log};
+use polywrap_wasm_rs::{BigInt};
 use std::str::FromStr;
 
+// @TODO(cbrzn): Remove this once new release of ethers has been published
+use cbrzn_ethers_core::abi::{encode_packed, FixedBytes};
 mod wrap;
 use wrap::*;
 use crate::provider::{PolywrapProvider};
@@ -294,12 +295,6 @@ pub fn encode_bytes_value(args: wrap::ArgsEncodeBytesValue) -> String {
     format!("{}", Bytes::from(bytes)).to_string()
 }
 
-pub fn keccak256_encode_bytes(args: wrap::ArgsKeccak256EncodeBytes) -> String {
-    let t = hex::decode(args.bytes).unwrap();
-    let bytes = Token::Bytes(t);
-    let encoded = keccak256(encode_packed(&[bytes]).unwrap());
-    format!("{}", Bytes::from(encoded)).to_string()
-}
 
 pub fn w_keccak256(args: wrap::ArgsWKeccak256) -> String {
     let decoded = Bytes::from_str(&args.bytes).unwrap();
@@ -307,11 +302,21 @@ pub fn w_keccak256(args: wrap::ArgsWKeccak256) -> String {
     format!("{}", Bytes::from(hash)).to_string()
 }
 
+pub fn keccak256_encode_bytes(args: wrap::ArgsKeccak256EncodeBytes) -> String {
+    let bytes = Bytes::from_str(&args.bytes).unwrap();
+    let bytes = Token::Bytes(bytes.to_vec());
+    let encoded = keccak256(encode_packed(&[bytes]).unwrap());
+    format!("{}", Bytes::from(encoded)).to_string()
+}
+
+// TODO(cbrzn): This does not works yet - Trying to replicate
+// `abi.encode()` from https://github.com/safe-global/safe-contracts/blob/main/contracts/proxies/SafeProxyFactory.sol#L54
+// in the meantime, the function above works in the safe wrapper
 pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
-    wrap_debug_log(&args.bytes);
     let bytes = Bytes::from_str(&args.bytes).unwrap();
     let bytes_as_fixed_array: [u8; 32] = bytes.to_vec().try_into().unwrap();
     let fixed_bytes = Token::FixedBytes(FixedBytes::from(bytes_as_fixed_array));
+
     let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
 
     let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();

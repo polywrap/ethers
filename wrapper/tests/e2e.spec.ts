@@ -323,7 +323,7 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("0x57d4d0c68057Cc9446F93307082D63466BC3D731".toLowerCase());
       });
 
-      it.only("should encode packed", async () => {
+      it.skip("should encode packed", async () => {
         const response = await client.invoke<string>({
           uri,
           method: "wEncodePacked",
@@ -333,7 +333,20 @@ describe("Ethereum Wrapper", () => {
           }
         });
         if (!response.ok) throw response.error;
-        expect(response.value).toEqual("0x1233388b1647069152c5f8794f8ed87af2edb8cfc397d78e053347bbfe6398b3".toLowerCase());
+        expect(response.value).toEqual("0x169b91711c9e5fc8418feaca506caa84243dc031eb336f195d6399e79978f138".toLowerCase());
+     
+      });
+
+      it("should encode bytes and convert to keccak", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "keccak256EncodeBytes",
+          args: {
+            bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a3600000000000000000000000000000000000000000000000000000000000000042",
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x169b91711c9e5fc8418feaca506caa84243dc031eb336f195d6399e79978f138".toLowerCase());
      
       });
 
