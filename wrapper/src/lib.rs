@@ -315,7 +315,8 @@ pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
     let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
 
     let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();
-    format!("{}", Bytes::from(encoded)).to_string()
+    
+    format!("{}", Bytes::from(keccak256(encoded))).to_string()
 }
 
 pub fn generate_create2_address(
