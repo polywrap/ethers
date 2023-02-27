@@ -281,6 +281,12 @@ type Module {
     initCode: String!
   ): String!
 
+  encodeBytesValue(value: String!) : String!
+
+  keccak256EncodeBytes(bytes: String!) : String!
+  wEncodePacked(bytes: String!, uint: String!) : String!
+  wKeccak256(bytes: String!): String!
+
 # TODO: implement the following methods
 
 #    signTypedData(

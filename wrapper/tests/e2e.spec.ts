@@ -1,4 +1,4 @@
-import { PolywrapClient } from "@polywrap/client-js";
+import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
 import { ensResolverPlugin } from "@polywrap/ens-resolver-plugin-js";
 import {ensAddresses, providers} from "@polywrap/test-env-js";
 import * as path from 'path'
@@ -7,7 +7,7 @@ import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
 import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-js";
 import * as Schema from "./types/wrap";
-import { initInfra, stopInfra } from "./utils/infra";
+// import { initInfra, stopInfra } from "./utils/infra";
 import {
   deployStorage,
   addPrimitiveToArrayStorage,
@@ -51,45 +51,38 @@ describe("Ethereum Wrapper", () => {
   const uri = `fs/${wrapperPath}/build`;
 
   beforeAll(async () => {
-    await initInfra();
+    // await initInfra();
 
     ensAddress = ensAddresses.ensAddress.toLowerCase();
     registrarAddress = ensAddresses.registrarAddress.toLowerCase();
 
-    client = new PolywrapClient({
-      packages: [
-        {
-          uri: "wrap://ens/ens-resolver.polywrap.eth",
-          package: ensResolverPlugin({
-            addresses: {
-              testnet: ensAddress,
-            },
-          }),
+    const builder = new ClientConfigBuilder();
+
+    builder
+    .addDefaults()
+    .addPackages({
+      "wrap://ens/ens-resolver.polywrap.eth": ensResolverPlugin({
+        addresses: {
+          testnet: ensAddress,
         },
-        {
-          uri: "wrap://package/ethereum-provider",
-          package: ethereumProviderPlugin({
-            connections: new Connections({
-              networks: {
-                testnet: new Connection({
-                  provider: providers.ethereum,
-                  signer: new Wallet(
-                    "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
-                  ),
-                })
-              },
-              defaultNetwork: "testnet",
+      }),
+      "wrap://package/ethereum-provider": ethereumProviderPlugin({
+        connections: new Connections({
+          networks: {
+            testnet: new Connection({
+              provider: providers.ethereum,
+              signer: new Wallet(
+                "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+              ),
             })
-          }),
-        },
-      ],
-      interfaces: [
-        {
-          interface: "wrap://ens/wraps.eth:ethereum-provider@1.1.0",
-          implementations: ["wrap://package/ethereum-provider"]
-        }
-      ]
-    });
+          },
+          defaultNetwork: "testnet",
+        })
+      })
+    })
+    .addInterfaceImplementation("wrap://ens/wraps.eth:ethereum-provider@1.1.0", "wrap://package/ethereum-provider")
+
+    client = new PolywrapClient(builder.build());
 
     const response = await client.invoke<string>({
       uri,
@@ -109,7 +102,7 @@ describe("Ethereum Wrapper", () => {
   });
 
   afterAll(async () => {
-    await stopInfra();
+    // await stopInfra();
   });
 
   describe("Ethereum Wrapper", () => {
@@ -313,6 +306,49 @@ describe("Ethereum Wrapper", () => {
       });
 
       expect(response.ok).toBeTruthy();
+    });
+
+    describe("create 2 address", () => {
+      it("should calculate create 2 address", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "generateCreate2Address",
+          args: {
+            address: "0x1d90fCc0423cCC9650392E799d4d6da9530aCA43",
+            salt: "0x1233388b1647069152c5f8794f8ed87af2edb8cfc397d78e053347bbfe6398b3",
+            initCode: "0x608060405234801561001057600080fd5b506040516101e63803806101e68339818101604052602081101561003357600080fd5b8101908080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156100ca576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260228152602001806101c46022913960400191505060405180910390fd5b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505060ab806101196000396000f3fe608060405273ffffffffffffffffffffffffffffffffffffffff600054167fa619486e0000000000000000000000000000000000000000000000000000000060003514156050578060005260206000f35b3660008037600080366000845af43d6000803e60008114156070573d6000fd5b3d6000f3fea264697066735822122003d1488ee65e08fa41e58e888a9865554c535f2c77126a82cb4c0f917f31441364736f6c63430007060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564000000000000000000000000b7f8bc63bbcad18155201308c8f3540b07f84f5e"
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x57d4d0c68057Cc9446F93307082D63466BC3D731".toLowerCase());
+      });
+
+      it.only("should encode packed", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "wEncodePacked",
+          args: {
+            bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360",
+            uint: "0x0000000000000000000000000000000000000000000000000000000000000042",
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x1233388b1647069152c5f8794f8ed87af2edb8cfc397d78e053347bbfe6398b3".toLowerCase());
+     
+      });
+
+      it("should encode keccak256", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "wKeccak256",
+          args: {
+            bytes: "0xe1c7392a",
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360".toLowerCase());
+     
+      });
     });
 
     it("toWei", async () => {

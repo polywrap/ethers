@@ -1,6 +1,9 @@
+use cbrzn_ethers_core::types::U256;
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function, Token, encode};
+use cbrzn_ethers_core::abi::{encode_packed, FixedBytes};
 use ethers_core::utils::{keccak256, get_create2_address};
+use polywrap_wasm_rs::{BigInt, wrap_debug_log};
 use std::str::FromStr;
 
 mod wrap;
@@ -285,16 +288,46 @@ pub fn solidity_keccak256_bytes(args: wrap::ArgsSolidityKeccak256Bytes) -> Strin
     hash
 }
 
+pub fn encode_bytes_value(args: wrap::ArgsEncodeBytesValue) -> String {
+    let mut bytes: Vec<u8> = Vec::with_capacity(args.value.len());
+    bytes.extend_from_slice(args.value.as_bytes());
+    format!("{}", Bytes::from(bytes)).to_string()
+}
+
+pub fn keccak256_encode_bytes(args: wrap::ArgsKeccak256EncodeBytes) -> String {
+    let t = hex::decode(args.bytes).unwrap();
+    let bytes = Token::Bytes(t);
+    let encoded = keccak256(encode_packed(&[bytes]).unwrap());
+    format!("{}", Bytes::from(encoded)).to_string()
+}
+
+pub fn w_keccak256(args: wrap::ArgsWKeccak256) -> String {
+    let decoded = Bytes::from_str(&args.bytes).unwrap();
+    let hash = keccak256(decoded);
+    format!("{}", Bytes::from(hash)).to_string()
+}
+
+pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
+    wrap_debug_log(&args.bytes);
+    let bytes = Bytes::from_str(&args.bytes).unwrap();
+    let bytes_as_fixed_array: [u8; 32] = bytes.to_vec().try_into().unwrap();
+    let fixed_bytes = Token::FixedBytes(FixedBytes::from(bytes_as_fixed_array));
+    let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
+
+    let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();
+    format!("{}", Bytes::from(encoded)).to_string()
+}
+
 pub fn generate_create2_address(
     args: wrap::ArgsGenerateCreate2Address,
 ) -> String {
-    let address: Address = args.address.parse().unwrap();
-    let salt = solidity_keccak256_bytes(wrap::module::serialization::ArgsSolidityKeccak256Bytes { bytes: args.salt });
-    let init_code = solidity_keccak256_bytes(wrap::module::serialization::ArgsSolidityKeccak256Bytes { bytes: args.init_code });
+    let salt = Bytes::from_str(&args.salt).unwrap();
+    let init_code = Bytes::from_str(&args.init_code).unwrap();
+    let address = args.address.parse::<Address>().unwrap();
     let generated_address = get_create2_address(
         address,
-        salt.as_bytes().to_vec(),
-        init_code.as_bytes().to_vec(),
+        salt,
+        init_code
     );
 
     format!("{:?}", generated_address)
