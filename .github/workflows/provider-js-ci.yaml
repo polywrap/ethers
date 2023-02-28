@@ -3,7 +3,7 @@ name: ethereum-provider-js-ci
 on:
   pull_request:
     paths:
-      - "provider/implementations/ethereum-provider-js/**"
+      - "provider/implementations/js/**"
 
 jobs:
   ci:

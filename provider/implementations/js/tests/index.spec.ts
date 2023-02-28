@@ -8,7 +8,7 @@ jest.setTimeout(360000);
 describe("Ethereum Plugin", () => {
   let client: PolywrapClient;
 
-  const uri = "wrap://ens/ethereum-provider-js.polywrap.eth";
+  const uri = "wrap://plugin/ethereum-provider";
 
   beforeAll(async () => {
     client = new PolywrapClient({

@@ -1,5 +1,5 @@
 {
-  "name": "ethereum-provider-interface",
+  "name": "@polywrap/ethereum-provider-interface",
   "description": "Ethereum Provider Interface",
   "version": "0.1.0",
   "license": "MIT",
