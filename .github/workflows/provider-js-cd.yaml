@@ -3,6 +3,8 @@ name: ethereum-provider-js-cd
 on:
   pull_request:
     types: [closed]
+    branches:
+      - main
     paths:
       - "provider/implementations/js/**"
 
