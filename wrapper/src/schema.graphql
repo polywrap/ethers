@@ -152,19 +152,16 @@ type Module {
   encodeParams(
     types: [String!]!
     values: [String!]!
-    connection: Connection
   ): String!
 
   encodeFunction(
     method: String!
     args: [String!]
-    connection: Connection
   ): String!
 
   decodeFunction(
     method: String!
     data: String!
-    connection: Connection
   ): [String!]!
 
   getSignerAddress(connection: Connection): String!
