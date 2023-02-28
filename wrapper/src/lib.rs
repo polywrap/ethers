@@ -1,12 +1,9 @@
-use cbrzn_ethers_core::types::U256;
-use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{Abi, Function, Token, encode};
+use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256, U256};
+use ethers_core::abi::{encode_packed, FixedBytes, Abi, Function, Token, encode};
 use ethers_core::utils::{keccak256, get_create2_address};
 use polywrap_wasm_rs::{BigInt,JSON};
 use std::str::FromStr;
 
-// @TODO(cbrzn): Remove this once new release of ethers has been published
-use cbrzn_ethers_core::abi::{encode_packed, FixedBytes};
 mod wrap;
 use wrap::*;
 use crate::provider::{PolywrapProvider};

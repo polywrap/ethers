@@ -7,7 +7,7 @@ import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
 import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-js";
 import * as Schema from "./types/wrap";
-// import { initInfra, stopInfra } from "./utils/infra";
+import { initInfra, stopInfra } from "./utils/infra";
 import {
   deployStorage,
   addPrimitiveToArrayStorage,
@@ -51,7 +51,7 @@ describe("Ethereum Wrapper", () => {
   const uri = `fs/${wrapperPath}/build`;
 
   beforeAll(async () => {
-    // await initInfra();
+    await initInfra();
 
     ensAddress = ensAddresses.ensAddress.toLowerCase();
     registrarAddress = ensAddresses.registrarAddress.toLowerCase();
@@ -102,7 +102,7 @@ describe("Ethereum Wrapper", () => {
   });
 
   afterAll(async () => {
-    // await stopInfra();
+    await stopInfra();
   });
 
   describe("Ethereum Wrapper", () => {
