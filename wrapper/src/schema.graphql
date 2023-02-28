@@ -276,12 +276,13 @@ type Module {
     connection: Connection
   ): String!
 
-# TODO: implement the following methods
+  signTypedData(
+    payload: JSON!
+    connection: Connection
+  ): String!
+}
 
-#    signTypedData(
-#        payload: JSON!
-#        connection: Connection
-#    ): String
+# TODO: implement the following methods
 
 #     waitForEvent(
 #       address: String!
@@ -289,4 +290,3 @@ type Module {
 #       args: [String!]
 #       timeout: UInt32
 #     ): EventNotification!
-}
