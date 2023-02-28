@@ -1,5 +1,5 @@
-use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256, U256};
-use ethers_core::abi::{encode_packed, FixedBytes, Abi, Function, Token, encode};
+use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
+use ethers_core::abi::{encode_packed, Abi, Function, Token, encode};
 use ethers_core::utils::{keccak256, get_create2_address};
 use polywrap_wasm_rs::{BigInt,JSON};
 use std::str::FromStr;
@@ -301,33 +301,18 @@ pub fn encode_bytes_value(args: wrap::ArgsEncodeBytesValue) -> String {
 }
 
 
-pub fn w_keccak256(args: wrap::ArgsWKeccak256) -> String {
+pub fn keccak256_bytes(args: wrap::ArgsKeccak256Bytes) -> String {
     let decoded = Bytes::from_str(&args.bytes).unwrap();
     let hash = keccak256(decoded);
     format!("{}", Bytes::from(hash)).to_string()
 }
 
-pub fn keccak256_encode_bytes(args: wrap::ArgsKeccak256EncodeBytes) -> String {
+pub fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked) -> String {
     let bytes = Bytes::from_str(&args.bytes).unwrap();
     let bytes = Token::Bytes(bytes.to_vec());
     let encoded = keccak256(encode_packed(&[bytes]).unwrap());
     format!("{}", Bytes::from(encoded)).to_string()
 }
-
-// TODO(cbrzn): This does not works yet - Trying to replicate
-// `abi.encode()` from https://github.com/safe-global/safe-contracts/blob/main/contracts/proxies/SafeProxyFactory.sol#L54
-// in the meantime, the function above works in the safe wrapper
-// pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
-//     let bytes = Bytes::from_str(&args.bytes).unwrap();
-//     let bytes_as_fixed_array: [u8; 32] = bytes.to_vec().try_into().unwrap();
-//     let fixed_bytes = Token::FixedBytes(FixedBytes::from(bytes_as_fixed_array));
-
-//     let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
-
-//     let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();
-    
-//     format!("{}", Bytes::from(keccak256(encoded))).to_string()
-// }
 
 pub fn generate_create2_address(
     args: wrap::ArgsGenerateCreate2Address,

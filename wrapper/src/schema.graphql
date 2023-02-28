@@ -283,9 +283,8 @@ type Module {
 
   encodeBytesValue(value: String!) : String!
 
-  keccak256EncodeBytes(bytes: String!) : String!
-  # wEncodePacked(bytes: String!, uint: String!) : String!
-  wKeccak256(bytes: String!): String!
+  keccak256BytesEncodePacked(bytes: String!) : String!
+  keccak256Bytes(bytes: String!): String!
 
   signTypedData(
     payload: JSON!
