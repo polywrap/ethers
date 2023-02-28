@@ -317,17 +317,17 @@ pub fn keccak256_encode_bytes(args: wrap::ArgsKeccak256EncodeBytes) -> String {
 // TODO(cbrzn): This does not works yet - Trying to replicate
 // `abi.encode()` from https://github.com/safe-global/safe-contracts/blob/main/contracts/proxies/SafeProxyFactory.sol#L54
 // in the meantime, the function above works in the safe wrapper
-pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
-    let bytes = Bytes::from_str(&args.bytes).unwrap();
-    let bytes_as_fixed_array: [u8; 32] = bytes.to_vec().try_into().unwrap();
-    let fixed_bytes = Token::FixedBytes(FixedBytes::from(bytes_as_fixed_array));
+// pub fn w_encode_packed(args: wrap::ArgsWEncodePacked) -> String {
+//     let bytes = Bytes::from_str(&args.bytes).unwrap();
+//     let bytes_as_fixed_array: [u8; 32] = bytes.to_vec().try_into().unwrap();
+//     let fixed_bytes = Token::FixedBytes(FixedBytes::from(bytes_as_fixed_array));
 
-    let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
+//     let uint = Token::Uint(args.uint.parse::<U256>().unwrap());
 
-    let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();
+//     let encoded = encode_packed(&[fixed_bytes, uint]).unwrap();
     
-    format!("{}", Bytes::from(keccak256(encoded))).to_string()
-}
+//     format!("{}", Bytes::from(keccak256(encoded))).to_string()
+// }
 
 pub fn generate_create2_address(
     args: wrap::ArgsGenerateCreate2Address,
