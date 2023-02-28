@@ -2,7 +2,7 @@ use cbrzn_ethers_core::types::U256;
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi, Function, Token, encode};
 use ethers_core::utils::{keccak256, get_create2_address};
-use polywrap_wasm_rs::{BigInt};
+use polywrap_wasm_rs::{BigInt,JSON};
 use std::str::FromStr;
 
 // @TODO(cbrzn): Remove this once new release of ethers has been published
@@ -98,6 +98,14 @@ pub fn sign_transaction(args: wrap::ArgsSignTransaction) -> String {
     let signature = signer.sign_transaction_sync(&tx).unwrap();
     let bytes: Bytes = signature.to_vec().into();
     format!("{}", bytes).to_string()
+}
+
+pub fn sign_typed_data(args: wrap::ArgsSignTypedData) -> String {
+    let address = PolywrapSigner::new(&args.connection).address();
+    let address_value = JSON::Value::String(format!("{:#x}", address));
+    let params = JSON::Value::Array(vec![address_value, args.payload]);
+    let provider = PolywrapProvider::new(&args.connection);
+    provider.request_sync("eth_signTypedData", params).unwrap()
 }
 
 pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
