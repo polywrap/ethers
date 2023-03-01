@@ -4,5 +4,3 @@ project:
   type: interface
 source:
   schema: ./src/schema.graphql
-extensions:
-  deploy: ./polywrap.deploy.yaml
