@@ -401,7 +401,7 @@ describe("Ethereum Wrapper", () => {
       it("should encode bytes and convert to keccak", async () => {
         const response = await client.invoke<string>({
           uri,
-          method: "keccak256EncodeBytes",
+          method: "keccak256BytesEncodePacked",
           args: {
             bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a3600000000000000000000000000000000000000000000000000000000000000042",
           }
@@ -414,7 +414,7 @@ describe("Ethereum Wrapper", () => {
       it("should encode keccak256", async () => {
         const response = await client.invoke<string>({
           uri,
-          method: "wKeccak256",
+          method: "keccak256Bytes",
           args: {
             bytes: "0xe1c7392a",
           }
