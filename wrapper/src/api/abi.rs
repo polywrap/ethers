@@ -1,4 +1,4 @@
-use ethers_core::{abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function, Abi}, types::{Bytes}};
+use ethers_core::{abi::{Param, Token, encode, HumanReadableParser, token::LenientTokenizer, token::Tokenizer, Function, Abi, ParamType}, types::{Bytes}};
 use crate::polywrap_provider::error::WrapperError;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
@@ -42,7 +42,14 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
     params
         .iter()
         .zip(values.iter())
-        .map(|(param, arg)| LenientTokenizer::tokenize(&param.kind, arg).unwrap())
+        .map(|(param, arg)| {
+            if let ParamType::Array(addresses) = &param.kind {
+                if let ParamType::Address = addresses.as_ref() {
+                    return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap()
+                };
+            }
+            LenientTokenizer::tokenize(&param.kind, arg).unwrap()
+        })
         .collect()
 }
 

@@ -6,7 +6,7 @@
   "main": "build/index.js",
   "files": ["build"],
   "scripts": {
-    "test:codegen": "polywrap codegen -m tests/types/polywrap.app.yaml -g tests/types/wrap",
+    "test:codegen": "polywrap codegen -m tests/types/polywrap.yaml -g tests/types/wrap",
     "test:e2e" : "jest --passWithNoTests --runInBand --verbose",
     "test": "yarn test:codegen && yarn test:e2e",
     "codegen": "npx polywrap codegen",
