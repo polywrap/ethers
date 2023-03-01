@@ -3,6 +3,8 @@ name: ethereum-provider-interface-cd
 on:
   pull_request:
     types: [closed]
+    branches:
+      - main
     paths:
       - "provider/interface/**"
 
