@@ -1,6 +1,5 @@
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{encode_packed, Abi, Function, Token, encode};
-use ethers_core::utils::{keccak256, get_create2_address};
+use ethers_core::abi::{Abi, Function};
 use polywrap_wasm_rs::{BigInt,JSON};
 use std::str::FromStr;
 
@@ -285,46 +284,4 @@ pub fn call_contract_method_and_wait(
     let receipt = provider.get_transaction_receipt_sync(tx_hash).unwrap().unwrap();
     let tx_receipt = mapping::to_wrap_receipt(receipt, 1);
     tx_receipt
-}
-
-pub fn solidity_keccak256_bytes(args: wrap::ArgsSolidityKeccak256Bytes) -> String {
-    let value = Token::Bytes(args.bytes.as_bytes().to_vec());
-    let hash = hex::encode(keccak256(encode(&[value])));
-
-    hash
-}
-
-pub fn encode_bytes_value(args: wrap::ArgsEncodeBytesValue) -> String {
-    let mut bytes: Vec<u8> = Vec::with_capacity(args.value.len());
-    bytes.extend_from_slice(args.value.as_bytes());
-    format!("{}", Bytes::from(bytes)).to_string()
-}
-
-
-pub fn keccak256_bytes(args: wrap::ArgsKeccak256Bytes) -> String {
-    let decoded = Bytes::from_str(&args.bytes).unwrap();
-    let hash = keccak256(decoded);
-    format!("{}", Bytes::from(hash)).to_string()
-}
-
-pub fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked) -> String {
-    let bytes = Bytes::from_str(&args.bytes).unwrap();
-    let bytes = Token::Bytes(bytes.to_vec());
-    let encoded = keccak256(encode_packed(&[bytes]).unwrap());
-    format!("{}", Bytes::from(encoded)).to_string()
-}
-
-pub fn generate_create2_address(
-    args: wrap::ArgsGenerateCreate2Address,
-) -> String {
-    let salt = Bytes::from_str(&args.salt).unwrap();
-    let init_code = Bytes::from_str(&args.init_code).unwrap();
-    let address = args.address.parse::<Address>().unwrap();
-    let generated_address = get_create2_address(
-        address,
-        salt,
-        init_code
-    );
-
-    format!("{:?}", generated_address)
 }
