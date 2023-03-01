@@ -1,5 +1,0 @@
-format: 0.2.0
-strategies:
-  image:
-    name: ethereum-wrapper-build
-    dockerfile: ./Dockerfile

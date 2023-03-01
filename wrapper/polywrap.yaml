@@ -5,5 +5,3 @@ project:
 source:
   module: ./Cargo.toml
   schema: ./src/schema.graphql
-extensions:
-  build: ./polywrap.build.yaml
