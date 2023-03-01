@@ -1,11 +1,12 @@
-import { PolywrapClient } from "@polywrap/client-js";
+import { PolywrapClient, ClientConfigBuilder } from "@polywrap/client-js";
 import { ensResolverPlugin } from "@polywrap/ens-resolver-plugin-js";
 import {ensAddresses, providers} from "@polywrap/test-env-js";
-import * as path from 'path'
+import { Connection, Connections, ethereumProviderPlugin } from "@polywrap/ethereum-provider-js";
 
 import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
-import { Connection, Connections, ethereumProviderPlugin } from "ethereum-provider-js";
+import * as path from 'path'
+
 import * as Schema from "./types/wrap";
 import { initInfra, stopInfra } from "./utils/infra";
 import {
@@ -56,40 +57,35 @@ describe("Ethereum Wrapper", () => {
     ensAddress = ensAddresses.ensAddress.toLowerCase();
     registrarAddress = ensAddresses.registrarAddress.toLowerCase();
 
-    client = new PolywrapClient({
-      packages: [
-        {
-          uri: "wrap://ens/ens-resolver.polywrap.eth",
-          package: ensResolverPlugin({
-            addresses: {
-              testnet: ensAddress,
+    const config = new ClientConfigBuilder()
+      .addDefaults()
+      .addPackages({
+        "wrap://ens/ens-resolver.polywrap.eth": ensResolverPlugin({
+          addresses: {
+            testnet: ensAddress,
+          },
+        }),
+        "wrap://package/ethereum-provider": ethereumProviderPlugin({
+          connections: new Connections({
+            networks: {
+              testnet: new Connection({
+                provider: providers.ethereum,
+                signer: new Wallet(
+                  "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+                ),
+              })
             },
-          }),
-        },
-        {
-          uri: "wrap://package/ethereum-provider",
-          package: ethereumProviderPlugin({
-            connections: new Connections({
-              networks: {
-                testnet: new Connection({
-                  provider: providers.ethereum,
-                  signer: new Wallet(
-                    "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
-                  ),
-                })
-              },
-              defaultNetwork: "testnet",
-            })
-          }),
-        },
-      ],
-      interfaces: [
-        {
-          interface: "wrap://ens/wraps.eth:ethereum-provider@1.1.0",
-          implementations: ["wrap://package/ethereum-provider"]
-        }
-      ]
-    });
+            defaultNetwork: "testnet",
+          })
+        })
+      })
+      .addInterfaceImplementation(
+        "wrap://ens/wraps.eth:ethereum-provider@1.1.0",
+        "wrap://package/ethereum-provider"
+      )
+      .build();
+
+    client = new PolywrapClient(config);
 
     const response = await client.invoke<string>({
       uri,
