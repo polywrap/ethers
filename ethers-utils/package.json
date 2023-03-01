@@ -1,0 +1,34 @@
+{
+  "name": "@polywrap/ethereum-wrapper",
+  "description": "Ethereum Wrapper that can be invoked from any language with a Polywrap client",
+  "version": "0.1.1",
+  "license": "MIT",
+  "main": "build/index.js",
+  "files": ["build"],
+  "scripts": {
+    "test" : "jest --passWithNoTests --runInBand --verbose",
+    "codegen": "npx polywrap codegen",
+    "build": "npx polywrap build",
+    "deploy": "npx polywrap deploy -o deployment.json"
+  },
+  "devDependencies": {
+    "@polywrap/ethereum-provider-js": "0.2.2",
+    "@polywrap/client-js": "0.10.0-pre.10",
+    "@polywrap/core-js": "0.10.0-pre.10",
+    "@polywrap/test-env-js": "0.10.0-pre.10",
+    "@types/jest": "27.0.3",
+    "axios": "0.27.2",
+    "eth-ens-namehash": "2.0.8",
+    "ethers": "5.7.2",
+    "jest": "26.6.3",
+    "js-sha3": "0.8.0",
+    "polywrap": "0.10.0-pre.10",
+    "rimraf": "3.0.2",
+    "ts-jest": "26.5.4",
+    "ts-node": "10.9.1",
+    "typescript": "4.9.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

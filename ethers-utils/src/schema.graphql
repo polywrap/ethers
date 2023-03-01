@@ -1,0 +1,15 @@
+type Module {
+  solidityKeccak256Bytes(bytes: String!): String!
+
+  generateCreate2Address(
+    address: String!
+    salt: String!
+    initCode: String!
+  ): String!
+
+  encodeBytesValue(value: String!) : String!
+
+  keccak256BytesEncodePacked(bytes: String!) : String!
+  keccak256Bytes(bytes: String!): String!
+  encodeMetaTransaction(operation: BigInt, to: String!, value: BigInt!, data: String!): String!
+}
