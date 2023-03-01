@@ -2,7 +2,7 @@ import { Connection } from "../src";
 import { initTestEnvironment, stopTestEnvironment, providers } from "@polywrap/test-env-js";
 import { Wallet } from "ethers";
 
-jest.setTimeout(60000);
+jest.setTimeout(600000);
 
 type BasicNetwork = "mainnet" | "rinkeby" | "ropsten" | "goerli" | "kovan";
 

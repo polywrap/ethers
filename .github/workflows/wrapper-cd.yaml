@@ -3,6 +3,8 @@ name: ethereum-wrapper-cd
 on:
   pull_request:
     types: [closed]
+    branches:
+      - main
     paths:
       - "wrapper/**"
 

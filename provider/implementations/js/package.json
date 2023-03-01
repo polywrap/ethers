@@ -1,7 +1,7 @@
 {
-  "name": "ethereum-provider-js",
-  "description": "Ethereum Provider Polywrap JS Plugin",
-  "version": "0.2.1",
+  "name": "@polywrap/ethereum-provider-js",
+  "description": "Ethereum Provider JS Plugin",
+  "version": "0.2.2",
   "license": "MIT",
   "main": "build/index.js",
   "files": [
@@ -12,19 +12,20 @@
     "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
     "codegen": "yarn polywrap codegen",
     "lint": "eslint --color --ext .ts src/",
-    "test": "jest --passWithNoTests --runInBand --verbose"
+    "test": "jest --passWithNoTests --runInBand --verbose",
+    "publish:npm": "yarn publish --access public --non-interactive --verbose"
   },
   "dependencies": {
     "@ethersproject/address": "5.7.0",
     "@ethersproject/providers": "5.7.0",
-    "@polywrap/core-js": "0.10.0-pre.8",
+    "@polywrap/core-js": "0.10.0-pre.10",
     "ethers": "5.7.0"
   },
   "devDependencies": {
-    "polywrap": "0.10.0-pre.8",
+    "polywrap": "0.10.0-pre.10",
     "@types/jest": "26.0.8",
-    "@polywrap/client-js": "0.10.0-pre.8",
-    "@polywrap/test-env-js": "0.10.0-pre.8",
+    "@polywrap/client-js": "0.10.0-pre.10",
+    "@polywrap/test-env-js": "0.10.0-pre.10",
     "eth-ens-namehash": "2.0.8",
     "jest": "26.6.3",
     "js-sha3": "0.8.0",
