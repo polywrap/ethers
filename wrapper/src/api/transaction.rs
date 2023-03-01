@@ -8,7 +8,6 @@ use ethers_core::{
 };
 use ethers_core::types::{BlockId, Chain};
 use ethers_providers::ProviderError;
-// use polywrap_wasm_rs::wrap_debug_log;
 
 use crate::error::WrapperError;
 use crate::provider::{PolywrapProvider};
@@ -72,7 +71,9 @@ pub fn call_contract_view(
     }.into();
 
     let bytes: Bytes = provider.call_sync(&tx, None).unwrap();
+
     let tokens: Vec<Token> = function.decode_output(&bytes).unwrap();
+
     tokens
 }
 

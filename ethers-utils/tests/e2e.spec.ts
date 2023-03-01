@@ -1,5 +1,6 @@
 import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
 import { keccak256 } from "js-sha3";
+import * as path from 'path'
 
 
 describe("Ethereum Wrapper", () => {
@@ -10,7 +11,6 @@ describe("Ethereum Wrapper", () => {
   const uri = `fs/${wrapperPath}/build`;
 
   beforeAll(async () => {
-
     const config = new ClientConfigBuilder()
       .addDefaults()
       .addInterfaceImplementation(
@@ -18,10 +18,7 @@ describe("Ethereum Wrapper", () => {
         "wrap://package/ethereum-provider"
       )
       .build();
-
     client = new PolywrapClient(config);
-
-
   });
 
 
@@ -78,6 +75,26 @@ describe("Ethereum Wrapper", () => {
       });
       if (!response.ok) throw response.error;
       expect(response.value).toEqual(keccak256(input));
+   
+    });
+
+    it("should encode meta transaction", async () => {
+      let to = "0xb09bCc172050fBd4562da8b229Cf3E45Dc3045A6"
+      let value = "1"
+      let data = "0xa9059cbb000000000000000000000000ffcf8fdee72ac11b5c542428b35eef5769c409f00000000000000000000000000000000000000000000000000f43fc2c04ee0000"
+      let operation = "0"
+      const response = await client.invoke<string>({
+        uri,
+        method: "encodeMetaTransaction",
+        args: {
+          to,
+          value,
+          data,
+          operation
+        }
+      });
+      if (!response.ok) throw response.error;
+      expect(response.value).toEqual("0x00b09bcc172050fbd4562da8b229cf3e45dc3045a600000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000ffcf8fdee72ac11b5c542428b35eef5769c409f00000000000000000000000000000000000000000000000000f43fc2c04ee0000");
    
     });
   })

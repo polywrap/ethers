@@ -55,7 +55,7 @@ pub fn estimate_eip1559_fees(args: wrap::ArgsEstimateEip1559Fees) -> wrap::Eip15
 
 pub fn get_signer_address(args: wrap::ArgsGetSignerAddress) -> String {
     let address = PolywrapSigner::new(&args.connection).address();
-    format!("{:#x}", address)
+    format!("{:#x}", address).to_string().to_lowercase()
 }
 
 pub fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> BigInt {

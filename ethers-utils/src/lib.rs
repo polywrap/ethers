@@ -1,7 +1,8 @@
-use ethers_core::abi::{encode_packed, Abi, Function, Token, encode};
+use ethers_core::abi::token::{LenientTokenizer, Tokenizer};
+use ethers_core::abi::{encode_packed, Token, encode, HumanReadableParser};
 use ethers_core::utils::{keccak256, get_create2_address};
-use ethers_core::types::{Bytes, U256, Address};
-use polywrap_wasm_rs::{BigInt,JSON};
+use ethers_core::types::{Bytes, Address};
+use polywrap_wasm_rs::{BigInt};
 use std::str::FromStr;
 
 mod wrap;
@@ -60,21 +61,38 @@ pub fn encode_meta_transaction(args: wrap::ArgsEncodeMetaTransaction) -> String 
 
     let operation = Token::FixedBytes(op_bytes.into());
     let to = args.to.parse::<Address>().unwrap();
-    // let value = Bytes::from_str(&args.value.to_string()).unwrap();
-    // let v = encode_params(ArgsEncodeParams { types: vec!["uint256".into()], values: vec![args.value.to_string()] });
-    // wrap_debug_log(&v);
-    let value = Token::Uint(args.value.to_string().parse::<U256>().unwrap());
-    
+
+    let value = encode_params(
+        vec!["uint256".into()],
+        vec![args.value.to_string()]
+    );
+
     let data = Bytes::from_str(&args.data).unwrap();
-    let data_length = Token::Uint(U256::from(data.len()));
+    let data_len = encode_params(
+        vec!["uint256".into()],
+        vec![data.len().to_string()]
+    );
 
     let encoded = encode_packed(&[
         operation, 
         Token::Address(to), 
-        value,
-        data_length,
+        Token::Bytes(value.to_vec()),
+        Token::Bytes(data_len),
         Token::Bytes(data.to_vec())
     ]).unwrap();
     
     format!("{}", Bytes::from(encoded)).to_string()
+}
+
+pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
+    let tokens: Vec<Token> = values
+        .iter()
+        .zip(types.iter())
+        .map(|(arg, t)| {
+            let kind = HumanReadableParser::parse_type(&t).unwrap();
+            LenientTokenizer::tokenize(&kind, arg).unwrap()
+        })
+        .collect();
+    let bytes = encode(&tokens);
+    bytes
 }

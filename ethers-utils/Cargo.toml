@@ -14,7 +14,8 @@ edition = "2021"
 thiserror = "1.0.38"
 polywrap-wasm-rs = "0.10.0-pre.10"
 serde = { version = "1.0.152", features = ["derive"] }
-ethers-core = { version = "=1.0.2", git = "https://github.com/gakonst/ethers-rs", commit = "ded611e714e4b50bc9db5fb8841df367d596d495", features = ["eip712"] }
+ethers-core = { version = "=1.5.0", features = ["eip712"] }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
