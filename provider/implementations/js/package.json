@@ -1,7 +1,7 @@
 {
   "name": "@polywrap/ethereum-provider-js",
   "description": "Ethereum Provider JS Plugin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "MIT",
   "main": "build/index.js",
   "files": [
@@ -19,7 +19,12 @@
     "@ethersproject/address": "5.7.0",
     "@ethersproject/providers": "5.7.0",
     "@polywrap/core-js": "0.10.0-pre.10",
+    "@polywrap/plugin-js": "0.10.0-pre.10",
     "ethers": "5.7.0"
+  },
+  "peerDependencies": {
+    "@polywrap/core-js": "0.10.x",
+    "@polywrap/plugin-js": "0.10.x"
   },
   "devDependencies": {
     "polywrap": "0.10.0-pre.10",

@@ -35,8 +35,24 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
     const params = JSON.parse(args?.params ?? "[]");
-    const req = await connection.getProvider().send(args.method, params);
-    return JSON.stringify(req);
+    const provider = connection.getProvider();
+
+    try {
+      const req = await provider.send(args.method, params);
+      return JSON.stringify(req);
+    } catch (err) {
+      if (
+        err && err.message &&
+        err.message.indexOf("0x2") > -1 &&
+        params.type === "0x02"
+      ) {
+        params.type = "0x2";
+        const req = await provider.send(args.method, params);
+        return JSON.stringify(req);
+      } else {
+        throw err;
+      }
+    }
   }
 
   async waitForTransaction(
