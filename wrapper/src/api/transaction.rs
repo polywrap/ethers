@@ -56,6 +56,9 @@ pub fn estimate_contract_call_gas(
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
     fill_transaction_sync(provider, signer, &mut tx, None).unwrap();
+    if let Some(gas_limit) = tx.as_eip1559_ref().unwrap().gas {
+        return gas_limit;
+    }
     provider.estimate_gas_sync(&tx, None).unwrap()
 }
 
