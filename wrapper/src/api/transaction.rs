@@ -48,12 +48,14 @@ pub fn create_deploy_contract_transaction(
 
 pub fn estimate_contract_call_gas(
     provider: &PolywrapProvider,
+    signer: &PolywrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions) -> U256 {
     let (_, data): (Function, Bytes) = encode_function(method, args).unwrap();
-    let tx: TypedTransaction = create_transaction(Some(address), data, options);
+    let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
+    fill_transaction_sync(provider, signer, &mut tx, None).unwrap();
     provider.estimate_gas_sync(&tx, None).unwrap()
 }
 
