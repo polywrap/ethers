@@ -200,6 +200,7 @@ pub fn deploy_contract(args: wrap::ArgsDeployContract) -> String {
 
 pub fn estimate_contract_call_gas(args: wrap::ArgsEstimateContractCallGas) -> BigInt {
     let provider = PolywrapProvider::new(&args.connection);
+    let signer = PolywrapSigner::new(&args.connection);
 
     let address = match Address::from_str(&args.address) {
         Ok(addr) => addr,
@@ -208,7 +209,7 @@ pub fn estimate_contract_call_gas(args: wrap::ArgsEstimateContractCallGas) -> Bi
     let params: Vec<String> = args.args.unwrap_or(vec![]);
     let tx_options: mapping::EthersTxOptions = mapping::from_wrap_tx_options(args.options);
 
-    let gas = api::estimate_contract_call_gas(&provider, address, &args.method, &params, &tx_options);
+    let gas = api::estimate_contract_call_gas(&provider, &signer, address, &args.method, &params, &tx_options);
     BigInt::from_str(&gas.to_string()).unwrap()
 }
 
