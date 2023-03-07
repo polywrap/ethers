@@ -44,9 +44,9 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       if (
         err && err.message &&
         err.message.indexOf("0x2") > -1 &&
-        params.type === "0x02"
+        params[0].type === "0x02"
       ) {
-        params.type = "0x2";
+        params[0].type = "0x2";
         const req = await provider.send(args.method, params);
         return JSON.stringify(req);
       } else {

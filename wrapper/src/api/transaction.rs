@@ -8,7 +8,6 @@ use ethers_core::{
 };
 use ethers_core::types::{BlockId, Chain};
 use ethers_providers::ProviderError;
-// use polywrap_wasm_rs::wrap_debug_log;
 
 use crate::error::WrapperError;
 use crate::provider::{PolywrapProvider};
