@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
-    "codegen": "polywrap codegen",
+    "codegen": "yarn polywrap codegen",
     "lint": "eslint --color --ext .ts src/",
     "test": "jest --passWithNoTests --runInBand --verbose",
     "publish:npm": "yarn publish --access public --non-interactive --verbose"
@@ -23,6 +23,7 @@
     "ethers": "5.7.0"
   },
   "peerDependencies": {
+    "@polywrap/client-js": "0.10.x",
     "@polywrap/core-js": "0.10.x",
     "@polywrap/plugin-js": "0.10.x"
   },
