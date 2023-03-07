@@ -41,17 +41,24 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       const req = await provider.send(args.method, params);
       return JSON.stringify(req);
     } catch (err) {
-      // Ethers-rs defines the type of EIP 1559 tx
-      // as 0x02, but metamask expects it as 0x2,
-      // hence, the need of this workaround. Related:
-      // https://github.com/foundry-rs/foundry/issues/3890
+      /**
+       * Hotfix:
+       * Ethers-rs defines the type of EIP 1559 tx
+       * as 0x02, but metamask expects it as 0x2,
+       * hence, the need of this workaround. Related:
+       * https://github.com/foundry-rs/foundry/issues/3890.
+       * 
+       * We check if the parameters comes as array, if the error
+       * contains 0x2 and if the type is 0x02, then we change it
+       */
+      const paramsIsArray = Array.isArray(params) && params.length > 0;
+      const messageContains0x2 = err && err.message && err.message.indexOf("0x2") > -1;
       if (
-        err && err.message &&
-        err.message.indexOf("0x2") > -1 &&
-        params.type === "0x02" &&
-        args.method === "eth_sendTransaction"
+        messageContains0x2 &&
+        paramsIsArray &&
+        params[0].type === "0x02"
       ) {
-        params.type = "0x2";
+        params[0].type = "0x2";
         const req = await provider.send(args.method, params);
         return JSON.stringify(req);
       } else {
