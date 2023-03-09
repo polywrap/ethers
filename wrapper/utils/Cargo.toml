@@ -1,5 +1,5 @@
 [package]
-name = "ethers-utils"
+name = "ethers-utils-wrappers"
 version = "0.1.0"
 description = "Ethereum Wrapper that can be invoked from any language with a Polywrap client"
 authors = [
@@ -14,6 +14,14 @@ edition = "2021"
 thiserror = "1.0.38"
 polywrap-wasm-rs = "0.10.0-pre.10"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = { version = "1.0.93", default-features = false, features = ["raw_value"] }
 ethers-core = { git="https://github.com/gakonst/ethers-rs", features = ["eip712"] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+ethers-utils = { path = "../../ethers-utils" }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 'z'
+lto = true
+panic = 'abort'

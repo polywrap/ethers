@@ -1,0 +1,11 @@
+type Module {
+  generateCreate2Address(
+    address: String!
+    salt: String!
+    initCode: String!
+  ): String!
+
+  keccak256BytesEncodePacked(value: String!) : String!
+  keccak256(value: String!): String!
+  encodeMetaTransaction(operation: BigInt, to: String!, value: BigInt!, data: String!): String!
+}

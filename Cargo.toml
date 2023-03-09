@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "ethers-utils",
+    "wrapper/core",
+    "wrapper/utils",
+]
