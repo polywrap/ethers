@@ -1,4 +1,4 @@
-use crate::provider::PolywrapProvider;
+use crate::provider::WrapProvider;
 use crate::wrap::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
 use ethers_core::types::{
     transaction::eip2718::TypedTransaction, Bytes, Log, NameOrAddress, Address, Transaction,
@@ -7,7 +7,7 @@ use ethers_core::types::{
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_core::types::transaction::eip2930::{AccessList, AccessListItem};
-use crate::polywrap_provider::sync_provider::SyncProvider;
+use ethers_provider::Provider;
 
 pub struct EthersTxOptions {
     pub gas_limit: Option<U256>,
@@ -159,14 +159,14 @@ pub fn to_wrap_receipt(receipt: TransactionReceipt, confirmations: u32) -> TxRec
 }
 
 pub fn to_wrap_response(
-    provider: &PolywrapProvider,
+    provider: &WrapProvider,
     response: Transaction,
 ) -> TxResponse {
     let block = match response.block_hash {
-        Some(h) => provider.get_block_sync(h).ok(),
+        Some(h) => provider.get_block(h).ok(),
         None => None,
     }.flatten();
-    let chain_id = provider.get_chainid_sync().unwrap();
+    let chain_id = provider.get_chainid().unwrap();
     let max_fee_per_gas = response
         .max_fee_per_gas
         .map(|v| BigInt::from_str(&v.to_string()).unwrap());

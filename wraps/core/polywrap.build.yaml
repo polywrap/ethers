@@ -7,4 +7,6 @@ strategies:
       - ./package.json
 linked_packages:
   - name: "ethers-utils"
-    path: ../../ethers-utils
+    path: ../../crates/util
+  - name: "ethers-provider"
+    path: ../../crates/provider

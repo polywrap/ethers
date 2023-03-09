@@ -5,82 +5,95 @@ use ethers_core::types::transaction::eip2718::TypedTransaction;
 use ethers_core::types::{Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Transaction, TransactionReceipt, TxHash, U256};
 use ethers_core::{utils};
 use serde::{de::DeserializeOwned, Serialize};
-use crate::polywrap_provider::provider::{PolywrapProvider};
+use thiserror::Error;
 
-pub trait SyncProvider {
-    fn get_transaction_count_sync<T: Into<NameOrAddress> + Send + Sync>(
-        &self,
-        from: T,
-        block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
+use crate::wrap::connection::Connection;
+use crate::wrap::imported::{IProviderConnection, IProviderModule, ArgsRequest, ArgsWaitForTransaction};
 
-    fn get_block_gen_sync<Tx: Default + Serialize + DeserializeOwned + Debug>(
-        &self,
-        id: BlockId,
-        include_txs: bool,
-    ) -> Result<Option<Block<Tx>>, ProviderError>;
+use ethers_provider::Provider;
+use super::iprovider::get_iprovider;
 
-    fn get_block_sync<T: Into<BlockId> + Send + Sync>(
-        &self,
-        block_hash_or_number: T,
-    ) -> Result<Option<Block<TxHash>>, ProviderError>;
-
-    fn fee_history_sync<T: Into<U256> + Send + Sync>(
-        &self,
-        block_count: T,
-        last_block: BlockNumber,
-        reward_percentiles: &[f64],
-    ) -> Result<FeeHistory, ProviderError>;
-
-    fn fill_gas_fees_sync(&self, tx: &mut TypedTransaction) -> Result<(), ProviderError>;
-
-    fn get_gas_price_sync(&self) -> Result<U256, ProviderError>;
-
-    fn estimate_eip1559_fees_sync(
-        &self,
-        estimator: Option<fn(U256, Vec<Vec<U256>>) -> (U256, U256)>,
-    ) -> Result<(U256, U256), ProviderError>;
-
-    fn estimate_gas_sync(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
-
-    fn fill_transaction_sync(
-        &self,
-        tx: &mut TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<(), ProviderError>;
-
-    fn get_chainid_sync(&self) -> Result<U256, ProviderError>;
-
-    fn get_balance_sync<T: Into<NameOrAddress> + Send + Sync>(
-        &self,
-        from: T,
-        block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
-
-    fn get_transaction_sync<T: Send + Sync + Into<TxHash>>(
-        &self,
-        transaction_hash: T,
-    ) -> Result<Option<Transaction>, ProviderError>;
-
-    fn get_transaction_receipt_sync<T: Send + Sync + Into<TxHash>>(
-        &self,
-        transaction_hash: T,
-    ) -> Result<Option<TransactionReceipt>, ProviderError>;
-
-    fn call_sync(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<Bytes, ProviderError>;
+#[derive(Error, Debug)]
+/// Error thrown when sending an HTTP request
+pub enum ClientError {
+    /// Serde JSON Error
+    #[error("Deserialization Error: {err}. Response: {text}")]
+    SerdeJson {
+        err: serde_json::Error,
+        text: String,
+    },
+    /// Serde JSON Error
+    #[error("Client error: {0}")]
+    Error(String),
 }
 
-impl SyncProvider for PolywrapProvider {
+impl From<ClientError> for ProviderError {
+    fn from(src: ClientError) -> Self {
+        match src {
+            _ => ProviderError::JsonRpcClientError(Box::new(src)),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct WrapProvider {
+    pub(super) connection: Option<IProviderConnection>,
+    pub(super) iprovider: IProviderModule,
+}
+
+impl WrapProvider {
+    pub fn new(connection: &Option<Connection>) -> Self {
+        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+            network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
+            node: conn.node.clone(),
+        });
+        Self {
+            connection: iprovider_connection,
+            iprovider: get_iprovider(),
+        }
+    }
+
+    pub fn request<T: Serialize + Send + Sync, R: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: T,
+    ) -> Result<R, ProviderError> {
+        let params_s = serde_json::to_string(&params).unwrap();
+        let res = self.iprovider.request(&ArgsRequest {
+            method: method.to_string(),
+            params: Some(params_s),
+            connection: self.connection.clone(),
+        })
+            .map_err(|err| ClientError::Error(err))?;
+        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
+            err,
+            text: "from str failed".to_string(),
+        })?;
+        Ok(res)
+    }
+
+    pub fn await_transaction<T: Send + Sync + Into<TxHash>>(
+        &self,
+        transaction_hash: T,
+        confirmations: u32,
+        timeout: Option<u32>,
+    ) -> Result<bool, ProviderError> {
+        let hash = transaction_hash.into();
+
+        let res = self.iprovider.wait_for_transaction(&ArgsWaitForTransaction {
+            tx_hash: format!("{:#x}", hash),
+            confirmations,
+            timeout,
+            connection: self.connection.clone(),
+        })
+            .map_err(|err| ClientError::Error(err))?;
+        Ok(res)
+    }
+}
+
+impl Provider for WrapProvider {
     /// Returns the nonce of the address
-    fn get_transaction_count_sync<T: Into<NameOrAddress> + Send + Sync>(
+    fn get_transaction_count<T: Into<NameOrAddress> + Send + Sync>(
         &self,
         from: T,
         block: Option<BlockId>,
@@ -94,10 +107,10 @@ impl SyncProvider for PolywrapProvider {
 
         let from = utils::serialize(&from);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
-        self.request_sync("eth_getTransactionCount", [from, block])
+        self.request("eth_getTransactionCount", [from, block])
     }
 
-    fn get_block_gen_sync<Tx: Default + Serialize + DeserializeOwned + Debug>(
+    fn get_block_gen<Tx: Default + Serialize + DeserializeOwned + Debug>(
         &self,
         id: BlockId,
         include_txs: bool,
@@ -107,24 +120,24 @@ impl SyncProvider for PolywrapProvider {
         Ok(match id {
             BlockId::Hash(hash) => {
                 let hash = utils::serialize(&hash);
-                self.request_sync("eth_getBlockByHash", [hash, include_txs])?
+                self.request("eth_getBlockByHash", [hash, include_txs])?
             }
             BlockId::Number(num) => {
                 let num = utils::serialize(&num);
-                self.request_sync("eth_getBlockByNumber", [num, include_txs])?
+                self.request("eth_getBlockByNumber", [num, include_txs])?
             }
         })
     }
 
     /// Gets the block at `block_hash_or_number` (transaction hashes only)
-    fn get_block_sync<T: Into<BlockId> + Send + Sync>(
+    fn get_block<T: Into<BlockId> + Send + Sync>(
         &self,
         block_hash_or_number: T,
     ) -> Result<Option<Block<TxHash>>, ProviderError> {
-        self.get_block_gen_sync(block_hash_or_number.into(), false)
+        self.get_block_gen(block_hash_or_number.into(), false)
     }
 
-    fn fee_history_sync<T: Into<U256> + Send + Sync>(
+    fn fee_history<T: Into<U256> + Send + Sync>(
         &self,
         block_count: T,
         last_block: BlockNumber,
@@ -138,7 +151,7 @@ impl SyncProvider for PolywrapProvider {
         // Geth v1.10.7 onwards, this has been updated to a hex encoded form. Failure to
         // decode the param from client side would fallback to the old API spec.
         match self
-            .request_sync::<_, FeeHistory>(
+            .request::<_, FeeHistory>(
                 "eth_feeHistory",
                 [utils::serialize(&block_count), last_block.clone(), reward_percentiles.clone()],
             )
@@ -146,7 +159,7 @@ impl SyncProvider for PolywrapProvider {
             success @ Ok(_) => success,
             err @ Err(_) => {
                 let fallback = self
-                    .request_sync::<_, FeeHistory>(
+                    .request::<_, FeeHistory>(
                         "eth_feeHistory",
                         [utils::serialize(&block_count.as_u64()), last_block, reward_percentiles],
                     );
@@ -161,20 +174,20 @@ impl SyncProvider for PolywrapProvider {
         }
     }
 
-    fn fill_gas_fees_sync(&self, tx: &mut TypedTransaction) -> Result<(), ProviderError> {
+    fn fill_gas_fees(&self, tx: &mut TypedTransaction) -> Result<(), ProviderError> {
         match tx {
             TypedTransaction::Eip2930(_) | TypedTransaction::Legacy(_) => {
                 let gas_price = if tx.gas_price().is_some() {
                     tx.gas_price().unwrap()
                 } else {
-                    self.get_gas_price_sync()?
+                    self.get_gas_price()?
                 };
                 tx.set_gas_price(gas_price);
             }
             TypedTransaction::Eip1559(ref mut inner) => {
                 if inner.max_fee_per_gas.is_none() || inner.max_priority_fee_per_gas.is_none() {
                     let (max_fee_per_gas, max_priority_fee_per_gas) =
-                        self.estimate_eip1559_fees_sync(None)?;
+                        self.estimate_eip1559_fees(None)?;
                     inner.max_fee_per_gas = Some(max_fee_per_gas);
                     inner.max_priority_fee_per_gas = Some(max_priority_fee_per_gas);
                 };
@@ -184,24 +197,24 @@ impl SyncProvider for PolywrapProvider {
     }
 
     /// Gets the current gas price as estimated by the node
-    fn get_gas_price_sync(&self) -> Result<U256, ProviderError> {
-        self.request_sync("eth_gasPrice", ())
+    fn get_gas_price(&self) -> Result<U256, ProviderError> {
+        self.request("eth_gasPrice", ())
     }
 
     /// Gets a heuristic recommendation of max fee per gas and max priority fee per gas for
     /// EIP-1559 compatible transactions.
-    fn estimate_eip1559_fees_sync(
+    fn estimate_eip1559_fees(
         &self,
         estimator: Option<fn(U256, Vec<Vec<U256>>) -> (U256, U256)>,
     ) -> Result<(U256, U256), ProviderError> {
         let base_fee_per_gas = self
-            .get_block_sync(BlockNumber::Latest)?
+            .get_block(BlockNumber::Latest)?
             .ok_or_else(|| ProviderError::CustomError("Latest block not found".into()))?
             .base_fee_per_gas
             .ok_or_else(|| ProviderError::CustomError("EIP-1559 not activated".into()))?;
 
         let fee_history = self
-            .fee_history_sync(
+            .fee_history(
                 utils::EIP1559_FEE_ESTIMATION_PAST_BLOCKS,
                 BlockNumber::Latest,
                 &[utils::EIP1559_FEE_ESTIMATION_REWARD_PERCENTILE],
@@ -221,7 +234,7 @@ impl SyncProvider for PolywrapProvider {
     /// required (as a U256) to send it This is free, but only an estimate. Providing too little
     /// gas will result in a transaction being rejected (while still consuming all provided
     /// gas).
-    fn estimate_gas_sync(
+    fn estimate_gas(
         &self,
         tx: &TypedTransaction,
         block: Option<BlockId>,
@@ -234,10 +247,10 @@ impl SyncProvider for PolywrapProvider {
         } else {
             vec![tx]
         };
-        self.request_sync("eth_estimateGas", params)
+        self.request("eth_estimateGas", params)
     }
 
-    fn fill_transaction_sync(
+    fn fill_transaction(
         &self,
         tx: &mut TypedTransaction,
         block: Option<BlockId>,
@@ -249,12 +262,12 @@ impl SyncProvider for PolywrapProvider {
         }
 
         // fill gas price
-        self.fill_gas_fees_sync(tx)?;
+        self.fill_gas_fees(tx)?;
 
         // Set gas to estimated value only if it was not set by the caller,
         // even if the access list has been populated and saves gas
         if tx.gas().is_none() {
-            let gas_estimate = self.estimate_gas_sync(tx, block)?;
+            let gas_estimate = self.estimate_gas(tx, block)?;
             tx.set_gas(gas_estimate);
         }
 
@@ -263,12 +276,12 @@ impl SyncProvider for PolywrapProvider {
 
     /// Returns the currently configured chain id, a value used in replay-protected
     /// transaction signing as introduced by EIP-155.
-    fn get_chainid_sync(&self) -> Result<U256, ProviderError> {
-        self.request_sync("eth_chainId", ())
+    fn get_chainid(&self) -> Result<U256, ProviderError> {
+        self.request("eth_chainId", ())
     }
 
     /// Returns the account's balance
-    fn get_balance_sync<T: Into<NameOrAddress> + Send + Sync>(
+    fn get_balance<T: Into<NameOrAddress> + Send + Sync>(
         &self,
         from: T,
         block: Option<BlockId>,
@@ -282,37 +295,37 @@ impl SyncProvider for PolywrapProvider {
 
         let from = utils::serialize(&from);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
-        self.request_sync("eth_getBalance", [from, block])
+        self.request("eth_getBalance", [from, block])
     }
 
     /// Gets the transaction with `transaction_hash`
-    fn get_transaction_sync<T: Send + Sync + Into<TxHash>>(
+    fn get_transaction<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
     ) -> Result<Option<Transaction>, ProviderError> {
         let hash = transaction_hash.into();
-        self.request_sync("eth_getTransactionByHash", [hash])
+        self.request("eth_getTransactionByHash", [hash])
     }
 
     /// Gets the transaction receipt with `transaction_hash`
-    fn get_transaction_receipt_sync<T: Send + Sync + Into<TxHash>>(
+    fn get_transaction_receipt<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
     ) -> Result<Option<TransactionReceipt>, ProviderError> {
         let hash = transaction_hash.into();
-        self.request_sync("eth_getTransactionReceipt", [hash])
+        self.request("eth_getTransactionReceipt", [hash])
     }
 
     /// Sends the read-only (constant) transaction to a single Ethereum node and return the result
     /// (as bytes) of executing it. This is free, since it does not change any state on the
     /// blockchain.
-    fn call_sync(
+    fn call(
         &self,
         tx: &TypedTransaction,
         block: Option<BlockId>,
     ) -> Result<Bytes, ProviderError> {
         let tx = utils::serialize(tx);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
-        self.request_sync("eth_call", [tx, block])
+        self.request("eth_call", [tx, block])
     }
 }

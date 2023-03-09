@@ -1,0 +1,18 @@
+[package]
+name = "ethers-provider"
+version = "0.1.0"
+description = "Transaction utilities for ethereum wrappers"
+authors = [
+  "Nestor Amesty <nestor@dorg.tech>",
+  "Kris Bitney <kris@dorg.tech>",
+]
+repository = "https://github.com/polywrap/ethereum"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+thiserror = "1.0.38"
+serde = { version = "1.0.152", features = ["derive"] }
+ethers-core = { git="https://github.com/gakonst/ethers-rs", features = ["eip712"] }
+ethers-providers = { version = "=1.0.2", features = [] }
+ethers-signers = { version = "=1.0.2", features = [] }

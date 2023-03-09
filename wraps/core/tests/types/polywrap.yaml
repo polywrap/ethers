@@ -6,4 +6,4 @@ source:
   schema: ../../src/schema.graphql
   import_abis:
   - uri: wrap://ens/wraps.eth:ethereum-provider@1.1.0
-    abi: ../../../../provider/interface/src/schema.graphql
+    abi: ../../../../plugin-provider/interface/src/schema.graphql

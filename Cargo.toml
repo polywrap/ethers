@@ -1,7 +1,9 @@
 [workspace]
 
 members = [
-    "ethers-utils",
-    "wrapper/core",
-    "wrapper/utils",
+    "crates/util",
+    "crates/transaction",
+    "crates/provider",
+    "wraps/core",
+    "wraps/utils",
 ]

@@ -8,19 +8,15 @@ use ethers_core::{
 };
 use ethers_core::types::{BlockId, Chain};
 use ethers_providers::ProviderError;
+use ethers_provider::Provider;
+use crate::{error::WrapperError, polywrap_provider::{provider::WrapProvider, signer::WrapSigner}};
 
-use crate::error::WrapperError;
-use crate::provider::{PolywrapProvider};
-use crate::signer::PolywrapSigner;
-use crate::polywrap_provider::sync_provider::SyncProvider;
 use crate::mapping::EthersTxOptions;
 
-
-
-pub fn send_transaction(provider: &PolywrapProvider, signer: &PolywrapSigner, tx: &mut TypedTransaction) -> H256 {
-    fill_transaction_sync(provider, signer, tx, None).unwrap();
+pub fn send_transaction(provider: &WrapProvider, signer: &WrapSigner, tx: &mut TypedTransaction) -> H256 {
+    fill_transaction(provider, signer, tx, None).unwrap();
     let rlp = serialize(tx);
-    let tx_hash: H256 = provider.request_sync("eth_sendTransaction", [rlp]).unwrap();
+    let tx_hash: H256 = provider.request("eth_sendTransaction", [rlp]).unwrap();
     tx_hash
 }
 
@@ -47,23 +43,23 @@ pub fn create_deploy_contract_transaction(
 }
 
 pub fn estimate_contract_call_gas(
-    provider: &PolywrapProvider,
-    signer: &PolywrapSigner,
+    provider: &WrapProvider,
+    signer: &WrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions) -> U256 {
     let (_, data): (Function, Bytes) = ethers_utils::encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
-    fill_transaction_sync(provider, signer, &mut tx, None).unwrap();
+    fill_transaction(provider, signer, &mut tx, None).unwrap();
     if let Some(gas_limit) = tx.as_eip1559_ref().unwrap().gas {
         return gas_limit;
     }
-    provider.estimate_gas_sync(&tx, None).unwrap()
+    provider.estimate_gas(&tx, None).unwrap()
 }
 
 pub fn call_contract_view(
-    provider: &PolywrapProvider,
+    provider: &WrapProvider,
     address: Address,
     method: &str,
     args: &Vec<String>
@@ -76,7 +72,7 @@ pub fn call_contract_view(
         ..Default::default()
     }.into();
 
-    let bytes: Bytes = provider.call_sync(&tx, None).unwrap();
+    let bytes: Bytes = provider.call(&tx, None).unwrap();
 
     let tokens: Vec<Token> = function.decode_output(&bytes).unwrap();
 
@@ -84,8 +80,8 @@ pub fn call_contract_view(
 }
 
 pub fn call_contract_static(
-    provider: &PolywrapProvider,
-    signer: &PolywrapSigner,
+    provider: &WrapProvider,
+    signer: &WrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
@@ -94,8 +90,8 @@ pub fn call_contract_static(
     let (function, data): (Function, Bytes) = ethers_utils::encode_function(method, args)?;
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
-    fill_transaction_sync(provider, signer, &mut tx, None)?;
-    let bytes: Result<Bytes, WrapperError> = provider.call_sync(&tx, None).map_err(|e| e.into());
+    fill_transaction(provider, signer, &mut tx, None)?;
+    let bytes: Result<Bytes, WrapperError> = provider.call(&tx, None).map_err(|e| e.into());
 
     if bytes.is_err() {
         Err(bytes.unwrap_err())
@@ -107,8 +103,8 @@ pub fn call_contract_static(
 }
 
 pub fn call_contract_method(
-    provider: &PolywrapProvider,
-    signer: &PolywrapSigner,
+    provider: &WrapProvider,
+    signer: &WrapSigner,
     address: Address,
     method: &str,
     args: &Vec<String>,
@@ -150,9 +146,9 @@ fn create_transaction(address: Option<Address>, data: Bytes, options: &EthersTxO
 }
 
 /// Helper for filling a transaction's nonce using the wallet
-fn fill_transaction_sync(
-    provider: &PolywrapProvider,
-    signer: &PolywrapSigner,
+fn fill_transaction(
+    provider: &WrapProvider,
+    signer: &WrapSigner,
     tx: &mut TypedTransaction,
     block: Option<BlockId>,
 ) -> Result<(), ProviderError> {
@@ -183,6 +179,6 @@ fn fill_transaction_sync(
     }
 
     provider
-        .fill_transaction_sync(tx, block)?;
+        .fill_transaction(tx, block)?;
     Ok(())
 }
