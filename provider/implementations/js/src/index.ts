@@ -8,7 +8,8 @@ import {
   IProvider_Module_Args_address as Args_address,
   IProvider_Module_Args_chainId as Args_chainId,
   IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
-  IProvider_Connection as SchemaConnection
+  IProvider_Connection as SchemaConnection,
+  IProvider_Module_Args_nonce as Args_nonce,
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
@@ -117,6 +118,15 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const connection = await this._getConnection(args.connection);
     const network = await connection.getProvider().getNetwork();
     return network.chainId.toString();
+  }
+
+  public async nonce(
+    args: Args_nonce,
+    _client: CoreClient
+  ): Promise<number> {
+    const connection = await this._getConnection(args.connection);
+    const nonce = await connection.getSigner().getTransactionCount();
+    return nonce 
   }
 
   private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {
