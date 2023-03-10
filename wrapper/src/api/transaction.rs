@@ -1,3 +1,4 @@
+
 use ethers_core::{
     abi::{Abi, Token, Function},
     types::{
@@ -10,19 +11,30 @@ use ethers_core::types::{BlockId, Chain};
 use ethers_providers::ProviderError;
 // use polywrap_wasm_rs::wrap_debug_log;
 
-use crate::error::WrapperError;
+use crate::{error::WrapperError};
 use crate::provider::{PolywrapProvider};
-use crate::signer::PolywrapSigner;
+use crate::signer::{PolywrapSigner};
+use crate::SyncSigner;
 use crate::polywrap_provider::sync_provider::SyncProvider;
 use crate::mapping::EthersTxOptions;
-
+use crate::imported::ArgsIsWallet;
 use crate::api::abi::{tokenize_values, encode_function};
 
 pub fn send_transaction(provider: &PolywrapProvider, signer: &PolywrapSigner, tx: &mut TypedTransaction) -> H256 {
     fill_transaction_sync(provider, signer, tx, None).unwrap();
-    let rlp = serialize(tx);
-    let tx_hash: H256 = provider.request_sync("eth_sendTransaction", [rlp]).unwrap();
-    tx_hash
+    let is_wallet_args = &ArgsIsWallet {
+        connection: signer.connection.clone()
+    };
+    let is_wallet = signer.iprovider.is_wallet(is_wallet_args).unwrap();
+    if is_wallet {
+        let rlp = serialize(tx);
+        let tx_hash: H256 = provider.request_sync("eth_sendTransaction", [rlp]).unwrap();
+        tx_hash
+    } else {
+        let signature = signer.sign_transaction_sync(tx).unwrap();
+        let rlp = tx.rlp_signed(&signature);
+        provider.request_sync("eth_sendRawTransaction", [rlp]).unwrap()
+    }
 }
 
 pub fn create_deploy_contract_transaction(

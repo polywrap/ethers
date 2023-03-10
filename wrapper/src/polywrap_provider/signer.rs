@@ -1,4 +1,4 @@
-use crate::wrap::imported::{ArgsAddress, ArgsChainId, ArgsSignMessage, ArgsSignTransaction};
+use crate::wrap::imported::{ArgsAddress, ArgsChainId, ArgsSignMessage, ArgsSignTransaction, ArgsNonce};
 use crate::wrap::{IProviderModule, IProviderConnection, Connection};
 use super::iprovider::get_iprovider;
 use ethers_core::types::{Address, Signature};
@@ -11,9 +11,11 @@ pub struct PolywrapSigner {
     address: Address,
     /// The wallet's chain id (for EIP-155)
     chain_id: u64,
+    // The wallet's nonce
+    nonce: i32,
     /// Ethereum connection to use
-    connection: Option<IProviderConnection>,
-    iprovider: IProviderModule,
+    pub connection: Option<IProviderConnection>,
+    pub iprovider: IProviderModule,
 }
 
 #[derive(Error, Debug)]
@@ -34,7 +36,11 @@ impl PolywrapSigner {
         let address = iprovider.address(&ArgsAddress { connection: iprovider_connection.clone() }).unwrap();
         let chain_id = iprovider.chain_id(&ArgsChainId { connection: iprovider_connection.clone() })
             .expect("failed to obtain signer chain id from provider plugin");
+        let nonce = iprovider.nonce(&ArgsNonce {
+            connection: iprovider_connection.clone()
+        }).unwrap();
         Self {
+            nonce,
             address: Address::from_str(&address).unwrap(),
             chain_id: u64::from_str(&chain_id).unwrap(),
             connection: iprovider_connection,

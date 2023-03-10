@@ -273,19 +273,6 @@ type Module {
     connection: Connection
   ): String!
 
-  solidityKeccak256Bytes(bytes: String!): String!
-
-  generateCreate2Address(
-    address: String!
-    salt: String!
-    initCode: String!
-  ): String!
-
-  encodeBytesValue(value: String!) : String!
-
-  keccak256BytesEncodePacked(bytes: String!) : String!
-  keccak256Bytes(bytes: String!): String!
-
   signTypedData(
     payload: JSON!
     connection: Connection
