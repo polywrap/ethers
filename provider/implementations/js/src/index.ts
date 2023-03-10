@@ -10,6 +10,7 @@ import {
   IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
   IProvider_Connection as SchemaConnection,
   IProvider_Module_Args_nonce as Args_nonce,
+  IProvider_Module_Args_isWallet as Args_isWallet,
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
@@ -47,7 +48,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
        * Ethers-rs defines the type of EIP 1559 tx
        * as 0x02, but metamask expects it as 0x2,
        * hence, the need of this workaround. Related:
-       * https://github.com/foundry-rs/foundry/issues/3890.
+       * https://github.com/MetaMask/metamask-extension/issues/18076
        * 
        * We check if the parameters comes as array, if the error
        * contains 0x2 and if the type is 0x02, then we change it
@@ -66,6 +67,26 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
         throw err;
       }
     }
+  }
+  public async isWallet(
+    args: Args_isWallet,
+    _client: CoreClient
+    ): Promise<boolean> {
+      const connection = await this._getConnection(args.connection);
+      /**
+       * This methods gives to the plugin the capability
+       * to check if the provider is a wallet (i.e metamask)
+       * or a given private key (with `new Wallet("0x..")`)
+       * this allows the wrapper to check if it needs to call
+       * sendTransaction or sendRawTransaction RPC method
+       * 
+       * It checks if the provider has the `provider` attribute
+       * which is something that only the `Web3Provider` has
+       * but not the JsonRpcProvider: Check the following link for more info:
+       * https://github.com/ethers-io/ethers.js/blob/v5.7.0/packages/providers/src.ts/web3-provider.ts#L122
+       */
+      const provider = connection.getProvider();
+      return "provider" in provider
   }
 
   async waitForTransaction(

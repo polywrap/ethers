@@ -45,4 +45,9 @@ type Module {
   Get the nonce of the signer's. Throws if signer is missing.
   """
   nonce(connection: Connection): Int!
+
+  """
+  Check if signer is wallet-based. Throws if signer is missing.
+  """
+  isWallet(connection: Connection): Boolean!
 }
