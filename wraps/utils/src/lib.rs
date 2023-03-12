@@ -1,7 +1,10 @@
-use ethers_core::abi::{encode_packed, Token};
+use ethers_core::abi::{encode_packed, Token, Function};
 use ethers_core::utils::{keccak256 as keccak256_ethers, get_create2_address};
 use ethers_core::types::{Bytes, Address};
-use ethers_utils::encode_params;
+use ethers_utils::{
+    encode_params as utils_encode_params,
+    encode_function as utils_encode_function
+};
 use polywrap_wasm_rs::{BigInt};
 use std::str::FromStr;
 
@@ -47,13 +50,13 @@ pub fn encode_meta_transaction(args: wrap::ArgsEncodeMetaTransaction) -> String 
     let operation = Token::FixedBytes(op_bytes.into());
     let to = args.to.parse::<Address>().unwrap();
 
-    let value = encode_params(
+    let value = utils_encode_params(
         vec!["uint256".into()],
         vec![args.value.to_string()]
     );
 
     let data = Bytes::from_str(&args.data).unwrap();
-    let data_len = encode_params(
+    let data_len = utils_encode_params(
         vec!["uint256".into()],
         vec![data.len().to_string()]
     );
@@ -67,4 +70,15 @@ pub fn encode_meta_transaction(args: wrap::ArgsEncodeMetaTransaction) -> String 
     ]).unwrap();
 
     format!("{}", Bytes::from(encoded)).to_string()
+}
+
+pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
+    let bytes: Bytes = utils_encode_params(input.types, input.values).into();
+    format!("{}", bytes).to_string()
+}
+
+pub fn encode_function(input: wrap::ArgsEncodeFunction) -> String {
+    let args: Vec<String> = input.args.unwrap_or(vec![]);
+    let (_, bytes): (Function, Bytes) = utils_encode_function(&input.method, &args).unwrap();
+    format!("{}", bytes).to_string()
 }

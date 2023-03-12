@@ -8,4 +8,13 @@ type Module {
   keccak256BytesEncodePacked(value: String!) : String!
   keccak256(value: String!): String!
   encodeMetaTransaction(operation: BigInt, to: String!, value: BigInt!, data: String!): String!
+  
+  encodeParams(
+    types: [String!]!
+    values: [String!]!
+  ): String!
+  encodeFunction(
+    method: String!
+    args: [String!]
+  ): String!
 }
