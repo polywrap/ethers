@@ -83,7 +83,7 @@ describe("Ethereum Wrapper", () => {
         uri,
         method: "keccak256BytesEncodePacked",
         args: {
-          bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a3600000000000000000000000000000000000000000000000000000000000000042",
+          value: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a3600000000000000000000000000000000000000000000000000000000000000042",
         }
       });
       if (!response.ok) throw response.error;
