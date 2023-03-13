@@ -10,7 +10,7 @@ import {
   IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
   IProvider_Connection as SchemaConnection,
   IProvider_Module_Args_nonce as Args_nonce,
-  IProvider_Module_Args_isWallet as Args_isWallet,
+  IProvider_Module_Args_isWeb3Provider as Args_isWeb3Provider,
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
@@ -68,8 +68,9 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       }
     }
   }
-  public async isWallet(
-    args: Args_isWallet,
+
+  public async isWeb3Provider(
+    args: Args_isWeb3Provider,
     _client: CoreClient
     ): Promise<boolean> {
       const connection = await this._getConnection(args.connection);
