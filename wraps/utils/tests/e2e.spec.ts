@@ -37,7 +37,7 @@ describe("Ethereum Wrapper", () => {
       expect(response.value).toEqual("0x57d4d0c68057Cc9446F93307082D63466BC3D731".toLowerCase());
     });
 
-    it.only("should encode packed [int16, uint48]", async () => {
+    it("should encode packed [int16, uint48]", async () => {
       const types = [ "int16", "uint48" ];
       const response = await client.invoke<string>({
         uri,
@@ -51,7 +51,7 @@ describe("Ethereum Wrapper", () => {
       expect(response.value).toEqual("0xffff00000000000c");
     });
 
-    it.only("should encode packed [uint256, uint256]", async () => {
+    it("should encode packed [uint256, uint256]", async () => {
       const types = [ "uint256", "uint256" ];
       const response = await client.invoke<string>({
         uri,
@@ -65,7 +65,7 @@ describe("Ethereum Wrapper", () => {
       expect(response.value).toEqual("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010");
     });
 
-    it.only("should encode packed [string, uint8]", async () => {
+    it("should encode packed [string, uint8]", async () => {
       const types = [ "string", "uint8" ];
       const values = [ "Hello", "3" ];
 
