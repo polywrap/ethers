@@ -39,6 +39,30 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const params = JSON.parse(args?.params ?? "[]");
     const provider = connection.getProvider();
 
+    /*
+    TODO: handle all signing related RPC calls here
+    if (isPrivateKeySigner) {
+      if (eth_sendTransaction) {
+
+      } else if (eth_signTypedData) {
+
+      } else if (...)
+    }
+    */
+
+    /*
+    TODO: handle all RPC calls that should be dealt with via ethers-specific
+    methods (helping improve performance due to caching)
+
+    if (method == eth_chainId) {
+      connection.provider.getChainId()
+    } else if (method == eth_transactionCount) { // nonce
+      connection.provider.getTransactionCount()
+    } else if (method == eth_address) {
+      ...
+    }
+    */
+
     try {
       const req = await provider.send(args.method, params);
       return JSON.stringify(req);
@@ -67,27 +91,6 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
         throw err;
       }
     }
-  }
-
-  public async isWeb3Provider(
-    args: Args_isWeb3Provider,
-    _client: CoreClient
-    ): Promise<boolean> {
-      const connection = await this._getConnection(args.connection);
-      /**
-       * This methods gives to the plugin the capability
-       * to check if the provider is a wallet (i.e metamask)
-       * or a given private key (with `new Wallet("0x..")`)
-       * this allows the wrapper to check if it needs to call
-       * sendTransaction or sendRawTransaction RPC method
-       * 
-       * It checks if the provider has the `provider` attribute
-       * which is something that only the `Web3Provider` has
-       * but not the JsonRpcProvider: Check the following link for more info:
-       * https://github.com/ethers-io/ethers.js/blob/v5.7.0/packages/providers/src.ts/web3-provider.ts#L122
-       */
-      const provider = connection.getProvider();
-      return "provider" in provider
   }
 
   async waitForTransaction(
@@ -123,32 +126,6 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const signedTxHex = await connection.getSigner().signTransaction(request);
     const signedTx = ethers.utils.parseTransaction(signedTxHex);
     return ethers.utils.joinSignature(signedTx as { r: string; s: string; v: number | undefined });
-  }
-
-  public async address(
-    args: Args_address,
-    _client: CoreClient
-  ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
-    return await connection.getSigner().getAddress();
-  }
-
-  public async chainId(
-    args: Args_chainId,
-    _client: CoreClient
-  ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
-    const network = await connection.getProvider().getNetwork();
-    return network.chainId.toString();
-  }
-
-  public async nonce(
-    args: Args_nonce,
-    _client: CoreClient
-  ): Promise<number> {
-    const connection = await this._getConnection(args.connection);
-    const nonce = await connection.getSigner().getTransactionCount();
-    return nonce 
   }
 
   private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {

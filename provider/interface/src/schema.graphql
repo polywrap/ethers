@@ -30,24 +30,4 @@ type Module {
   Typically, transactions are sent by `request` and signed by the wallet.
   """
   signTransaction(rlp: Bytes!, connection: Connection): String!
-
-  """
-  Get the ethereum address of the signer. Throws if signer is missing.
-  """
-  address(connection: Connection): String!
-
-  """
-  Get the chain id of the signer's connection. Throws if signer is missing.
-  """
-  chainId(connection: Connection): String!
-
-  """
-  Get the nonce of the signer's. Throws if signer is missing.
-  """
-  nonce(connection: Connection): Int!
-
-  """
-  Check if signer is wallet-based. Throws if signer is missing.
-  """
-  isWeb3Provider(connection: Connection): Boolean!
 }
