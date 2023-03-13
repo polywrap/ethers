@@ -17,4 +17,8 @@ type Module {
     method: String!
     args: [String!]
   ): String!
+  encodePacked(
+    types: [String!]!
+    values: [String!]!
+  ): String!
 }

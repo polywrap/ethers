@@ -1,9 +1,10 @@
-use ethers_core::abi::{encode_packed, Token, Function};
+use ethers_core::abi::{encode_packed as encode_packed_tokens, Token, Function, AbiEncode};
 use ethers_core::utils::{keccak256 as keccak256_ethers, get_create2_address};
 use ethers_core::types::{Bytes, Address};
 use ethers_utils::{
     encode_params as utils_encode_params,
-    encode_function as utils_encode_function
+    encode_function as utils_encode_function,
+    solidity_pack as utils_solidity_pack,
 };
 use polywrap_wasm_rs::{BigInt};
 use std::str::FromStr;
@@ -14,14 +15,14 @@ use wrap::*;
 pub fn keccak256(args: wrap::ArgsKeccak256) -> String {
     let decoded = Bytes::from_str(&args.value).unwrap();
     let hash = keccak256_ethers(decoded);
-    format!("{}", Bytes::from(hash)).to_string()
+    format!("{}", Bytes::from(hash))
 }
 
 pub fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked) -> String {
     let bytes = Bytes::from_str(&args.value).unwrap();
-    let bytes = Token::Bytes(bytes.to_vec());
-    let encoded = keccak256_ethers(encode_packed(&[bytes]).unwrap());
-    format!("{}", Bytes::from(encoded)).to_string()
+    let token = Token::Bytes(bytes.to_vec());
+    let encoded = keccak256_ethers(encode_packed_tokens(&[token]).unwrap());
+    format!("{}", Bytes::from(encoded))
 }
 
 pub fn generate_create2_address(
@@ -61,7 +62,7 @@ pub fn encode_meta_transaction(args: wrap::ArgsEncodeMetaTransaction) -> String 
         vec![data.len().to_string()]
     );
 
-    let encoded = encode_packed(&[
+    let encoded = encode_packed_tokens(&[
         operation, 
         Token::Address(to), 
         Token::Bytes(value.to_vec()),
@@ -69,16 +70,21 @@ pub fn encode_meta_transaction(args: wrap::ArgsEncodeMetaTransaction) -> String 
         Token::Bytes(data.to_vec())
     ]).unwrap();
 
-    format!("{}", Bytes::from(encoded)).to_string()
+    format!("{}", Bytes::from(encoded))
 }
 
 pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
     let bytes: Bytes = utils_encode_params(input.types, input.values).into();
-    format!("{}", bytes).to_string()
+    format!("{}", bytes)
 }
 
 pub fn encode_function(input: wrap::ArgsEncodeFunction) -> String {
     let args: Vec<String> = input.args.unwrap_or(vec![]);
     let (_, bytes): (Function, Bytes) = utils_encode_function(&input.method, &args).unwrap();
-    format!("{}", bytes).to_string()
+    format!("{}", bytes)
+}
+
+pub fn encode_packed(input: wrap::ArgsEncodePacked) -> String {
+    let encoded = utils_solidity_pack(input.types, input.values);
+    format!("{}", Bytes::from(encoded))
 }

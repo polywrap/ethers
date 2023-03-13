@@ -11,14 +11,7 @@ use crate::error::EncodeError;
 use std::str::FromStr;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
-    let tokens: Vec<Token> = values
-        .iter()
-        .zip(types.iter())
-        .map(|(arg, t)| {
-            let kind = HumanReadableParser::parse_type(&t).unwrap();
-            LenientTokenizer::tokenize(&kind, arg).unwrap()
-        })
-        .collect();
+    let tokens: Vec<Token> = tokenize_string_values(types, values);
     let bytes = encode(&tokens);
     bytes
 }
@@ -87,7 +80,23 @@ pub fn parse_method(method: &str) -> Result<Function, EncodeError> {
 
 pub fn encode_packed_bytes(bytes: String) -> String {
     let bytes = Bytes::from_str(&bytes).unwrap();
-    let bytes = Token::Bytes(bytes.to_vec());
-    let encoded = encode_packed(&[bytes]).unwrap();
-    format!("{}", Bytes::from(encoded)).to_string()
+    let token = Token::Bytes(bytes.to_vec());
+    let encoded = encode_packed(&[token]).unwrap();
+    format!("{}", Bytes::from(encoded))
+}
+
+pub fn solidity_pack(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
+    let tokens: Vec<Token> = tokenize_string_values(types, values);
+    encode_packed(tokens.as_slice()).unwrap()
+}
+
+fn tokenize_string_values(types: Vec<String>, values: Vec<String>) -> Vec<Token> {
+    values
+        .iter()
+        .zip(types.iter())
+        .map(|(arg, t)| {
+            let kind = HumanReadableParser::parse_type(&t).unwrap();
+            LenientTokenizer::tokenize(&kind, arg).unwrap()
+        })
+        .collect()
 }
