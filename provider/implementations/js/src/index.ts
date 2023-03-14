@@ -39,7 +39,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     // Optimizations, utilizing the cache within ethers
     if (args.method === "eth_chainId") {
       const network = await provider.getNetwork();
-      return network.chainId.toString();
+      return JSON.stringify("0x" + network.chainId.toString(16));
     }
 
     try {
