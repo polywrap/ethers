@@ -12,7 +12,7 @@ use crate::signer::PolywrapSigner;
 mod api;
 mod polywrap_provider;
 mod helpers;
-use polywrap_provider::{iprovider, provider, signer, error, sync_provider::SyncProvider};
+use polywrap_provider::{provider, signer, error, sync_provider::SyncProvider};
 use helpers::{format, mapping};
 use crate::polywrap_provider::sync_signer::SyncSigner;
 
