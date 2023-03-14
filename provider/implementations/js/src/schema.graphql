@@ -4,4 +4,9 @@ type Env {
   connection: IProvider_Connection
 }
 
-type Module implements IProvider {}
+type Module implements IProvider {
+  solidityPack(
+    types: [String!]!
+    values: [String!]!
+  ): String!
+}

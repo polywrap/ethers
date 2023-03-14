@@ -8,7 +8,7 @@ import {
   IProvider_Module_Args_address as Args_address,
   IProvider_Module_Args_chainId as Args_chainId,
   IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
-  IProvider_Connection as SchemaConnection
+  IProvider_Connection as SchemaConnection, Args_solidityPack
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
@@ -117,6 +117,23 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const connection = await this._getConnection(args.connection);
     const network = await connection.getProvider().getNetwork();
     return network.chainId.toString();
+  }
+
+  public async solidityPack(args: Args_solidityPack): Promise<string> {
+    return ethers.utils.solidityPack(args.types, this.parseArgs(args.values));
+  }
+
+  private parseArgs(args?: string[] | null): unknown[] {
+    if (!args) {
+      return [];
+    }
+
+    return args.map((arg: string) =>
+      (arg.startsWith("[") && arg.endsWith("]")) ||
+      (arg.startsWith("{") && arg.endsWith("}"))
+        ? JSON.parse(arg)
+        : arg
+    );
   }
 
   private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {
