@@ -8,7 +8,7 @@
     "deploy": "npx polywrap deploy -o deployment.json"
   },
   "devDependencies": {
-    "polywrap": "0.10.0-pre.10"
+    "polywrap": "0.10.0-pre.12"
   },
   "publishConfig": {
     "access": "public"

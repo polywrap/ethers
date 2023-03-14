@@ -7,12 +7,13 @@ jest.setTimeout(360000);
 
 describe("Ethereum Plugin", () => {
   let client: PolywrapClient;
+  let clientNoSigner: PolywrapClient;
 
   const uri = "wrap://plugin/ethereum-provider";
 
   beforeAll(async () => {
-    const config = new ClientConfigBuilder()
-      .addPackage(
+    client = new PolywrapClient(
+      new ClientConfigBuilder().addPackage(
         uri,
         ethereumProviderPlugin({
           connections: new Connections({
@@ -25,9 +26,24 @@ describe("Ethereum Plugin", () => {
             defaultNetwork: "binance",
           })
         }),
-      ).build();
+      ).build()
+    );
 
-    client = new PolywrapClient(config);
+    clientNoSigner = new PolywrapClient(
+      new ClientConfigBuilder().addPackage(
+        uri,
+        ethereumProviderPlugin({
+          connections: new Connections({
+            networks: {
+              binance: new Connection({
+                provider: "https://bsc-dataseed1.binance.org/",
+              })
+            },
+            defaultNetwork: "binance",
+          })
+        }),
+      ).build()
+    );
   });
 
   describe("EthereumProviderPlugin", () => {
@@ -43,6 +59,44 @@ describe("Ethereum Plugin", () => {
 
       const res = BigNumber.from(JSON.parse(response.value)).toString();
       expect(res).toBe("56");
+    });
+
+    it("eth_getTransactionCount", async () => {
+      const response = await client.invoke<string>({
+        uri,
+        method: "request",
+        args: {
+          method: "eth_getTransactionCount",
+          params: `["0x3f349bBaFEc1551819B8be1EfEA2fC46cA749aA1","latest"]`
+        }
+      });
+
+      if (response.ok === false) fail(response.error);
+      expect(response.value).toBeDefined();
+      expect(BigNumber.from(JSON.parse(response.value)).gt(0)).toBe(true);
+    });
+
+    it("signerAddress", async () => {
+      const response = await client.invoke<string | undefined>({
+        uri,
+        method: "signerAddress",
+      });
+
+      if (response.ok === false) fail(response.error);
+      expect(response.value).toBeDefined();
+
+      expect(response.value?.startsWith("0x")).toBe(true);
+    });
+
+    it("signerAddress - no signer", async () => {
+      const response = await clientNoSigner.invoke<string | undefined>({
+        uri,
+        method: "signerAddress",
+      });
+
+      if (response.ok === false) fail(response.error);
+      expect(response.value).toBeDefined();
+      expect(response.value).toBe(null);
     });
 
     it("signMessage", async () => {
@@ -71,28 +125,6 @@ describe("Ethereum Plugin", () => {
 
       expect(response.value).toBeDefined();
       expect(response.value).toBe("0xeb91a997a865e2e4a48c098ea519666ed7fa5d9922f4e7e9b6838dc18ecfdab03a568682c3f0a4cb6b78ef0f601117a0de9848c089c94c01f782f067404c1eae1b");
-    });
-
-    it("address", async () => {
-      const response = await client.invoke<string | undefined>({
-        uri,
-        method: "address",
-      });
-
-      if (response.ok === false) fail(response.error);
-      expect(response.value).toBeDefined();
-
-      expect(response.value?.startsWith("0x")).toBe(true);
-    });
-
-    it("chainId", async () => {
-      const response = await client.invoke<string>({
-        uri,
-        method: "chainId",
-      });
-
-      if (response.ok === false) fail(response.error);
-      expect(response.value).toEqual("56");
     });
   });
 });

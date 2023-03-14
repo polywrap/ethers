@@ -2,15 +2,12 @@ import {
   Module,
   manifest,
   CoreClient,
-  IProvider_Module_Args_request as Args_request,
-  IProvider_Module_Args_signMessage as Args_signMessage,
-  IProvider_Module_Args_signTransaction as Args_signTransaction,
-  IProvider_Module_Args_address as Args_address,
-  IProvider_Module_Args_chainId as Args_chainId,
-  IProvider_Module_Args_waitForTransaction as Args_waitForTransaction,
-  IProvider_Connection as SchemaConnection,
-  IProvider_Module_Args_nonce as Args_nonce,
-  IProvider_Module_Args_isWeb3Provider as Args_isWeb3Provider,
+  Args_request,
+  Args_signMessage,
+  Args_signTransaction,
+  Args_waitForTransaction,
+  Connection as SchemaConnection,
+  Args_signerAddress,
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection } from "./Connection";
@@ -39,29 +36,11 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const params = JSON.parse(args?.params ?? "[]");
     const provider = connection.getProvider();
 
-    /*
-    TODO: handle all signing related RPC calls here
-    if (isPrivateKeySigner) {
-      if (eth_sendTransaction) {
-
-      } else if (eth_signTypedData) {
-
-      } else if (...)
+    // Optimizations, utilizing the cache within ethers
+    if (args.method === "eth_chainId") {
+      const network = await provider.getNetwork();
+      return network.chainId.toString();
     }
-    */
-
-    /*
-    TODO: handle all RPC calls that should be dealt with via ethers-specific
-    methods (helping improve performance due to caching)
-
-    if (method == eth_chainId) {
-      connection.provider.getChainId()
-    } else if (method == eth_transactionCount) { // nonce
-      connection.provider.getTransactionCount()
-    } else if (method == eth_address) {
-      ...
-    }
-    */
 
     try {
       const req = await provider.send(args.method, params);
@@ -109,6 +88,18 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     return true;
   }
 
+  public async signerAddress(
+    args: Args_signerAddress,
+    _client: CoreClient
+  ): Promise<string | null> {
+    try {
+      const connection = await this._getConnection(args.connection);
+      return await connection.getSigner().getAddress();
+    } catch (_error) {
+      return null;
+    }
+  }
+
   public async signMessage(
     args: Args_signMessage,
     _client: CoreClient
@@ -129,7 +120,9 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   }
 
   private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {
-    return this._connections.getConnection(connection ?? this.env.connection);
+    return this._connections.getConnection(
+      connection ?? this.env.connection
+    );
   }
 
   private _parseTransaction(rlp: Uint8Array): ethers.providers.TransactionRequest {
