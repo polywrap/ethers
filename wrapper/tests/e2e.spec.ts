@@ -111,7 +111,6 @@ describe("Ethereum Wrapper", () => {
       const response = await client.invoke<string>({
         uri,
         method: "getChainId",
-        args: {},
       });
 
       if (!response.ok) throw response.error;
