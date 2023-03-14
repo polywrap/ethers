@@ -10,7 +10,7 @@ import {
   Args_signerAddress,
 } from "./wrap";
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
-import { Connection } from "./Connection";
+import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
 import { ethers } from "ethers";
 export * from "./Connection";
@@ -24,7 +24,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   private _connections: Connections;
 
   constructor(config: ProviderConfig) {
-    super(config)
+    super(config);
     this._connections = config.connections;
   }
 
@@ -42,6 +42,51 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       return JSON.stringify("0x" + network.chainId.toString(16));
     }
 
+    if (args.method === "eth_getTransactionCount") {
+      try {
+        const signer = await connection.getSigner();
+        const nonce = await signer.getTransactionCount("latest");
+        return "0x" + nonce.toString(16);
+      } catch (_) {
+        return "0x0";
+      }
+    }
+
+    if (args.method === "eth_sendTransaction") {
+      if (params.length < 1) {
+        throw new Error(
+          "Parameters must be given in eth_sendTransaction method"
+        );
+      }
+
+      const [transaction] = params;
+      if (connection.getSignerType() == SignerType.CUSTOM_SIGNER) {
+        const signer = await connection.getSigner();
+
+        // Ethers.js expects "0" | "1" | "2"
+        // but it's being received as hex (e.g: "0x02")
+        if ("type" in transaction) {
+          transaction.type = parseInt(transaction.type);
+        }
+
+        // Ethers.js expects `gasLimit` instead of `gas`
+        if ("gas" in transaction) {
+          transaction.gasLimit = transaction.gas;
+          delete transaction.gas;
+        }
+
+        const req = await signer.sendTransaction(transaction);
+        return JSON.stringify(req.hash);
+      }
+    }
+
+    // if (args.method === "eth_signTypedData") {
+    //   if (connection.isPrivateKeySigner()) {
+    //     const req = await provider.send("eth_sendRawTransaction", params);
+    //     return JSON.stringify(req);
+    //   }
+    // }
+
     try {
       const req = await provider.send(args.method, params);
       return JSON.stringify(req);
@@ -52,17 +97,14 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
        * as 0x02, but metamask expects it as 0x2,
        * hence, the need of this workaround. Related:
        * https://github.com/MetaMask/metamask-extension/issues/18076
-       * 
+       *
        * We check if the parameters comes as array, if the error
        * contains 0x2 and if the type is 0x02, then we change it
        */
       const paramsIsArray = Array.isArray(params) && params.length > 0;
-      const messageContains0x2 = err && err.message && err.message.indexOf("0x2") > -1;
-      if (
-        messageContains0x2 &&
-        paramsIsArray &&
-        params[0].type === "0x02"
-      ) {
+      const messageContains0x2 =
+        err && err.message && err.message.indexOf("0x2") > -1;
+      if (messageContains0x2 && paramsIsArray && params[0].type === "0x02") {
         params[0].type = "0x2";
         const req = await provider.send(args.method, params);
         return JSON.stringify(req);
@@ -116,27 +158,36 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     const request = this._parseTransaction(args.rlp);
     const signedTxHex = await connection.getSigner().signTransaction(request);
     const signedTx = ethers.utils.parseTransaction(signedTxHex);
-    return ethers.utils.joinSignature(signedTx as { r: string; s: string; v: number | undefined });
-  }
-
-  private async _getConnection(connection?: SchemaConnection | null): Promise<Connection> {
-    return this._connections.getConnection(
-      connection ?? this.env.connection
+    return ethers.utils.joinSignature(
+      signedTx as { r: string; s: string; v: number | undefined }
     );
   }
 
-  private _parseTransaction(rlp: Uint8Array): ethers.providers.TransactionRequest {
+  private async _getConnection(
+    connection?: SchemaConnection | null
+  ): Promise<Connection> {
+    return this._connections.getConnection(connection ?? this.env.connection);
+  }
+
+  private _parseTransaction(
+    rlp: Uint8Array
+  ): ethers.providers.TransactionRequest {
     const tx = ethers.utils.parseTransaction(rlp);
 
     // r, s, v can sometimes be set to 0, but ethers will throw if the keys exist at all
-    let request: Record<string, any> = { ...tx, r: undefined, s: undefined, v: undefined };
+    let request: Record<string, any> = {
+      ...tx,
+      r: undefined,
+      s: undefined,
+      v: undefined,
+    };
 
     // remove undefined and null values
     request = Object.keys(request).reduce((prev, curr) => {
       const val = request[curr];
-      if (val !== undefined && val !== null) prev[curr] = val
+      if (val !== undefined && val !== null) prev[curr] = val;
       return prev;
-    }, {} as Record<string, unknown>)
+    }, {} as Record<string, unknown>);
 
     return request;
   }
@@ -144,7 +195,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
 export const ethereumProviderPlugin: PluginFactory<ProviderConfig> = (
   config: ProviderConfig
-) => new PluginPackage<ProviderConfig>(new EthereumProviderPlugin(config), manifest);
+) =>
+  new PluginPackage<ProviderConfig>(
+    new EthereumProviderPlugin(config),
+    manifest
+  );
 
 export const plugin = ethereumProviderPlugin;
-
