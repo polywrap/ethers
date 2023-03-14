@@ -46,7 +46,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       try {
         const signer = await connection.getSigner();
         const nonce = await signer.getTransactionCount("latest");
-        return "0x" + nonce.toString(16);
+        return JSON.stringify("0x" + nonce.toString(16));
       } catch (_) {
         return "0x0";
       }
@@ -80,12 +80,30 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       }
     }
 
-    // if (args.method === "eth_signTypedData") {
-    //   if (connection.isPrivateKeySigner()) {
-    //     const req = await provider.send("eth_sendRawTransaction", params);
-    //     return JSON.stringify(req);
-    //   }
-    // }
+    if (args.method === "eth_signTypedData") {
+      if (params.length < 2) {
+        throw new Error(
+          "Address & TypedData must be given in eth_signTypedData method"
+        );
+      }
+      if (connection.getSignerType() == SignerType.CUSTOM_SIGNER) {
+        const signer = await connection.getSigner()
+        let signature = "";
+        // This is a hack because in ethers v5.7 this method is experimental
+        // when when we update to ethers v6 this wont be needed. More info:
+        // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
+        if ("_signTypedData" in signer) {
+          const [_, data] = params
+          // @ts-ignore
+          signature = await signer._signTypedData(
+            data.domain,
+            data.types,
+            data.message
+          )
+        }
+        return JSON.stringify(signature)
+      }
+    }
 
     try {
       const req = await provider.send(args.method, params);
