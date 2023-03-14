@@ -2,6 +2,7 @@ use crate::wrap::imported::{ArgsSignerAddress, ArgsSignMessage, ArgsSignTransact
 use crate::wrap::{ProviderModule, ProviderConnection, Connection};
 use ethers_core::types::{Address, Signature};
 use std::str::FromStr;
+use polywrap_wasm_rs::JSON;
 use thiserror::Error;
 
 #[derive(Clone, Debug)]
@@ -31,17 +32,16 @@ impl PolywrapSigner {
         let address = ProviderModule::signer_address(&ArgsSignerAddress {
             connection: iprovider_connection.clone()
         }).unwrap().unwrap();
-        let chain_id = ProviderModule::request(&ArgsRequest {
+        let chain_id: JSON::Value = ProviderModule::request(&ArgsRequest {
             method: "eth_chainId".to_string(),
             params: None,
             connection: iprovider_connection.clone()
         })
             .expect("failed to obtain signer chain id from provider plugin");
+        let chain_id_hex: String = serde_json::from_value::<String>(chain_id).unwrap().as_str().to_string();
         Self {
             address: Address::from_str(&address.as_str()).unwrap(),
-            chain_id: u64::from_str(
-                serde_json::to_string(&chain_id).unwrap().as_str()
-            ).unwrap(),
+            chain_id: u64::from_str_radix(&chain_id_hex[2..], 16).unwrap(),
             connection: iprovider_connection,
         }
     }
