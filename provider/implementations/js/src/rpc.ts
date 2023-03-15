@@ -61,6 +61,8 @@ export namespace eth_sendTransaction {
       gasLimit: transaction.gas
     };
 
+    delete (result as unknown as Record<string, unknown>).gas
+
     // Ethers.js expects "0" | "1" | "2"
     // but it's being received as hex (e.g: "0x02")
     if ("type" in transaction) {
