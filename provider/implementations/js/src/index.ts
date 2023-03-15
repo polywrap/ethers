@@ -12,8 +12,7 @@ import {
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
 import {
-  eth_sendTransaction,
-  eth_signTypedData
+  eth_sendTransaction
 } from "./rpc";
 
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
@@ -39,13 +38,14 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
-    const params = args?.params ?? "[]";
+    const paramsStr = args?.params ?? "[]";
     const provider = connection.getProvider();
 
     // Optimizations, utilizing the cache within ethers
     if (args.method === "eth_chainId") {
       const network = await provider.getNetwork();
-      return JSON.stringify("0x" + network.chainId.toString(16));
+      const result = JSON.stringify("0x" + network.chainId.toString(16));
+      return result;
     }
 
     if (
@@ -54,7 +54,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     ) {
       const signer = await connection.getSigner();
       const parameters = eth_sendTransaction.deserializeParameters(
-        params
+        paramsStr
       );
       const request = eth_sendTransaction.toEthers(
         parameters[0]
@@ -63,34 +63,12 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       return JSON.stringify(res.hash);
     }
 
-    if (
-      args.method === "eth_signTypedData" &&
-      connection.getSignerType() == SignerType.CUSTOM_SIGNER
-    ) {
-      const signer = await connection.getSigner();
-      const parameters = eth_signTypedData.deserializeParameters(
-        params
-      );
-      let signature = "";
-      // This is a hack because in ethers v5.7 this method is experimental
-      // when when we update to ethers v6 this wont be needed. More info:
-      // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
-      if ("_signTypedData" in signer) {
-        const [_, data] = parameters
-        // @ts-ignore
-        signature = await signer._signTypedData(
-          data.domain,
-          data.types,
-          data.message
-        )
-      }
-      return JSON.stringify(signature)
-    }
+    const params = JSON.parse(paramsStr);
 
     try {
       const req = await provider.send(
         args.method,
-        JSON.parse(params)
+        params
       );
       return JSON.stringify(req);
     } catch (err) {

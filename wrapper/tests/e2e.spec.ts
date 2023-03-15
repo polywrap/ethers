@@ -1,5 +1,12 @@
-import {ClientConfigBuilder, PolywrapClient} from "@polywrap/client-js";
-import { Connection, Connections, ethereumProviderPlugin } from "@polywrap/ethereum-provider-js";
+import {
+  ClientConfigBuilder,
+  PolywrapClient
+} from "@polywrap/client-js";
+import {
+  Connection,
+  Connections,
+  ethereumProviderPlugin
+} from "../../provider/implementations/js";
 
 import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
@@ -13,7 +20,7 @@ import {
   addStructToStorage,
   setPrimitiveToStorage,
 } from "./utils/storage";
-import {ETH_ENS_IPFS_MODULE_CONSTANTS} from "polywrap";
+import { ETH_ENS_IPFS_MODULE_CONSTANTS } from "polywrap";
 
 const { hash: namehash } = require("eth-ens-namehash");
 const contracts = {
