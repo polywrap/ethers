@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "wrapper/**"
+      - "provider/interface/**"
+      - "provider/implementations/js/**"
 
 jobs:
   ci:
