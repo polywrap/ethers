@@ -12,7 +12,8 @@ import {
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
 import {
-  eth_sendTransaction
+  eth_sendTransaction,
+  eth_signTypedData
 } from "./rpc";
 
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
@@ -63,8 +64,31 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       return JSON.stringify(res.hash);
     }
 
+    if (
+      args.method === "eth_signTypedData" &&
+      connection.getSignerType() == SignerType.CUSTOM_SIGNER
+    ) {
+      const signer = await connection.getSigner();
+      const parameters = eth_signTypedData.deserializeParameters(
+        paramsStr
+      );
+      let signature = "";
+      // This is a hack because in ethers v5.7 this method is experimental
+      // when when we update to ethers v6 this wont be needed. More info:
+      // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
+      if ("_signTypedData" in signer) {
+        const [_, data] = parameters
+        const payload = eth_signTypedData.toEthers(data)
+        // @ts-ignore
+        signature = await signer._signTypedData(
+          payload.domain,
+          payload.types,
+          payload.message
+        )
+      }
+      return JSON.stringify(signature)
+    }
     const params = JSON.parse(paramsStr);
-
     try {
       const req = await provider.send(
         args.method,
