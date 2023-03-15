@@ -9,10 +9,16 @@ import {
   Connection as SchemaConnection,
   Args_signerAddress,
 } from "./wrap";
-import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
+import {
+  eth_sendTransaction,
+  eth_signTypedData
+} from "./rpc";
+
+import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
 import { ethers } from "ethers";
+
 export * from "./Connection";
 export * from "./Connections";
 
@@ -33,7 +39,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     _client: CoreClient
   ): Promise<string> {
     const connection = await this._getConnection(args.connection);
-    const params = JSON.parse(args?.params ?? "[]");
+    const params = args?.params ?? "[]";
     const provider = connection.getProvider();
 
     // Optimizations, utilizing the cache within ethers
@@ -42,71 +48,50 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       return JSON.stringify("0x" + network.chainId.toString(16));
     }
 
-    if (args.method === "eth_getTransactionCount") {
-      try {
-        const signer = await connection.getSigner();
-        const nonce = await signer.getTransactionCount("latest");
-        return JSON.stringify("0x" + nonce.toString(16));
-      } catch (_) {
-        return "0x0";
-      }
+    if (
+      args.method === "eth_sendTransaction" &&
+      connection.getSignerType() == SignerType.CUSTOM_SIGNER
+    ) {
+      const signer = await connection.getSigner();
+      const parameters = eth_sendTransaction.deserializeParameters(
+        params
+      );
+      const request = eth_sendTransaction.toEthers(
+        parameters[0]
+      );
+      const res = await signer.sendTransaction(request);
+      return JSON.stringify(res.hash);
     }
 
-    if (args.method === "eth_sendTransaction") {
-      if (params.length < 1) {
-        throw new Error(
-          "Parameters must be given in eth_sendTransaction method"
-        );
+    if (
+      args.method === "eth_signTypedData" &&
+      connection.getSignerType() == SignerType.CUSTOM_SIGNER
+    ) {
+      const signer = await connection.getSigner();
+      const parameters = eth_signTypedData.deserializeParameters(
+        params
+      );
+      let signature = "";
+      // This is a hack because in ethers v5.7 this method is experimental
+      // when when we update to ethers v6 this wont be needed. More info:
+      // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
+      if ("_signTypedData" in signer) {
+        const [_, data] = parameters
+        // @ts-ignore
+        signature = await signer._signTypedData(
+          data.domain,
+          data.types,
+          data.message
+        )
       }
-
-      const [transaction] = params;
-      if (connection.getSignerType() == SignerType.CUSTOM_SIGNER) {
-        const signer = await connection.getSigner();
-
-        // Ethers.js expects "0" | "1" | "2"
-        // but it's being received as hex (e.g: "0x02")
-        if ("type" in transaction) {
-          transaction.type = parseInt(transaction.type);
-        }
-
-        // Ethers.js expects `gasLimit` instead of `gas`
-        if ("gas" in transaction) {
-          transaction.gasLimit = transaction.gas;
-          delete transaction.gas;
-        }
-
-        const req = await signer.sendTransaction(transaction);
-        return JSON.stringify(req.hash);
-      }
-    }
-
-    if (args.method === "eth_signTypedData") {
-      if (params.length < 2) {
-        throw new Error(
-          "Address & TypedData must be given in eth_signTypedData method"
-        );
-      }
-      if (connection.getSignerType() == SignerType.CUSTOM_SIGNER) {
-        const signer = await connection.getSigner()
-        let signature = "";
-        // This is a hack because in ethers v5.7 this method is experimental
-        // when when we update to ethers v6 this wont be needed. More info:
-        // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
-        if ("_signTypedData" in signer) {
-          const [_, data] = params
-          // @ts-ignore
-          signature = await signer._signTypedData(
-            data.domain,
-            data.types,
-            data.message
-          )
-        }
-        return JSON.stringify(signature)
-      }
+      return JSON.stringify(signature)
     }
 
     try {
-      const req = await provider.send(args.method, params);
+      const req = await provider.send(
+        args.method,
+        JSON.parse(params)
+      );
       return JSON.stringify(req);
     } catch (err) {
       /**
