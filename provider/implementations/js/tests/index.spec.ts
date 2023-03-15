@@ -8,7 +8,6 @@ jest.setTimeout(360000);
 describe("Ethereum Plugin", () => {
   let client: PolywrapClient;
   let clientNoSigner: PolywrapClient;
-
   const uri = "wrap://plugin/ethereum-provider";
 
   beforeAll(async () => {
@@ -125,6 +124,64 @@ describe("Ethereum Plugin", () => {
 
       expect(response.value).toBeDefined();
       expect(response.value).toBe("0xeb91a997a865e2e4a48c098ea519666ed7fa5d9922f4e7e9b6838dc18ecfdab03a568682c3f0a4cb6b78ef0f601117a0de9848c089c94c01f782f067404c1eae1b");
+    });
+
+    it("signTypedData", async () => {
+      const domain = {
+        name: 'Ether Mail',
+        version: '1',
+        chainId: 1,
+        verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
+    };
+    
+    // The named list of all type definitions
+    const types = {
+      EIP712Domain: [
+        {
+          type: "uint256",
+          name: "chainId",
+        },
+        {
+          type: "address",
+          name: "verifyingContract",
+        },
+      ],
+        Person: [
+            { name: 'name', type: 'string' },
+            { name: 'wallet', type: 'address' }
+        ],
+        Mail: [
+            { name: 'from', type: 'Person' },
+            { name: 'to', type: 'Person' },
+            { name: 'contents', type: 'string' }
+        ]
+    };
+    
+    // The data to sign
+    const message = {
+        from: {
+            name: 'Cow',
+            wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826'
+        },
+        to: {
+            name: 'Bob',
+            wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB'
+        },
+        contents: 'Hello, Bob!'
+    };
+  
+      const response = await client.invoke<string>({
+        uri,
+        method: "request",
+        args: {
+          method: "eth_signTypedData",
+          params: JSON.stringify(["0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1", { domain, primaryType: 'Mail', types, message }])
+        }
+      });
+      if (!response.ok) fail(response.error);
+      expect(response.value).toBe(
+        "\"0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c\""
+      );
     });
   });
 });

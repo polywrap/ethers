@@ -118,5 +118,25 @@ export namespace eth_signTypedData {
 
     return params;
   }
+
+  export type EthersTypedData = {
+    domain: TypedData["domain"]
+    types: {
+      [key: string]: unknown;
+    }
+    message: TypedData["message"]
+  };
+
+  export function toEthers(
+    typedData: TypedData
+  ): EthersTypedData {
+    let types: Omit<TypedData["types"], "EIP712Domain"> = typedData.types;
+    delete types.EIP712Domain;
+    return {
+      domain: typedData.domain,
+      types,
+      message: typedData.message
+    }
+  }
 }
 
