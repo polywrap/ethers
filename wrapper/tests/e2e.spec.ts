@@ -388,20 +388,6 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("0x57d4d0c68057Cc9446F93307082D63466BC3D731".toLowerCase());
       });
 
-      it.skip("should encode packed", async () => {
-        const response = await client.invoke<string>({
-          uri,
-          method: "wEncodePacked",
-          args: {
-            bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360",
-            uint: "0x0000000000000000000000000000000000000000000000000000000000000042",
-          }
-        });
-        if (!response.ok) throw response.error;
-        expect(response.value).toEqual("0x169b91711c9e5fc8418feaca506caa84243dc031eb336f195d6399e79978f138".toLowerCase());
-     
-      });
-
       it("should encode bytes and convert to keccak", async () => {
         const response = await client.invoke<string>({
           uri,
@@ -426,6 +412,47 @@ describe("Ethereum Wrapper", () => {
         if (!response.ok) throw response.error;
         expect(response.value).toEqual("0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360".toLowerCase());
      
+      });
+    });
+
+    describe("solidityPack", () => {
+      it("should encode packed [int16, uint48]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "int16", "uint48" ],
+            values: [ "-1", "12" ]
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0xffff00000000000c");
+      });
+
+      it("should encode packed [uint256, uint256]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "uint256", "uint256" ],
+            values: [ "8", "16" ]
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010");
+      });
+
+      it("should encode packed [string, uint8]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "string", "uint8" ],
+            values: [ "Hello", "3" ],
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x48656c6c6f03");
       });
     });
 

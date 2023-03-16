@@ -7,6 +7,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
 
 use ethers_core::types::{TxHash};
+use polywrap_wasm_rs::JSON;
 
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
@@ -51,14 +52,14 @@ impl PolywrapProvider {
         method: &str,
         params: T,
     ) -> Result<R, ProviderError> {
-        let params_v = serde_json::to_value(&params).unwrap();
+        let params_v = JSON::to_value(&params).unwrap();
         let res = ProviderModule::request(&ArgsRequest {
             method: method.to_string(),
             params: Some(params_v),
             connection: self.connection.clone(),
         })
             .map_err(|err| ClientError::Error(err))?;
-        let res = serde_json::from_value(res).map_err(|err| ClientError::SerdeJson {
+        let res = JSON::from_value(res).map_err(|err| ClientError::SerdeJson {
             err,
             text: "from str failed".to_string(),
         })?;
