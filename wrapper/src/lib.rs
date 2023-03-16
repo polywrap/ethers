@@ -315,6 +315,15 @@ pub fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked)
     format!("{}", Bytes::from(encoded)).to_string()
 }
 
+// pub fn solidity_pack(args: wrap::ArgsSolidityPack) -> String {
+//     let provider = PolywrapProvider::new(&None);
+//     let params = JSON::json!({
+//         "types": args.types,
+//         "values": args.values
+//     }).to_string();
+//     return provider.request_sync("eth_encodePacked", params).unwrap()
+// }
+
 pub fn generate_create2_address(
     args: wrap::ArgsGenerateCreate2Address,
 ) -> String {
