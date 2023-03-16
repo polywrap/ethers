@@ -8,6 +8,7 @@ import {
   ethereumProviderPlugin
 } from "../../provider/implementations/js";
 
+import { provider as Web3MockProvider } from "ganache"
 import { ethers, Wallet } from "ethers";
 import { keccak256 } from "js-sha3";
 import * as path from 'path'
@@ -47,7 +48,8 @@ const contracts = {
 jest.setTimeout(360000);
 
 describe("Ethereum Wrapper", () => {
-  let client: PolywrapClient;
+  let clientWithCustomSigner: PolywrapClient;
+  let clientWithWeb3Provider: PolywrapClient;
   let ensAddress: string;
   let registrarAddress: string;
   let viewMethodsAddress: string;
@@ -88,11 +90,42 @@ describe("Ethereum Wrapper", () => {
           })
         })
       })
-      .build();
 
-    client = new PolywrapClient(config);
+    clientWithCustomSigner = new PolywrapClient(config.build());
 
-    const response = await client.invoke<string>({
+    const configWeb3Provider = new ClientConfigBuilder()
+    .addDefaults()
+    .addEnv(
+      "ens/wraps.eth:ens-uri-resolver-ext@1.0.0",
+      {
+        registryAddress: ensAddress,
+      },
+    )
+    .addPackages({
+      [ethProviderPluginUri]: ethereumProviderPlugin({
+        connections: new Connections({
+          networks: {
+            testnet: new Connection({
+              provider: Web3MockProvider({
+                wallet: {
+                  accounts: [
+                    {
+                      balance: "0x100000000000000000000000000000",
+                      secretKey: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+                    }
+                  ]
+                }
+              })
+            })
+          },
+          defaultNetwork: "testnet",
+        })
+      })
+    })
+
+    clientWithWeb3Provider = new PolywrapClient(configWeb3Provider.build())
+
+    const response = await clientWithCustomSigner.invoke<string>({
       uri,
       method: "deployContract",
       args: {
@@ -115,7 +148,7 @@ describe("Ethereum Wrapper", () => {
 
   describe("Ethereum Wrapper", () => {
     it("chainId", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getChainId",
       });
@@ -126,7 +159,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("getBalance", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getBalance",
         args: {
@@ -139,7 +172,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("checkAddress", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "checkAddress",
         args: {
@@ -153,7 +186,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("getGasPrice", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getGasPrice"
       });
@@ -163,7 +196,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("signMessage", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "signMessage",
         args: {
@@ -179,7 +212,7 @@ describe("Ethereum Wrapper", () => {
 
     it("signMessageBytes", async () => {
       const encoder = new TextEncoder();
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "signMessageBytes",
         args: {
@@ -193,7 +226,7 @@ describe("Ethereum Wrapper", () => {
       );
     });
 
-    it("signTypedData", async () => {
+    describe("signTypedData", () => {
       const domain = {
         name: 'Ether Mail',
         version: '1',
@@ -204,6 +237,14 @@ describe("Ethereum Wrapper", () => {
       // The named list of all type definitions
       const types = {
         EIP712Domain: [
+          {
+            type: "string",
+            name: "name"
+          },
+          {
+            type: "string",
+            name: "version"
+          },
           {
             type: "uint256",
             name: "chainId",
@@ -237,22 +278,39 @@ describe("Ethereum Wrapper", () => {
         contents: 'Hello, Bob!'
       };
 
-      const response = await client.invoke<string>({
-        uri,
-        method: "signTypedData",
-        args: {
-          payload: JSON.stringify({ domain, primaryType:'Mail', types, message })
-        }
-      });
+      it("with custom signer", async () => {
+        const response = await clientWithCustomSigner.invoke<string>({
+          uri,
+          method: "signTypedData",
+          args: {
+            payload: JSON.stringify({ domain, primaryType: 'Mail', types, message })
+          }
+        });
+  
+        if (!response.ok) throw response.error;
+        expect(response.value).toBe(
+          "0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c"
+        );
+      })
 
-      if (!response.ok) throw response.error;
-      expect(response.value).toBe(
-        "0x0a5c8f973cd8605ac5743c271b60e34d76186f29d6de319f9792b5d66fb63e372df3018c984a52d1cfb4bf29eb645198b54acf4ea7bec94a023c463bebb992091c"
-      );
+      it("with provider signer", async () => {
+        const response = await clientWithWeb3Provider.invoke<string>({
+          uri,
+          method: "signTypedData",
+          args: {
+            payload: JSON.stringify({ domain, primaryType: 'Mail', types, message })
+          }
+        });
+  
+        if (!response.ok) throw response.error;
+        expect(response.value).toBe(
+          "0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c"
+        );
+      })
     });
 
     it("getSignerAddress", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getSignerAddress",
       });
@@ -264,7 +322,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("getSignerBalance", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getSignerBalance",
       });
@@ -274,7 +332,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("getSignerTransactionCount", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getSignerTransactionCount",
       });
@@ -285,7 +343,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("getGasPrice", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "getGasPrice",
       });
@@ -296,7 +354,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("encodeParams", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "encodeParams",
         args: {
@@ -312,7 +370,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("encodeParams - (uint256, uint256)", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "encodeParams",
         args: {
@@ -329,7 +387,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("encodeParams - (uint256, uint256, address)", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "encodeParams",
         args: {
@@ -345,7 +403,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("encodeFunction", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "encodeFunction",
         args: {
@@ -361,7 +419,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("encodeFunction - array arg", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "encodeFunction",
         args: {
@@ -375,7 +433,7 @@ describe("Ethereum Wrapper", () => {
 
     describe("create 2 address", () => {
       it("should calculate create 2 address", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "generateCreate2Address",
           args: {
@@ -388,22 +446,8 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("0x57d4d0c68057Cc9446F93307082D63466BC3D731".toLowerCase());
       });
 
-      it.skip("should encode packed", async () => {
-        const response = await client.invoke<string>({
-          uri,
-          method: "wEncodePacked",
-          args: {
-            bytes: "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360",
-            uint: "0x0000000000000000000000000000000000000000000000000000000000000042",
-          }
-        });
-        if (!response.ok) throw response.error;
-        expect(response.value).toEqual("0x169b91711c9e5fc8418feaca506caa84243dc031eb336f195d6399e79978f138".toLowerCase());
-     
-      });
-
       it("should encode bytes and convert to keccak", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "keccak256BytesEncodePacked",
           args: {
@@ -416,7 +460,7 @@ describe("Ethereum Wrapper", () => {
       });
 
       it("should encode keccak256", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "keccak256Bytes",
           args: {
@@ -430,7 +474,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("toWei", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "toWei",
         args: {
@@ -444,7 +488,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("toEth", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "toEth",
         args: {
@@ -458,7 +502,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("sendRpc", async () => {
-      const res = await client.invoke<string | undefined>({
+      const res = await clientWithCustomSigner.invoke<string | undefined>({
         uri,
         method: "sendRpc",
         args: {
@@ -474,7 +518,7 @@ describe("Ethereum Wrapper", () => {
     it("estimateTransactionGas", async () => {
       const data = contracts.SimpleStorage.bytecode;
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "estimateTransactionGas",
         args: {
@@ -492,7 +536,7 @@ describe("Ethereum Wrapper", () => {
 
     it("awaitTransaction", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke<Schema.TxResponse>({
+      const response = await clientWithCustomSigner.invoke<Schema.TxResponse>({
         uri,
         method: "callContractMethod",
         args: {
@@ -508,14 +552,14 @@ describe("Ethereum Wrapper", () => {
 
       const confirmations = 4;
 
-      const awaitResponsePromise = client.invoke<Schema.TxReceipt>({
+      const awaitResponsePromise = clientWithCustomSigner.invoke<Schema.TxReceipt>({
         uri,
         method: "awaitTransaction",
         args: { txHash, confirmations },
       });
 
       for (let i = 0; i < confirmations; i++) {
-        await client.invoke({
+        await clientWithCustomSigner.invoke({
           uri: ethProviderPluginUri,
           method: "request",
           args: { method: "evm_mine" }
@@ -530,22 +574,37 @@ describe("Ethereum Wrapper", () => {
       expect(awaitResponse.value.confirmations).toEqual(4);
     });
 
-    it("sendTransaction", async () => {
-      const response = await client.invoke<Schema.TxResponse>({
-        uri,
-        method: "sendTransaction",
-        args: {
-          tx: { data: contracts.SimpleStorage.bytecode }
-        }
-      });
-
-      if (!response.ok) throw response.error;
-      expect(response.value).toBeDefined();
-      expect(response.value.hash).toBeDefined();
-    });
+    describe("sendTransaction", () => {
+      it("using custom signer", async () => {
+        const response = await clientWithCustomSigner.invoke<Schema.TxResponse>({
+          uri,
+          method: "sendTransaction",
+          args: {
+            tx: { data: contracts.SimpleStorage.bytecode }
+          }
+        });
+        
+        if (!response.ok) throw response.error;
+        expect(response.value).toBeDefined();
+        expect(response.value.hash).toBeDefined();
+      })
+      it("using provider signer", async () => {
+        const response = await clientWithWeb3Provider.invoke<Schema.TxResponse>({
+          uri,
+          method: "sendTransaction",
+          args: {
+            tx: { data: contracts.SimpleStorage.bytecode }
+          }
+        });
+        
+        if (!response.ok) throw response.error;
+        expect(response.value).toBeDefined();
+        expect(response.value.hash).toBeDefined();
+      })
+    })
 
     it("sendTransactionAndWait", async () => {
-      const response = await client.invoke<Schema.TxReceipt>({
+      const response = await clientWithCustomSigner.invoke<Schema.TxReceipt>({
         uri,
         method: "sendTransactionAndWait",
         args: {
@@ -563,7 +622,7 @@ describe("Ethereum Wrapper", () => {
     it("estimateTransactionGas", async () => {
       const data = contracts.SimpleStorage.bytecode;
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "estimateTransactionGas",
         args: {
@@ -580,7 +639,7 @@ describe("Ethereum Wrapper", () => {
     });
 
     it("deployContract", async () => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "deployContract",
         args: {
@@ -596,7 +655,7 @@ describe("Ethereum Wrapper", () => {
 
     it("estimateContractCallGas", async () => {
       const label = "0x" + keccak256("testwhatever2");
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "estimateContractCallGas",
         args: {
@@ -614,7 +673,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractView", async () => {
       const node = namehash("whatever.eth");
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -631,7 +690,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractStatic (no error)", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke<Schema.StaticTxResult>({
+      const response = await clientWithCustomSigner.invoke<Schema.StaticTxResult>({
         uri,
         method: "callContractStatic",
         args: {
@@ -648,7 +707,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractStatic (expecting error)", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke<Schema.StaticTxResult>({
+      const response = await clientWithCustomSigner.invoke<Schema.StaticTxResult>({
         uri,
         method: "callContractStatic",
         args: {
@@ -668,7 +727,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractStatic (expecting error) - TxOptions", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke<Schema.StaticTxResult>({
+      const response = await clientWithCustomSigner.invoke<Schema.StaticTxResult>({
         uri,
         method: "callContractStatic",
         args: {
@@ -689,7 +748,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractMethod", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke({
+      const response = await clientWithCustomSigner.invoke({
         uri,
         method: "callContractMethod",
         args: {
@@ -710,7 +769,7 @@ describe("Ethereum Wrapper", () => {
 
     it("callContractMethodAndWait", async () => {
       const label = "0x" + keccak256("testwhatever");
-      const response = await client.invoke<Schema.TxReceipt>({
+      const response = await clientWithCustomSigner.invoke<Schema.TxReceipt>({
         uri,
         method: "callContractMethodAndWait",
         args: {
@@ -741,7 +800,7 @@ describe("Ethereum Wrapper", () => {
         "100"
       );
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -766,7 +825,7 @@ describe("Ethereum Wrapper", () => {
         "100"
       );
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -796,7 +855,7 @@ describe("Ethereum Wrapper", () => {
         "90"
       );
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -834,7 +893,7 @@ describe("Ethereum Wrapper", () => {
         "90"
       );
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -872,7 +931,7 @@ describe("Ethereum Wrapper", () => {
         "90"
       );
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -900,7 +959,7 @@ describe("Ethereum Wrapper", () => {
         contracts.SimpleStorage.bytecode
       )).toLowerCase();
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -924,7 +983,7 @@ describe("Ethereum Wrapper", () => {
         "100",
       ]);
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -956,7 +1015,7 @@ describe("Ethereum Wrapper", () => {
         "99",
       ]);
 
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
@@ -988,7 +1047,7 @@ describe("Ethereum Wrapper", () => {
       returnType: string,
       returnValue: string
     ) => {
-      const response = await client.invoke<string>({
+      const response = await clientWithCustomSigner.invoke<string>({
         uri,
         method: "callContractView",
         args: {
