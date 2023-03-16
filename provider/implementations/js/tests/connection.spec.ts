@@ -5,7 +5,7 @@ import { Wallet } from "ethers";
 
 jest.setTimeout(600000);
 
-type BasicNetwork = "mainnet" | "rinkeby" | "ropsten" | "goerli" | "kovan";
+type BasicNetwork = "mainnet" | "goerli" | "sepolia";
 
 const getRpcUri = (network: BasicNetwork): string => {
   return `https://${network}.infura.io/v3/d119148113c047ca90f0311ed729c466`;
