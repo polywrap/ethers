@@ -1,5 +1,4 @@
-#import { Module } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.1.0"
-#use { getImplementations } for IProvider
+#import { Module } into Provider from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
 
 type Connection {
     node: String
