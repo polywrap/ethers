@@ -142,7 +142,8 @@ export namespace eth_signTypedData {
 
 export namespace eth_encodePacked {
   export function deserializeParameters(paramsStr: string): { types: string[], values: unknown[] } {
-    const params = JSON.parse(paramsStr) as Record<string, unknown>;
+    let params = JSON.parse(paramsStr);
+
     if (
       typeof params === "object"
       && "types" in params

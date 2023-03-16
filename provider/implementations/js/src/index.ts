@@ -91,7 +91,8 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
     if (args.method === "eth_encodePacked") {
       const params = eth_encodePacked.deserializeParameters(paramsStr);
-      return ethers.utils.solidityPack(params.types, params.values);
+      const result = ethers.utils.solidityPack(params.types, params.values);
+      return JSON.stringify(result);
     }
 
     const params = JSON.parse(paramsStr);

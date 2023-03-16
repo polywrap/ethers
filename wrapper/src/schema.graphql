@@ -285,10 +285,10 @@ type Module {
   keccak256BytesEncodePacked(bytes: String!) : String!
   keccak256Bytes(bytes: String!): String!
 
-#  solidityPack(
-#    types: [String!]!
-#    values: [String!]!
-#  ): String!
+  solidityPack(
+    types: [String!]!
+    values: [String!]!
+  ): String!
 
   signTypedData(
     payload: JSON!

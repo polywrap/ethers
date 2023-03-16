@@ -198,7 +198,7 @@ describe("Ethereum Plugin", () => {
           }
         });
         if (response.ok === false) throw response.error;
-        expect(response.value).toEqual("0xffff00000000000c");
+        expect(response.value).toEqual(`"0xffff00000000000c"`);
       });
 
       it("should encode packed [uint256, uint256]", async () => {
@@ -214,7 +214,7 @@ describe("Ethereum Plugin", () => {
           }
         });
         if (response.ok === false) throw response.error;
-        expect(response.value).toEqual("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010");
+        expect(response.value).toEqual(`"0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010"`);
       });
 
       it("should encode packed [string, uint8]", async () => {
@@ -230,7 +230,7 @@ describe("Ethereum Plugin", () => {
           }
         });
         if (response.ok === false) throw response.error;
-        expect(response.value).toEqual("0x48656c6c6f03");
+        expect(response.value).toEqual(`"0x48656c6c6f03"`);
       });
     })
   });
