@@ -1,6 +1,7 @@
 import { PolywrapClient, ClientConfigBuilder } from "@polywrap/client-js";
 
 import { BigNumber, Wallet } from "ethers";
+
 import { ethereumProviderPlugin, Connection, Connections } from "../src";
 
 jest.setTimeout(360000);
@@ -138,6 +139,14 @@ describe("Ethereum Plugin", () => {
     const types = {
       EIP712Domain: [
         {
+          type: "string",
+          name: "name"
+        },
+        {
+          type: "string",
+          name: "version"
+        },
+        {
           type: "uint256",
           name: "chainId",
         },
@@ -146,15 +155,15 @@ describe("Ethereum Plugin", () => {
           name: "verifyingContract",
         },
       ],
-        Person: [
-            { name: 'name', type: 'string' },
-            { name: 'wallet', type: 'address' }
-        ],
-        Mail: [
-            { name: 'from', type: 'Person' },
-            { name: 'to', type: 'Person' },
-            { name: 'contents', type: 'string' }
-        ]
+      Person: [
+          { name: 'name', type: 'string' },
+          { name: 'wallet', type: 'address' }
+      ],
+      Mail: [
+          { name: 'from', type: 'Person' },
+          { name: 'to', type: 'Person' },
+          { name: 'contents', type: 'string' }
+      ]
     };
     
     // The data to sign
@@ -174,7 +183,7 @@ describe("Ethereum Plugin", () => {
         uri,
         method: "request",
         args: {
-          method: "eth_signTypedData",
+          method: "eth_signTypedData_v4",
           params: JSON.stringify(["0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1", { domain, primaryType: 'Mail', types, message }])
         }
       });
