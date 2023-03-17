@@ -102,7 +102,7 @@ pub fn sign_typed_data(args: wrap::ArgsSignTypedData) -> String {
     let address_value = JSON::Value::String(format!("{:#x}", address));
     let params = JSON::Value::Array(vec![address_value, args.payload]);
     let provider = PolywrapProvider::new(&args.connection);
-    provider.request_sync("eth_signTypedData", params).unwrap()
+    provider.request_sync("eth_signTypedData_v4", params).unwrap()
 }
 
 pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {

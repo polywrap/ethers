@@ -65,7 +65,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     }
 
     if (
-      args.method === "eth_signTypedData" &&
+      args.method === "eth_signTypedData_v4" &&
       connection.getSignerType() == SignerType.CUSTOM_SIGNER
     ) {
       const signer = await connection.getSigner();
