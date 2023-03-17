@@ -2,12 +2,12 @@ use std::fmt::Debug;
 use ethers_providers::{ProviderError};
 
 use crate::wrap::imported::{ArgsRequest, ArgsWaitForTransaction};
-use crate::wrap::{IProviderModule, IProviderConnection, Connection};
-use crate::iprovider::get_iprovider;
+use crate::wrap::{ProviderModule, ProviderConnection, Connection};
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
 
 use ethers_core::types::{TxHash};
+use polywrap_wasm_rs::JSON;
 
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
@@ -33,19 +33,17 @@ impl From<ClientError> for ProviderError {
 
 #[derive(Debug)]
 pub struct PolywrapProvider {
-    pub(super) connection: Option<IProviderConnection>,
-    pub(super) iprovider: IProviderModule,
+    pub(super) connection: Option<ProviderConnection>,
 }
 
 impl PolywrapProvider {
     pub fn new(connection: &Option<Connection>) -> Self {
-        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+        let iprovider_connection = connection.as_ref().map(|conn| ProviderConnection {
             network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
             node: conn.node.clone(),
         });
         Self {
             connection: iprovider_connection,
-            iprovider: get_iprovider(),
         }
     }
 
@@ -54,14 +52,14 @@ impl PolywrapProvider {
         method: &str,
         params: T,
     ) -> Result<R, ProviderError> {
-        let params_s = serde_json::to_string(&params).unwrap();
-        let res = self.iprovider.request(&ArgsRequest {
+        let params_v = JSON::to_value(&params).unwrap();
+        let res = ProviderModule::request(&ArgsRequest {
             method: method.to_string(),
-            params: Some(params_s),
+            params: Some(params_v),
             connection: self.connection.clone(),
         })
             .map_err(|err| ClientError::Error(err))?;
-        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
+        let res = JSON::from_value(res).map_err(|err| ClientError::SerdeJson {
             err,
             text: "from str failed".to_string(),
         })?;
@@ -76,7 +74,7 @@ impl PolywrapProvider {
     ) -> Result<bool, ProviderError> {
         let hash = transaction_hash.into();
 
-        let res = self.iprovider.wait_for_transaction(&ArgsWaitForTransaction {
+        let res = ProviderModule::wait_for_transaction(&ArgsWaitForTransaction {
             tx_hash: format!("{:#x}", hash),
             confirmations,
             timeout,

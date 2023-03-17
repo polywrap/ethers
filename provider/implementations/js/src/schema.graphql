@@ -1,7 +1,2 @@
-#import { Module, Connection } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.1.0"
-
-type Env {
-  connection: IProvider_Connection
-}
-
-type Module implements IProvider {}
+#import * from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
+#import { Env } from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"

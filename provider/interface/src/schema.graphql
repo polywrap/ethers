@@ -3,11 +3,15 @@ type Connection {
   networkNameOrChainId: String
 }
 
+type Env {
+  connection: Connection
+}
+
 type Module {
   """
   Send a remote RPC request to the registered provider
   """
-  request(method: String!, params: String, connection: Connection): String!
+  request(method: String!, params: JSON, connection: Connection): JSON!
 
   """
   Wait for a transaction to be confirmed
@@ -20,6 +24,11 @@ type Module {
   ): Boolean!
 
   """
+  Get the ethereum address of the signer. Return null if signer is missing.
+  """
+  signerAddress(connection: Connection): String
+
+  """
   Sign a message and return the signature. Throws if signer is missing.
   """
   signMessage(message: Bytes!, connection: Connection): String!
@@ -30,14 +39,4 @@ type Module {
   Typically, transactions are sent by `request` and signed by the wallet.
   """
   signTransaction(rlp: Bytes!, connection: Connection): String!
-
-  """
-  Get the ethereum address of the signer. Throws if signer is missing.
-  """
-  address(connection: Connection): String!
-
-  """
-  Get the chain id of the signer's connection. Throws if signer is missing.
-  """
-  chainId(connection: Connection): String!
 }

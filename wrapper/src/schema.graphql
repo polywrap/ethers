@@ -1,5 +1,4 @@
-#import { Module } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.1.0"
-#use { getImplementations } for IProvider
+#import { Module } into Provider from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
 
 type Connection {
     node: String
@@ -286,17 +285,13 @@ type Module {
   keccak256BytesEncodePacked(bytes: String!) : String!
   keccak256Bytes(bytes: String!): String!
 
+  solidityPack(
+    types: [String!]!
+    values: [String!]!
+  ): String!
+
   signTypedData(
     payload: JSON!
     connection: Connection
   ): String!
 }
-
-# TODO: implement the following methods
-
-#     waitForEvent(
-#       address: String!
-#       event: String!
-#       args: [String!]
-#       timeout: UInt32
-#     ): EventNotification!
