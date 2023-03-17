@@ -54,7 +54,7 @@ describe("Ethereum Plugin", () => {
         args: { method: "eth_chainId" }
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
       expect(response.value).toBeDefined();
 
       const res = BigNumber.from(JSON.parse(response.value)).toString();
@@ -71,7 +71,7 @@ describe("Ethereum Plugin", () => {
         }
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
       expect(response.value).toBeDefined();
       expect(BigNumber.from(JSON.parse(response.value)).gt(0)).toBe(true);
     });
@@ -82,7 +82,7 @@ describe("Ethereum Plugin", () => {
         method: "signerAddress",
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
       expect(response.value).toBeDefined();
 
       expect(response.value?.startsWith("0x")).toBe(true);
@@ -94,7 +94,7 @@ describe("Ethereum Plugin", () => {
         method: "signerAddress",
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
       expect(response.value).toBeDefined();
       expect(response.value).toBe(null);
     });
@@ -107,7 +107,7 @@ describe("Ethereum Plugin", () => {
         args: { message },
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
 
       expect(response.value).toBeDefined();
       expect(response.value).toBe("0xa4708243bf782c6769ed04d83e7192dbcf4fc131aa54fde9d889d8633ae39dab03d7babd2392982dff6bc20177f7d887e27e50848c851320ee89c6c63d18ca761c");
@@ -121,7 +121,7 @@ describe("Ethereum Plugin", () => {
         args: { rlp },
       });
 
-      if (response.ok === false) fail(response.error);
+      if (response.ok === false) throw response.error;
 
       expect(response.value).toBeDefined();
       expect(response.value).toBe("0xeb91a997a865e2e4a48c098ea519666ed7fa5d9922f4e7e9b6838dc18ecfdab03a568682c3f0a4cb6b78ef0f601117a0de9848c089c94c01f782f067404c1eae1b");
@@ -187,10 +187,60 @@ describe("Ethereum Plugin", () => {
           params: JSON.stringify(["0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1", { domain, primaryType: 'Mail', types, message }])
         }
       });
-      if (!response.ok) fail(response.error);
+      if (response.ok === false) throw response.error;
       expect(response.value).toBe(
         "\"0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c\""
       );
     });
+
+    describe("eth_encodePacked", () => {
+      it("should encode packed [int16, uint48]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "request",
+          args: {
+            method: "eth_encodePacked",
+            params: JSON.stringify({
+              types: [ "int16", "uint48" ],
+              values: [ "-1", "12" ]
+            })
+          }
+        });
+        if (response.ok === false) throw response.error;
+        expect(response.value).toEqual(`"0xffff00000000000c"`);
+      });
+
+      it("should encode packed [uint256, uint256]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "request",
+          args: {
+            method: "eth_encodePacked",
+            params: JSON.stringify({
+              types: [ "uint256", "uint256" ],
+              values: [ "8", "16" ]
+            })
+          }
+        });
+        if (response.ok === false) throw response.error;
+        expect(response.value).toEqual(`"0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010"`);
+      });
+
+      it("should encode packed [string, uint8]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "request",
+          args: {
+            method: "eth_encodePacked",
+            params: JSON.stringify({
+              types: [ "string", "uint8" ],
+              values: [ "Hello", "3" ]
+            })
+          }
+        });
+        if (response.ok === false) throw response.error;
+        expect(response.value).toEqual(`"0x48656c6c6f03"`);
+      });
+    })
   });
 });

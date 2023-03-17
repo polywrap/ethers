@@ -473,6 +473,47 @@ describe("Ethereum Wrapper", () => {
       });
     });
 
+    describe("solidityPack", () => {
+      it("should encode packed [int16, uint48]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "int16", "uint48" ],
+            values: [ "-1", "12" ]
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0xffff00000000000c");
+      });
+
+      it("should encode packed [uint256, uint256]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "uint256", "uint256" ],
+            values: [ "8", "16" ]
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010");
+      });
+
+      it("should encode packed [string, uint8]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: [ "string", "uint8" ],
+            values: [ "Hello", "3" ],
+          }
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x48656c6c6f03");
+      });
+    });
+
     it("toWei", async () => {
       const response = await clientWithCustomSigner.invoke<string>({
         uri,

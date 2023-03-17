@@ -12,6 +12,7 @@ import {
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
 import {
+  eth_encodePacked,
   eth_sendTransaction,
   eth_signTypedData
 } from "./rpc";
@@ -45,8 +46,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
     // Optimizations, utilizing the cache within ethers
     if (args.method === "eth_chainId") {
       const network = await provider.getNetwork();
-      const result = JSON.stringify("0x" + network.chainId.toString(16));
-      return result;
+      return JSON.stringify("0x" + network.chainId.toString(16));
     }
 
     if (
@@ -74,7 +74,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       );
       let signature = "";
       // This is a hack because in ethers v5.7 this method is experimental
-      // when when we update to ethers v6 this wont be needed. More info:
+      // when we update to ethers v6 this won't be needed. More info:
       // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
       if ("_signTypedData" in signer) {
         const [_, data] = parameters
@@ -87,6 +87,12 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
         )
       }
       return JSON.stringify(signature)
+    }
+
+    if (args.method === "eth_encodePacked") {
+      const params = eth_encodePacked.deserializeParameters(paramsStr);
+      const result = ethers.utils.solidityPack(params.types, params.values);
+      return JSON.stringify(result);
     }
 
     const params = JSON.parse(paramsStr);

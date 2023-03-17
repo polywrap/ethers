@@ -140,3 +140,40 @@ export namespace eth_signTypedData {
   }
 }
 
+export namespace eth_encodePacked {
+  export function deserializeParameters(paramsStr: string): { types: string[], values: unknown[] } {
+    let params = JSON.parse(paramsStr);
+
+    if (
+      typeof params === "object"
+      && "types" in params
+      && "values" in params
+      && Array.isArray(params.types)
+      && Array.isArray(params.values)
+      && typeof params.types[0] === "string"
+    ) {
+      return {
+        types: params.types,
+        values: parseValues(params.values)
+      };
+    }
+
+    throw new Error(
+      "Invalid JSON-RPC parameters provided for eth_encodePacked method. " +
+      "Expected JSON of the form: { types: string[], values: string[] }"
+    );
+  }
+
+  function parseValues(values?: string[] | null): unknown[] {
+    if (!values) {
+      return [];
+    }
+
+    return values.map((arg: string) =>
+      (arg.startsWith("[") && arg.endsWith("]")) ||
+      (arg.startsWith("{") && arg.endsWith("}"))
+        ? JSON.parse(arg)
+        : arg
+    );
+  }
+}
