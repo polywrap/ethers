@@ -475,7 +475,7 @@ describe("Ethereum Wrapper", () => {
 
     describe("solidityPack", () => {
       it("should encode packed [int16, uint48]", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "solidityPack",
           args: {
@@ -488,7 +488,7 @@ describe("Ethereum Wrapper", () => {
       });
 
       it("should encode packed [uint256, uint256]", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "solidityPack",
           args: {
@@ -501,7 +501,7 @@ describe("Ethereum Wrapper", () => {
       });
 
       it("should encode packed [string, uint8]", async () => {
-        const response = await client.invoke<string>({
+        const response = await clientWithCustomSigner.invoke<string>({
           uri,
           method: "solidityPack",
           args: {
