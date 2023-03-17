@@ -443,7 +443,6 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      console.log(response);
       expect(response.ok).toBeTruthy();
     });
 
