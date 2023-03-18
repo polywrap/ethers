@@ -431,6 +431,21 @@ describe("Ethereum Wrapper", () => {
       expect(response.ok).toBeTruthy();
     });
 
+    it("encodeFunction - object arg", async () => {
+      const response = await clientWithCustomSigner.invoke<string>({
+        uri,
+        method: "encodeFunction",
+        args: {
+          // NOTE: ethabi does not support the keyword "tuple", as well as tuple property names
+          method: "function mint((address, uint24, uint256) calldata params) external payable returns (uint256 tokenId, uint128 liquidity)",
+          // NOTE: ethabi does not support spaces between the ','
+          args: [`(0x0000000000000000000000000000000000000001,3000,2332324)`],
+        },
+      });
+
+      expect(response.ok).toBeTruthy();
+    });
+
     describe("create 2 address", () => {
       it("should calculate create 2 address", async () => {
         const response = await clientWithCustomSigner.invoke<string>({
