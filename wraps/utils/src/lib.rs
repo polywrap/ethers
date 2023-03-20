@@ -81,7 +81,7 @@ impl ModuleTrait for Module {
     }
 
     fn to_eth(input: ArgsToEth) -> Result<String, String> {
-        Ok(utils_to_eth(input.wei).to_string())
+        Ok(utils_to_eth(input.wei))
     }
 
     fn solidity_pack(args: wrap::ArgsSolidityPack) -> Result<String, String> {

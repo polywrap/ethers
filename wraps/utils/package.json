@@ -6,7 +6,8 @@
   "main": "build/index.js",
   "files": ["build"],
   "scripts": {
-    "test" : "jest --passWithNoTests --runInBand --verbose",
+    "test:e2e" : "jest --passWithNoTests --runInBand --verbose",
+    "test": "yarn test:e2e",
     "codegen": "npx polywrap codegen",
     "build": "npx polywrap build",
     "deploy": "npx polywrap deploy -o deployment.json"

@@ -1,7 +1,7 @@
 import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
 import { keccak256 } from "js-sha3";
 import * as path from "path";
-import {ethers} from "ethers";
+import { ethers } from "ethers";
 
 jest.setTimeout(360000);
 
@@ -183,20 +183,36 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("20000000000000000000");
       });
 
-      it("toEth", async () => {
-        const response = await client.invoke<string>({
-          uri,
-          method: "toEth",
-          args: {
-            wei: "20000000000000000000",
-          },
+      describe("toEth", () => {
+        it("handle integers", async () => {
+          const response = await client.invoke<string>({
+            uri,
+            method: "toEth",
+            args: {
+              wei: "20000000000000000000",
+            },
+          });
+
+          if (!response.ok) throw response.error;
+          expect(response.value).toBeDefined();
+          expect(response.value).toEqual("20");
         });
 
-        if (!response.ok) throw response.error;
-        expect(response.value).toBeDefined();
-        expect(response.value).toEqual("20");
+        it("handle decimals", async () => {
+          const response = await client.invoke<string>({
+            uri,
+            method: "toEth",
+            args: {
+              wei: "200000000000000000",
+            },
+          });
+
+          if (!response.ok) throw response.error;
+          expect(response.value).toBeDefined();
+          expect(response.value).toEqual("0.2");
+        });
       });
-    })
+    });
 
     describe("solidityPack", () => {
       it("should encode packed [int16, uint48]", async () => {
@@ -250,12 +266,17 @@ describe("Ethereum Wrapper", () => {
           },
         });
         if (!response.ok) throw response.error;
-        expect(response.value).toEqual("0x8ba1f109551bd432803012645ac136ddd64dba72000000000000000000000000000000000000000000000000000000000000002d");
+        expect(response.value).toEqual(
+          "0x8ba1f109551bd432803012645ac136ddd64dba72000000000000000000000000000000000000000000000000000000000000002d"
+        );
       });
 
       it("should encode packed [address[], uint]", async () => {
         const types = ["address[]", "uint"];
-        const values = ["0x8ba1f109551bd432803012645ac136ddd64dba72,0x8ba1f109551bd432803012645ac136ddd64dba71", "45"];
+        const values = [
+          "0x8ba1f109551bd432803012645ac136ddd64dba72,0x8ba1f109551bd432803012645ac136ddd64dba71",
+          "45",
+        ];
 
         const response = await client.invoke<string>({
           uri,
@@ -264,45 +285,67 @@ describe("Ethereum Wrapper", () => {
         });
         if (!response.ok) throw response.error;
 
-        const expected = ethers.utils.solidityPack(
-          types,
-          [["0x8ba1f109551bd432803012645ac136ddd64dba72","0x8ba1f109551bd432803012645ac136ddd64dba71"],
-            "45"]
-        );
+        const expected = ethers.utils.solidityPack(types, [
+          [
+            "0x8ba1f109551bd432803012645ac136ddd64dba72",
+            "0x8ba1f109551bd432803012645ac136ddd64dba71",
+          ],
+          "45",
+        ]);
         expect(response.value).toEqual(expected);
       });
 
-
       it("should encode packed ethers", async () => {
         const types: string[] = [
-          "string", "address", "bool",
-          "uint8", "uint16", "uint32", "uint64", "uint128", "uint256", "uint",
-          "int8", "int16", "int32", "int64", "int128", "int256", "int",
-          "bytes", "bytes8", "bytes16", "bytes24", "bytes32"
+          "string",
+          "address",
+          "bool",
+          "uint8",
+          "uint16",
+          "uint32",
+          "uint64",
+          "uint128",
+          "uint256",
+          "uint",
+          "int8",
+          "int16",
+          "int32",
+          "int64",
+          "int128",
+          "int256",
+          "int",
+          "bytes",
+          "bytes8",
+          "bytes16",
+          "bytes24",
+          "bytes32",
         ];
         const exampleValues: Record<string, string> = {
-          "string": "hello world",
-          "address": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-          "bool": "true",
-          "uint8": "255",
-          "uint16": "65535",
-          "uint32": "4294967295",
-          "uint64": "18446744073709551615",
-          "uint128": "340282366920938463463374607431768211455",
-          "uint256": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-          "uint": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-          "int8": "127",
-          "int16": "32767",
-          "int32": "2147483647",
-          "int64": "9223372036854775807",
-          "int128": "170141183460469231731687303715884105727",
-          "int256": "57896044618658097711785492504343953926634992332820282019728792003956564819967",
-          "int": "57896044618658097711785492504343953926634992332820282019728792003956564819967",
-          "bytes": "0x1234abcd",
-          "bytes8": "0x1234567890abcdef",
-          "bytes16": "0x1234567890abcdef1234567890abcdef",
-          "bytes24": "0x1234567890abcdef1234567890abcdef1234567890abcdef",
-          "bytes32": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          string: "hello world",
+          address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+          bool: "true",
+          uint8: "255",
+          uint16: "65535",
+          uint32: "4294967295",
+          uint64: "18446744073709551615",
+          uint128: "340282366920938463463374607431768211455",
+          uint256:
+            "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+          uint: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+          int8: "127",
+          int16: "32767",
+          int32: "2147483647",
+          int64: "9223372036854775807",
+          int128: "170141183460469231731687303715884105727",
+          int256:
+            "57896044618658097711785492504343953926634992332820282019728792003956564819967",
+          int: "57896044618658097711785492504343953926634992332820282019728792003956564819967",
+          bytes: "0x1234abcd",
+          bytes8: "0x1234567890abcdef",
+          bytes16: "0x1234567890abcdef1234567890abcdef",
+          bytes24: "0x1234567890abcdef1234567890abcdef1234567890abcdef",
+          bytes32:
+            "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         };
         const values: string[] = Object.values(exampleValues);
 
@@ -318,15 +361,24 @@ describe("Ethereum Wrapper", () => {
       });
 
       it("should encode packed negative numbers", async () => {
-        const types: string[] = ["int8", "int16", "int32", "int64", "int128", "int256", "int"];
+        const types: string[] = [
+          "int8",
+          "int16",
+          "int32",
+          "int64",
+          "int128",
+          "int256",
+          "int",
+        ];
         const exampleValues: Record<string, string> = {
-          "int8": "-12",
-          "int16": "-3276",
-          "int32": "-214748364",
-          "int64": "-922337203685477580",
-          "int128": "-17014118346046923173168730371588410572",
-          "int256": "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
-          "int": "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
+          int8: "-12",
+          int16: "-3276",
+          int32: "-214748364",
+          int64: "-922337203685477580",
+          int128: "-17014118346046923173168730371588410572",
+          int256:
+            "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
+          int: "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
         };
         const values: string[] = Object.values(exampleValues);
 
