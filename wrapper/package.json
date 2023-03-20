@@ -8,7 +8,8 @@
   "scripts": {
     "test:codegen": "polywrap codegen -m tests/types/polywrap.yaml -g tests/types/wrap",
     "test:e2e" : "jest --passWithNoTests --runInBand --verbose",
-    "test": "yarn test:codegen && yarn test:e2e",
+    "test:unit": "cargo test",
+    "test": "yarn test:unit && yarn test:codegen && yarn test:e2e",
     "codegen": "npx polywrap codegen",
     "build": "npx polywrap build",
     "deploy": "npx polywrap deploy -o deployment.json"
