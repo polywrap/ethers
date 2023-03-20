@@ -130,7 +130,7 @@ pub fn to_wei(input: ArgsToWei) -> String {
 }
 
 pub fn to_eth(input: ArgsToEth) -> String {
-    api::to_eth(input.wei).to_string()
+    api::to_eth(input.wei)
 }
 
 pub fn send_rpc(args: wrap::ArgsSendRpc) -> String {
