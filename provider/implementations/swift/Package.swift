@@ -4,18 +4,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftEthereumProvider",
+    name: "MetamaskProvider",
+    platforms: [.iOS(.v14)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
-            name: "SwiftEthereumProvider",
+            name: "MetamaskProvider",
             targets: ["MetamaskProvider"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(
             url: "https://github.com/MetaMask/metamask-ios-sdk",
-            from: "0.1.0"
+            from: "0.1.1"
         )
     ],
     targets: [
@@ -24,8 +25,5 @@ let package = Package(
         .target(
             name: "MetamaskProvider",
             dependencies: ["metamask-ios-sdk"]),
-        .testTarget(
-            name: "MetamaskProviderTests",
-            dependencies: ["MetamaskProvider"]),
     ]
 )
