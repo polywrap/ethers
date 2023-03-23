@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "MetamaskProvider",
-    platforms: [.iOS(.v14)],
+    platforms: [.iOS(.v15)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
@@ -25,5 +25,6 @@ let package = Package(
         .target(
             name: "MetamaskProvider",
             dependencies: ["metamask-ios-sdk"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

@@ -14,12 +14,13 @@ public struct ArgsRequest {
 }
 
 public class MetamaskProvider {
-//    var provider: Ethereum
+    var provider: Ethereum
     var cancellables: Set<AnyCancellable> = []
-    
-    var result: String = ""
+    var result: Data? = nil;
+
     public init(provider:Ethereum, dapp:Dapp) {
-        provider.connect(dapp)?.sink(receiveCompletion: { completion in
+        self.provider = provider
+        self.provider.connect(dapp)?.sink(receiveCompletion: { completion in
             switch completion {
             case let .failure(error):
                 print("Error connecting to address: \(error)")
@@ -29,25 +30,39 @@ public class MetamaskProvider {
             print("Wallet connected! \(value)")
         }).store(in: &cancellables)
     }
-
-    public func request(provider:Ethereum, args: ArgsRequest) -> String {
-//        if (!provider.connected) {
-//
-//        }
+    
+    func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
+        if !provider.connected {
+//            completion(.failure(SomeError.notConnected)) // Replace with an appropriate error type
+            return
+        }
 
         let request = EthereumRequest(method: args.method, params: args.params)
-        provider.request(request)?.sink(receiveCompletion: { completion in
-            switch completion {
+
+        provider.request(request)?.sink(receiveCompletion: { completionResult in
+            switch completionResult {
+            case .finished:
+                break
             case let .failure(error):
-                print("Add chain error: \(error.localizedDescription)")
-            default: break
+                completion(.failure(error))
             }
         }, receiveValue: { value in
-            print("Add chain result: \(value)")
+            completion(.success(value as! String))
         }).store(in: &cancellables)
-        
-        return self.result
-    };
+    }
+    
+    public func request(args: ArgsRequest) async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            request(args: args) { result in
+                switch result {
+                case .success(let value):
+                    continuation.resume(returning: value)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
 
     public func waitForTransaction() {
         
@@ -66,6 +81,6 @@ public class MetamaskProvider {
     }
     
     public func chainId() {
-        
+//        self.provider.$chainId
     }
 }
