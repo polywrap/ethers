@@ -2,15 +2,40 @@ import metamask_ios_sdk
 import Foundation
 import Combine
 
-
 public struct ArgsRequest {
     var method: String;
     var params: Data;
+    var connection: Any?;
     
     public init(method: String, params: Data) {
         self.method = method
         self.params = params
+        self.connection = nil
     }
+}
+
+public struct ArgsSignMessage {
+    var message: [UInt8]
+    var connection: Any?;
+    
+    public init(message: [UInt8]) {
+        self.message = message
+        self.connection = nil
+    }
+}
+
+public struct ArgsSignTransaction {
+    var message: [UInt8]
+    var connection: Any?;
+    
+    public init(message: [UInt8]) {
+        self.message = message
+        self.connection = nil
+    }
+}
+
+enum ProviderError: Error {
+    case NotConnected
 }
 
 public class MetamaskProvider {
@@ -33,11 +58,12 @@ public class MetamaskProvider {
     
     func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
         if !provider.connected {
-//            completion(.failure(SomeError.notConnected)) // Replace with an appropriate error type
+            completion(.failure(ProviderError.NotConnected))
             return
         }
-
-        let request = EthereumRequest(method: args.method, params: args.params)
+        
+        let params = try! JSONDecoder().decode([String].self, from: args.params)
+        let request = EthereumRequest(method: args.method, params: params)
 
         provider.request(request)?.sink(receiveCompletion: { completionResult in
             switch completionResult {
@@ -51,7 +77,7 @@ public class MetamaskProvider {
         }).store(in: &cancellables)
     }
     
-    public func request(args: ArgsRequest) async throws -> String {
+    public func request(_ args: ArgsRequest) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
             request(args: args) { result in
                 switch result {
@@ -69,18 +95,34 @@ public class MetamaskProvider {
     }
     
     public func signTransaction() {
-        
+
+    }
+
+    public func signMessage(_ message: String) async throws -> String {
+        let messageData: Data = Data(message.utf8)
+        let messageHex = "0x" + messageData.hexString
+        let address = self.provider.selectedAddress.lowercased()
+
+        let jsonParams = try JSONSerialization.data(withJSONObject: [messageHex, address], options: [])
+        let request = ArgsRequest(
+            method: "personal_sign",
+            params: jsonParams
+        )
+
+        return try await self.request(request)
     }
     
-    public func signMessage() {
-        
+    public func address() -> String {
+        self.provider.selectedAddress
     }
-    
-    public func address() {
-        
+
+    public func chainId() -> String {
+        self.provider.chainId
     }
-    
-    public func chainId() {
-//        self.provider.$chainId
+}
+
+extension Data {
+    var hexString: String {
+        return map { String(format: "%02x", $0) }.joined()
     }
 }
