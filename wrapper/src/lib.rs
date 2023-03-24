@@ -102,7 +102,7 @@ pub fn sign_typed_data(args: wrap::ArgsSignTypedData) -> String {
     let address_value = JSON::Value::String(format!("{:#x}", address));
     let params = JSON::Value::Array(vec![address_value, args.payload]);
     let provider = PolywrapProvider::new(&args.connection);
-    provider.request_sync("eth_signTypedData", params).unwrap()
+    provider.request_sync("eth_signTypedData_v4", params).unwrap()
 }
 
 pub fn encode_params(input: wrap::ArgsEncodeParams) -> String {
@@ -313,6 +313,15 @@ pub fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked)
     let bytes = Token::Bytes(bytes.to_vec());
     let encoded = keccak256(encode_packed(&[bytes]).unwrap());
     format!("{}", Bytes::from(encoded)).to_string()
+}
+
+pub fn solidity_pack(args: wrap::ArgsSolidityPack) -> String {
+    let provider = PolywrapProvider::new(&None);
+    let params = JSON::json!({
+        "types": args.types,
+        "values": args.values
+    });
+    return provider.request_sync("eth_encodePacked", params).unwrap()
 }
 
 pub fn generate_create2_address(

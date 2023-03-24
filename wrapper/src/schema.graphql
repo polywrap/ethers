@@ -285,17 +285,13 @@ type Module {
   keccak256BytesEncodePacked(bytes: String!) : String!
   keccak256Bytes(bytes: String!): String!
 
+  solidityPack(
+    types: [String!]!
+    values: [String!]!
+  ): String!
+
   signTypedData(
     payload: JSON!
     connection: Connection
   ): String!
 }
-
-# TODO: implement the following methods
-
-#     waitForEvent(
-#       address: String!
-#       event: String!
-#       args: [String!]
-#       timeout: UInt32
-#     ): EventNotification!
