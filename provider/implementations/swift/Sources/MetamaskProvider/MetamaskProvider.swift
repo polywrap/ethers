@@ -46,6 +46,19 @@ public struct Transaction: CodableData {
     }
 }
 
+public struct ArgsWaitForTransaction {
+    let txHash: String
+    let confirmations: UInt32
+    let timeout: UInt32?
+    let connection: Any? = nil
+    
+    public init(txHash: String, confirmations: UInt32, timeout: UInt32? = nil) {
+        self.txHash = txHash
+        self.confirmations = confirmations
+        self.timeout = timeout
+    }
+}
+
 public struct ArgsRequest {
     var method: String;
     var params: Data;
@@ -81,6 +94,7 @@ public struct ArgsSignTransaction {
 enum ProviderError: Error {
     case NotConnected
     case EncodeError
+    case MethodNotSupported
 }
 
 public class MetamaskProvider {
@@ -107,7 +121,7 @@ public class MetamaskProvider {
             return
         }
         
-        if (args.method == "eth_sendTransaction") {
+        if self.isTransactionMethod(args.method) {
             let params: [Transaction] = try! JSONDecoder().decode(
                 [Transaction].self,
                 from: args.params
@@ -138,8 +152,21 @@ public class MetamaskProvider {
                     completion(.failure(error))
                 }
             }, receiveValue: { value in
-                let response = (value as! String).data(using: .utf8)!
-                completion(.success(response))
+                if let stringValue = value as? String {
+                    let response = stringValue.data(using: .utf8)!
+                    completion(.success(response))
+                }
+                
+                if let jsonValue = value as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: jsonValue, options: [])
+                        completion(.success(jsonData))
+                    } catch {
+                        completion(.failure(ProviderError.EncodeError))
+                    }
+                } else {
+                    completion(.success(Data()))
+                }
             }).store(in: &cancellables)
         }
     }
@@ -156,29 +183,42 @@ public class MetamaskProvider {
             }
         }
     }
+    private var delayUnit: DelayUnit = .shortest
 
-    public func waitForTransaction() {
-        
+    
+    // Inspired from https://github.com/web3swift-team/web3swift/blob/develop/Sources/web3swift/Transaction/TransactionPollingTask.swift#L11
+    // Probably it would be easier to add this library and use it?
+    public func waitForTransaction(_ args: ArgsWaitForTransaction) async throws -> Bool {
+        let startTime = Date()
+        while true {
+            let jsonParams = try JSONSerialization.data(withJSONObject: [args.txHash], options: [])
+            let request = ArgsRequest(
+                method: "eth_getTransactionReceipt",
+                params: jsonParams
+            )
+            let receipt = try await self.request(request)
+            if receipt != Data() {
+                if try JSONSerialization.jsonObject(with: receipt, options: []) is [String: Any] {
+                    // Successfully converted Data to [String: Any]
+                    // TODO: Handle confirmations
+                    return true
+                }
+                
+                if delayUnit.shouldIncreaseDelay(startTime) {
+                    delayUnit = delayUnit.nextDelayUnit
+                }
+            }
+            try await Task.sleep(nanoseconds: delayUnit.rawValue)
+
+        }
     }
     
     public func signTransaction(_ args: ArgsSignTransaction) async throws -> String {
-//        throw Error("")
-        return ""
+        throw ProviderError.MethodNotSupported
     }
 
     public func signMessage(_ args: ArgsSignMessage) async throws -> String {
-        let messageData = Data(args.message)
-        let messageHex = "0x" + messageData.hexString
-        let address = self.provider.selectedAddress.lowercased()
-
-        let jsonParams = try JSONSerialization.data(withJSONObject: [messageHex, address], options: [])
-        let request = ArgsRequest(
-            method: "personal_sign",
-            params: jsonParams
-        )
-        
-        let response = try await self.request(request)
-        return String(data: response, encoding: .utf8)!
+        throw ProviderError.MethodNotSupported
     }
     
     public func address() -> String {
@@ -187,6 +227,43 @@ public class MetamaskProvider {
 
     public func chainId() -> String {
         self.provider.chainId
+    }
+    
+    func isTransactionMethod(_ method: String) -> Bool {
+        let transactionMethods = [
+            "eth_sendTransaction",
+            "eth_estimateGas",
+            "eth_call"
+        ]
+        
+        return transactionMethods.contains(method)
+    }
+    
+    private enum DelayUnit: UInt64 {
+        case shortest = 1
+        case medium = 5
+        case longest = 60
+
+        func shouldIncreaseDelay(_ startTime: Date) -> Bool {
+            let timePassed = Date().timeIntervalSince1970 - startTime.timeIntervalSince1970
+            switch self {
+            case .shortest:
+                return timePassed > 10
+            case .medium:
+                return timePassed > 120
+            case .longest:
+                return false
+            }
+        }
+
+        var nextDelayUnit: DelayUnit {
+            switch self {
+            case .shortest:
+                return .medium
+            case .medium, .longest:
+                return .longest
+            }
+        }
     }
 }
 
