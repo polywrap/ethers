@@ -14,19 +14,22 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(
-            url: "https://github.com/MetaMask/metamask-ios-sdk",
-            from: "0.1.1"
-        ),
-        .package(name: "PolywrapClient", path: "../../../../swift-client")
-        
+        .package(name: "PolywrapClient", path: "../../../../swift-client"),
+        .package(name: "metamask-ios-sdk", path: "../../../../../metamask/ios-sdk")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "MetamaskProvider",
-            dependencies: ["metamask-ios-sdk"]),
+            dependencies: [
+                "PolywrapClient",
+                "metamask-ios-sdk"
+            ],
+            cSettings: [
+                .headerSearchPath("../../include")
+            ]
+        ),
     ],
     swiftLanguageVersions: [.v5]
 )

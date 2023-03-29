@@ -1,7 +1,7 @@
 import metamask_ios_sdk
 import Foundation
 import Combine
-//import PolywrapClient
+import PolywrapClient
 
 public struct Transaction: CodableData {
     let to: String
@@ -91,19 +91,29 @@ public struct ArgsSignTransaction {
     }
 }
 
+public struct ArgsAddress: Codable {
+    public init() {}
+}
+
+
+public struct ArgsChainId: Codable {
+    public init() {}
+}
+
 enum ProviderError: Error {
     case NotConnected
     case EncodeError
     case MethodNotSupported
 }
 
-public class MetamaskProvider {
+public class MetamaskProvider: Plugin {
     var provider: Ethereum
     var cancellables: Set<AnyCancellable> = []
     var result: Data? = nil;
 
-    public init(provider:Ethereum, dapp:Dapp) {
-        self.provider = provider
+    public init(ethereum: Ethereum, dapp: Dapp) {
+        self.provider = ethereum
+        
         self.provider.connect(dapp)?.sink(receiveCompletion: { completion in
             switch completion {
             case let .failure(error):
@@ -113,6 +123,12 @@ public class MetamaskProvider {
         }, receiveValue: { value in
             print("Wallet connected! \(value)")
         }).store(in: &cancellables)
+
+        super.init()
+        super.addMethod(name: "request", closure: request)
+        super.addMethod(name: "waitForTransaction", closure: waitForTransaction)
+        super.addMethod(name: "address", closure: address)
+        super.addMethod(name: "chainId", closure: chainId)
     }
         
     func request(args: ArgsRequest, completion: @escaping (Result<Data, Error>) -> Void) {
@@ -226,11 +242,11 @@ public class MetamaskProvider {
         throw ProviderError.MethodNotSupported
     }
     
-    public func address() -> String {
+    public func address(_ args: ArgsAddress) async -> String {
         self.provider.selectedAddress
     }
 
-    public func chainId() -> String {
+    public func chainId(_ args: ArgsChainId) async -> String {
         self.provider.chainId
     }
     
