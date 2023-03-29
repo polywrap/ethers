@@ -1,7 +1,7 @@
 import metamask_ios_sdk
 import Foundation
 import Combine
-import RLPSwift
+//import PolywrapClient
 
 public struct Transaction: CodableData {
     let to: String
@@ -46,11 +46,11 @@ public struct Transaction: CodableData {
     }
 }
 
-public struct ArgsWaitForTransaction {
+public struct ArgsWaitForTransaction: Codable {
     let txHash: String
     let confirmations: UInt32
     let timeout: UInt32?
-    let connection: Any? = nil
+    let connection: String? = nil
     
     public init(txHash: String, confirmations: UInt32, timeout: UInt32? = nil) {
         self.txHash = txHash
@@ -59,10 +59,10 @@ public struct ArgsWaitForTransaction {
     }
 }
 
-public struct ArgsRequest {
+public struct ArgsRequest: Codable {
     var method: String;
     var params: Data;
-    var connection: Any?;
+    var connection: String?;
     
     public init(method: String, params: Data) {
         self.method = method
@@ -171,14 +171,14 @@ public class MetamaskProvider {
         }
     }
     
-    public func request(_ args: ArgsRequest) async throws -> Data {
-        return try await withCheckedThrowingContinuation { continuation in
+    public func request(_ args: ArgsRequest) async -> Data {
+        return await withCheckedContinuation { continuation in
             request(args: args) { result in
                 switch result {
                 case .success(let value):
                     continuation.resume(returning: value)
                 case .failure(let error):
-                    continuation.resume(throwing: error)
+                   print("Error in request: \(error)")
                 }
             }
         }
@@ -188,27 +188,32 @@ public class MetamaskProvider {
     
     // Inspired from https://github.com/web3swift-team/web3swift/blob/develop/Sources/web3swift/Transaction/TransactionPollingTask.swift#L11
     // Probably it would be easier to add this library and use it?
-    public func waitForTransaction(_ args: ArgsWaitForTransaction) async throws -> Bool {
+    public func waitForTransaction(_ args: ArgsWaitForTransaction) async -> Bool {
         let startTime = Date()
         while true {
-            let jsonParams = try JSONSerialization.data(withJSONObject: [args.txHash], options: [])
-            let request = ArgsRequest(
-                method: "eth_getTransactionReceipt",
-                params: jsonParams
-            )
-            let receipt = try await self.request(request)
-            if receipt != Data() {
-                if try JSONSerialization.jsonObject(with: receipt, options: []) is [String: Any] {
-                    // Successfully converted Data to [String: Any]
-                    // TODO: Handle confirmations
-                    return true
+            do {
+                let jsonParams = try JSONSerialization.data(withJSONObject: [args.txHash], options: [])
+                let request = ArgsRequest(
+                    method: "eth_getTransactionReceipt",
+                    params: jsonParams
+                )
+                let receipt = await self.request(request)
+                if receipt != Data() {
+                    if  try JSONSerialization.jsonObject(with: receipt, options: []) is [String: Any] {
+                        // Successfully converted Data to [String: Any]
+                        // TODO: Handle confirmations
+                        return true
+                    }
+                    
+                    if delayUnit.shouldIncreaseDelay(startTime) {
+                        delayUnit = delayUnit.nextDelayUnit
+                    }
                 }
-                
-                if delayUnit.shouldIncreaseDelay(startTime) {
-                    delayUnit = delayUnit.nextDelayUnit
-                }
+                try await Task.sleep(nanoseconds: delayUnit.rawValue)
+            } catch {
+                print("Error in JSON Serialization from wait for transaction method \(error)")
             }
-            try await Task.sleep(nanoseconds: delayUnit.rawValue)
+
 
         }
     }
