@@ -4,12 +4,12 @@ import Combine
 import PolywrapClient
 
 public struct Transaction: CodableData {
-    let to: String
+    let to: String?
     let from: String
-    let value: String
-    let data: String?
+    let value: String?
+    let data: String
 
-    public init(to: String, from: String, value: String, data: String? = nil) {
+    public init(to: String? = nil, from: String, value: String? = nil, data: String) {
         self.to = to
         self.from = from
         self.value = value
@@ -17,22 +17,26 @@ public struct Transaction: CodableData {
     }
     
     public init?(json: [String: Any]) {
-        guard let to = json["to"] as? String,
-              let from = json["from"] as? String,
-              let value = json["value"] as? String
+        guard let from = json["from"] as? String,
+              let data = json["data"] as? String
         else {
             return nil
         }
         
         
-        self.to = to
+        self.data = data
         self.from = from
-        self.value = value
         
-        if let data = json["data"] as? String {
-            self.data = data
+        if let to = json["to"] as? String {
+            self.to = to
         } else {
-            self.data = nil
+            self.to = nil
+        }
+        
+        if let value = json["value"] as? String {
+            self.value = value
+        } else {
+            self.value = nil
         }
     }
 
@@ -50,21 +54,22 @@ public struct ArgsWaitForTransaction: Codable {
     let txHash: String
     let confirmations: UInt32
     let timeout: UInt32?
-    let connection: String? = nil
+    let connection: String?
     
     public init(txHash: String, confirmations: UInt32, timeout: UInt32? = nil) {
         self.txHash = txHash
         self.confirmations = confirmations
         self.timeout = timeout
+        self.connection = nil
     }
 }
 
 public struct ArgsRequest: Codable {
     var method: String;
-    var params: Data;
+    var params: String;
     var connection: String?;
     
-    public init(method: String, params: Data) {
+    public init(method: String, params: String) {
         self.method = method
         self.params = params
         self.connection = nil
@@ -130,65 +135,65 @@ public class MetamaskProvider: Plugin {
         super.addMethod(name: "address", closure: address)
         super.addMethod(name: "chainId", closure: chainId)
     }
+    
+    func executeRequest(publisher: EthereumPublisher?, completion: @escaping (Result<String, Error>) -> Void) -> Void {
+        publisher?.sink(receiveCompletion: { completionResult in
+            switch completionResult {
+            case .finished:
+                break
+            case let .failure(error):
+                return completion(.failure(error))
+            }
+        }, receiveValue: { value in
+            if let response = value as? String {
+                print("response")
+                print(response)
+                return completion(.success(response))
+            }
+        }).store(in: &cancellables)
+   }
         
-    func request(args: ArgsRequest, completion: @escaping (Result<Data, Error>) -> Void) {
+    func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
         if !provider.connected {
-            completion(.failure(ProviderError.NotConnected))
-            return
+            return completion(.failure(ProviderError.NotConnected))
         }
         
         if self.isTransactionMethod(args.method) {
+            let jsonData = args.params.data(using: .utf8)!
             let params: [Transaction] = try! JSONDecoder().decode(
                 [Transaction].self,
-                from: args.params
+                from: jsonData
             )
 
             let request = EthereumRequest(method: args.method, params: params)
-            provider.request(request)?.sink(receiveCompletion: { completionResult in
-                switch completionResult {
-                case .finished:
-                    break
-                case let .failure(error):
-                    completion(.failure(error))
+            let publisher = provider.request(request)
+            executeRequest(publisher: publisher) { result in
+                switch result {
+                case .success(let response):
+                    return completion(.success(response))
+                case .failure(let error):
+                    return completion(.failure(error))
                 }
-            }, receiveValue: { value in
-                let response = (value as! String).data(using: .utf8)!
-                completion(.success(response))
-            }).store(in: &cancellables)
-
+            }
         } else {
-            let params: [String] = try! JSONDecoder().decode([String].self, from: args.params)
+            let jsonData = args.params.data(using: .utf8)!
+            let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
             let request = EthereumRequest(method: args.method, params: params)
 
-            provider.request(request)?.sink(receiveCompletion: { completionResult in
-                switch completionResult {
-                case .finished:
-                    break
-                case let .failure(error):
-                    completion(.failure(error))
+            let publisher = provider.request(request)
+            executeRequest(publisher: publisher) { result in
+                switch result {
+                case .success(let response):
+                    return completion(.success(response))
+                case .failure(let error):
+                    return completion(.failure(error))
                 }
-            }, receiveValue: { value in
-                if let stringValue = value as? String {
-                    let response = stringValue.data(using: .utf8)!
-                    completion(.success(response))
-                }
-                
-                if let jsonValue = value as? [String: Any] {
-                    do {
-                        let jsonData = try JSONSerialization.data(withJSONObject: jsonValue, options: [])
-                        completion(.success(jsonData))
-                    } catch {
-                        completion(.failure(ProviderError.EncodeError))
-                    }
-                } else {
-                    completion(.success(Data()))
-                }
-            }).store(in: &cancellables)
+            }
         }
     }
     
-    public func request(_ args: ArgsRequest) async -> Data {
-        return await withCheckedContinuation { continuation in
+    public func request(args: ArgsRequest) async -> String {
+        await withCheckedContinuation { continuation in
             request(args: args) { result in
                 switch result {
                 case .success(let value):
@@ -204,18 +209,18 @@ public class MetamaskProvider: Plugin {
     
     // Inspired from https://github.com/web3swift-team/web3swift/blob/develop/Sources/web3swift/Transaction/TransactionPollingTask.swift#L11
     // Probably it would be easier to add this library and use it?
-    public func waitForTransaction(_ args: ArgsWaitForTransaction) async -> Bool {
+    public func waitForTransaction(args: ArgsWaitForTransaction) async -> Bool {
         let startTime = Date()
         while true {
             do {
                 let jsonParams = try JSONSerialization.data(withJSONObject: [args.txHash], options: [])
                 let request = ArgsRequest(
                     method: "eth_getTransactionReceipt",
-                    params: jsonParams
+                    params: String(data: jsonParams, encoding: .utf8)!
                 )
-                let receipt = await self.request(request)
-                if receipt != Data() {
-                    if  try JSONSerialization.jsonObject(with: receipt, options: []) is [String: Any] {
+                let receipt = await self.request(args: request)
+                if receipt != "" {
+                    if  try JSONSerialization.jsonObject(with: receipt.data(using: .utf8)!, options: []) is [String: Any] {
                         // Successfully converted Data to [String: Any]
                         // TODO: Handle confirmations
                         return true
