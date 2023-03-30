@@ -66,10 +66,10 @@ public struct ArgsWaitForTransaction: Codable {
 
 public struct ArgsRequest: Codable {
     var method: String;
-    var params: String;
+    var params: String?;
     var connection: String?;
     
-    public init(method: String, params: String) {
+    public init(method: String, params: String? = "") {
         self.method = method
         self.params = params
         self.connection = nil
@@ -109,6 +109,47 @@ enum ProviderError: Error {
     case NotConnected
     case EncodeError
     case MethodNotSupported
+    case DataCorruptedError
+}
+enum StringOrBool: Codable {
+    case string(String)
+    case bool(Bool)
+        
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else if let boolValue = try? container.decode(Bool.self) {
+            self = .bool(boolValue)
+        } else {
+            throw ProviderError.DataCorruptedError
+            
+        }
+    }
+    
+   public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        case .bool(let boolValue):
+            try container.encode(boolValue)
+        }
+    }
+    
+    public func toString() -> String {
+        switch self {
+        case .string(let v):
+            return v
+        case .bool(let b):
+            if b {
+                return "true"
+            } else {
+                return "false"
+            }
+        }
+        
+    }
 }
 
 public class MetamaskProvider: Plugin {
@@ -132,7 +173,7 @@ public class MetamaskProvider: Plugin {
         super.init()
         super.addMethod(name: "request", closure: request)
         super.addMethod(name: "waitForTransaction", closure: waitForTransaction)
-        super.addMethod(name: "address", closure: address)
+        super.addMethod(name: "signerAddress", closure: signerAddress)
         super.addMethod(name: "chainId", closure: chainId)
     }
     
@@ -146,9 +187,15 @@ public class MetamaskProvider: Plugin {
             }
         }, receiveValue: { value in
             if let response = value as? String {
-                print("response")
-                print(response)
-                return completion(.success(response))
+                 return completion(.success("\"\(response)\""))
+            }
+            
+            if let tx = value as? Transaction {
+                let encoder = JSONEncoder()
+                let jsonData = try! encoder.encode(tx)
+                let string = String(data: jsonData, encoding: .utf8)!
+                return completion(.success(string))
+
             }
         }).store(in: &cancellables)
    }
@@ -157,15 +204,19 @@ public class MetamaskProvider: Plugin {
         if !provider.connected {
             return completion(.failure(ProviderError.NotConnected))
         }
-        
-        if self.isTransactionMethod(args.method) {
-            let jsonData = args.params.data(using: .utf8)!
-            let params: [Transaction] = try! JSONDecoder().decode(
-                [Transaction].self,
-                from: jsonData
-            )
 
-            let request = EthereumRequest(method: args.method, params: params)
+        let initialParamsTx: [Transaction] = []
+        if self.isTransactionMethod(args.method) {
+            var request = EthereumRequest(method: args.method, params: initialParamsTx)
+            if let jsonData = args.params {
+                let json = jsonData.data(using: .utf8)!
+                let params: [Transaction] = try! JSONDecoder().decode(
+                    [Transaction].self,
+                    from: json
+                )
+                request = EthereumRequest(method: args.method, params: params)
+
+            }
             let publisher = provider.request(request)
             executeRequest(publisher: publisher) { result in
                 switch result {
@@ -176,10 +227,11 @@ public class MetamaskProvider: Plugin {
                 }
             }
         } else {
-            let jsonData = args.params.data(using: .utf8)!
-            let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
-            let request = EthereumRequest(method: args.method, params: params)
-
+            print("check the params: ")
+            print(args.params)
+            let request = EthereumRequest(method: args.method, params: args.params ?? "")
+            
+            
             let publisher = provider.request(request)
             executeRequest(publisher: publisher) { result in
                 switch result {
@@ -247,7 +299,7 @@ public class MetamaskProvider: Plugin {
         throw ProviderError.MethodNotSupported
     }
     
-    public func address(_ args: ArgsAddress) async -> String {
+    public func signerAddress(_ args: ArgsAddress) async -> String {
         self.provider.selectedAddress
     }
 
