@@ -89,6 +89,13 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
         )
       }
       return JSON.stringify(signature)
+    } else if (args.method === "eth_signTypedData_v4") {
+      const params = JSON.parse(paramsStr);
+      const req = await provider.send(
+        args.method,
+        [params[0], JSON.stringify(params[1])]
+      );
+      return JSON.stringify(req);
     }
 
     if (args.method === "eth_encodePacked") {
