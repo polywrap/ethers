@@ -2,6 +2,7 @@ import metamask_ios_sdk
 import Foundation
 import Combine
 import PolywrapClient
+import SocketIO
 
 public struct Transaction: CodableData {
     let to: String?
@@ -152,6 +153,15 @@ enum StringOrBool: Codable {
     }
 }
 
+public struct CustomBoolOrStringArray: CodableData {
+    let tag: String
+    let include: Bool
+    
+    public func socketRepresentation() -> NetworkData {
+        [self.tag, self.include]
+    }
+}
+
 public class MetamaskProvider: Plugin {
     var provider: Ethereum
     var cancellables: Set<AnyCancellable> = []
@@ -200,6 +210,71 @@ public class MetamaskProvider: Plugin {
         }).store(in: &cancellables)
    }
         
+    
+    func handleGetBlockByNumber(block: String, includeTx: Bool, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_getBlockByNumber",
+            "params": [block, includeTx]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                print("error :/ \(error)")
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
+                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
+                return completion(.success(String(data:stringJson, encoding: .utf8)!))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
+    }
+    
+    func handleFeeHistory(blockCount: String, newestBlock: String, rewardPercentiles: [Float]?, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_feeHistory",
+            "params": [blockCount, newestBlock, rewardPercentiles]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                print("error :/ \(error)")
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
+                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
+                return completion(.success(String(data:stringJson, encoding: .utf8)!))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
+    }
+    
     func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
         if !provider.connected {
             return completion(.failure(ProviderError.NotConnected))
@@ -227,18 +302,35 @@ public class MetamaskProvider: Plugin {
                 }
             }
         } else {
-            print("check the params: ")
-            print(args.params)
-            let request = EthereumRequest(method: args.method, params: args.params ?? "")
-            
-            
-            let publisher = provider.request(request)
-            executeRequest(publisher: publisher) { result in
-                switch result {
-                case .success(let response):
-                    return completion(.success(response))
-                case .failure(let error):
-                    return completion(.failure(error))
+            if args.method == "eth_getBlockByNumber" {
+                handleGetBlockByNumber(block: "latest", includeTx: false, completion: completion)
+            } else if args.method == "eth_feeHistory" {
+                handleFeeHistory(blockCount: "0xa", newestBlock: "latest", rewardPercentiles: [5.0], completion: completion)
+            } else {
+                if let params = args.params {
+                    let jsonData = params.data(using: .utf8)!
+                    let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
+                    let request = EthereumRequest(method: args.method, params: params)
+                    let publisher = provider.request(request)
+                    executeRequest(publisher: publisher) { result in
+                        switch result {
+                        case .success(let response):
+                            return completion(.success(response))
+                        case .failure(let error):
+                            return completion(.failure(error))
+                        }
+                    }
+                } else {
+                    let request = EthereumRequest(method: args.method, params: "")
+                    let publisher = provider.request(request)
+                    executeRequest(publisher: publisher) { result in
+                        switch result {
+                        case .success(let response):
+                            return completion(.success(response))
+                        case .failure(let error):
+                            return completion(.failure(error))
+                        }
+                    }
                 }
             }
         }
