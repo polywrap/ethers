@@ -5,28 +5,41 @@ import PolywrapClient
 import SocketIO
 
 public struct Transaction: CodableData {
-    let to: String?
-    let from: String
-    let value: String?
+    let from: String?
     let data: String
+    let type: String?
+    let value: String?
+    let to: String?
 
-    public init(to: String? = nil, from: String, value: String? = nil, data: String) {
+
+    public init(to: String? = nil, from: String? = nil, value: String? = nil, data: String, type: String? = nil) {
         self.to = to
         self.from = from
         self.value = value
         self.data = data
+        self.type = type
     }
     
     public init?(json: [String: Any]) {
-        guard let from = json["from"] as? String,
-              let data = json["data"] as? String
+        guard let data = json["data"] as? String
         else {
             return nil
         }
         
         
         self.data = data
-        self.from = from
+        
+        if let type = json["type"] as? String {
+            self.type = type
+        } else {
+            self.type = nil
+        }
+
+        if let from = json["from"] as? String {
+            self.from = from
+        } else {
+            self.from = nil
+        }
         
         if let to = json["to"] as? String {
             self.to = to
@@ -153,6 +166,78 @@ enum StringOrBool: Codable {
     }
 }
 
+enum TxOrString: Codable {
+    case string(String)
+    case transaction(Transaction)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let txValue = try? container.decode(Transaction.self) {
+            self = .transaction(txValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unable to decode Element"
+            )
+        }
+    }
+        
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+
+        switch self {
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        case .transaction(let txValue):
+            try container.encode(txValue)
+        }
+    }
+    
+    func toString() -> String {
+        switch self {
+        case .transaction(let v):
+            let encoder = JSONEncoder()
+            let jsonData = try! encoder.encode(v)
+            let string = String(data: jsonData, encoding: .utf8)!
+            return string
+        case.string(let v):
+            return v
+        }
+    }
+    
+    func toTransaction() -> Transaction? {
+        switch self {
+        case .transaction(let v):
+            return v
+        case .string(_):
+            return nil
+        }
+    }
+}
+
+public struct ParamsEthCall: CodableData {
+    public var tx: Transaction
+    public var tag: String
+    
+    public init(tx: Transaction, tag: String) {
+        self.tx = tx
+        self.tag = tag
+    }
+    
+    public func socketRepresentation() throws -> SocketData {
+        return [
+         [
+            "data": self.tx.data,
+            "type": self.tx.type,
+            "to": self.tx.to
+         ], self.tag
+        ]
+    }
+}
+
 public struct CustomBoolOrStringArray: CodableData {
     let tag: String
     let include: Bool
@@ -275,6 +360,42 @@ public class MetamaskProvider: Plugin {
        task.resume()
     }
     
+    func handleEthCall(transaction: Transaction, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_call",
+            "params": [
+                [
+                    "to": transaction.to!,
+                    "data": transaction.data,
+                    "type": transaction.type!
+                ]
+            ]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : String]
+                let result = json["result"]!
+                return completion(.success("\"\(result)\""))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
+    }
+    
     func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
         if !provider.connected {
             return completion(.failure(ProviderError.NotConnected))
@@ -282,23 +403,40 @@ public class MetamaskProvider: Plugin {
 
         let initialParamsTx: [Transaction] = []
         if self.isTransactionMethod(args.method) {
-            var request = EthereumRequest(method: args.method, params: initialParamsTx)
-            if let jsonData = args.params {
-                let json = jsonData.data(using: .utf8)!
-                let params: [Transaction] = try! JSONDecoder().decode(
-                    [Transaction].self,
-                    from: json
-                )
-                request = EthereumRequest(method: args.method, params: params)
-
-            }
-            let publisher = provider.request(request)
-            executeRequest(publisher: publisher) { result in
-                switch result {
-                case .success(let response):
-                    return completion(.success(response))
-                case .failure(let error):
-                    return completion(.failure(error))
+            if args.method == "eth_call" {
+                if let params = args.params {
+                    print("params: \(params)")
+//                    print("transaction maybe? \(params[0])")
+                    let json = params.data(using: .utf8)!
+                    let jsonDecoder = JSONDecoder()
+                    let mixedArray = try! jsonDecoder.decode([TxOrString].self, from: json)
+                    
+                    let transaction = mixedArray[0].toTransaction()!
+                    handleEthCall(transaction: transaction, completion: completion)
+                    
+                } else {
+                    // todo make error
+                    print("Params must be in eth_call")
+                }
+            } else {
+                var request = EthereumRequest(method: args.method, params: initialParamsTx)
+                if let jsonData = args.params {
+                    let json = jsonData.data(using: .utf8)!
+                    let params: [Transaction] = try! JSONDecoder().decode(
+                        [Transaction].self,
+                        from: json
+                    )
+                    request = EthereumRequest(method: args.method, params: params)
+                    
+                }
+                let publisher = provider.request(request)
+                executeRequest(publisher: publisher) { result in
+                    switch result {
+                    case .success(let response):
+                        return completion(.success(response))
+                    case .failure(let error):
+                        return completion(.failure(error))
+                    }
                 }
             }
         } else {
@@ -308,16 +446,29 @@ public class MetamaskProvider: Plugin {
                 handleFeeHistory(blockCount: "0xa", newestBlock: "latest", rewardPercentiles: [5.0], completion: completion)
             } else {
                 if let params = args.params {
-                    let jsonData = params.data(using: .utf8)!
-                    let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
-                    let request = EthereumRequest(method: args.method, params: params)
-                    let publisher = provider.request(request)
-                    executeRequest(publisher: publisher) { result in
-                        switch result {
-                        case .success(let response):
-                            return completion(.success(response))
-                        case .failure(let error):
-                            return completion(.failure(error))
+                    if params != "null" {
+                        let jsonData = params.data(using: .utf8)!
+                        let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
+                        let request = EthereumRequest(method: args.method, params: params)
+                        let publisher = provider.request(request)
+                        executeRequest(publisher: publisher) { result in
+                            switch result {
+                            case .success(let response):
+                                return completion(.success(response))
+                            case .failure(let error):
+                                return completion(.failure(error))
+                            }
+                        }
+                    } else {
+                        let request = EthereumRequest(method: args.method, params: "")
+                        let publisher = provider.request(request)
+                        executeRequest(publisher: publisher) { result in
+                            switch result {
+                            case .success(let response):
+                                return completion(.success(response))
+                            case .failure(let error):
+                                return completion(.failure(error))
+                            }
                         }
                     }
                 } else {
