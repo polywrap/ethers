@@ -2,250 +2,6 @@ import metamask_ios_sdk
 import Foundation
 import Combine
 import PolywrapClient
-import SocketIO
-
-public struct Transaction: CodableData {
-    let from: String?
-    let data: String
-    let type: String?
-    let value: String?
-    let to: String?
-
-
-    public init(to: String? = nil, from: String? = nil, value: String? = nil, data: String, type: String? = nil) {
-        self.to = to
-        self.from = from
-        self.value = value
-        self.data = data
-        self.type = type
-    }
-    
-    public init?(json: [String: Any]) {
-        guard let data = json["data"] as? String
-        else {
-            return nil
-        }
-        
-        
-        self.data = data
-        
-        if let type = json["type"] as? String {
-            self.type = type
-        } else {
-            self.type = nil
-        }
-
-        if let from = json["from"] as? String {
-            self.from = from
-        } else {
-            self.from = nil
-        }
-        
-        if let to = json["to"] as? String {
-            self.to = to
-        } else {
-            self.to = nil
-        }
-        
-        if let value = json["value"] as? String {
-            self.value = value
-        } else {
-            self.value = nil
-        }
-    }
-
-    public func socketRepresentation() -> NetworkData {
-        [
-            "to": to,
-            "from": from,
-            "value": value,
-            "data": data
-        ]
-    }
-}
-
-public struct ArgsWaitForTransaction: Codable {
-    let txHash: String
-    let confirmations: UInt32
-    let timeout: UInt32?
-    let connection: String?
-    
-    public init(txHash: String, confirmations: UInt32, timeout: UInt32? = nil) {
-        self.txHash = txHash
-        self.confirmations = confirmations
-        self.timeout = timeout
-        self.connection = nil
-    }
-}
-
-public struct ArgsRequest: Codable {
-    var method: String;
-    var params: String?;
-    var connection: String?;
-    
-    public init(method: String, params: String? = "") {
-        self.method = method
-        self.params = params
-        self.connection = nil
-    }
-}
-
-public struct ArgsSignMessage {
-    var message: [UInt8]
-    var connection: Any?;
-    
-    public init(message: [UInt8]) {
-        self.message = message
-        self.connection = nil
-    }
-}
-
-public struct ArgsSignTransaction {
-    var rlp: [UInt8]
-    var connection: Any?;
-    
-    public init(rlp: [UInt8]) {
-        self.rlp = rlp
-        self.connection = nil
-    }
-}
-
-public struct ArgsAddress: Codable {
-    public init() {}
-}
-
-
-public struct ArgsChainId: Codable {
-    public init() {}
-}
-
-enum ProviderError: Error {
-    case NotConnected
-    case EncodeError
-    case MethodNotSupported
-    case DataCorruptedError
-}
-enum StringOrBool: Codable {
-    case string(String)
-    case bool(Bool)
-        
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let stringValue = try? container.decode(String.self) {
-            self = .string(stringValue)
-        } else if let boolValue = try? container.decode(Bool.self) {
-            self = .bool(boolValue)
-        } else {
-            throw ProviderError.DataCorruptedError
-            
-        }
-    }
-    
-   public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .string(let stringValue):
-            try container.encode(stringValue)
-        case .bool(let boolValue):
-            try container.encode(boolValue)
-        }
-    }
-    
-    public func toString() -> String {
-        switch self {
-        case .string(let v):
-            return v
-        case .bool(let b):
-            if b {
-                return "true"
-            } else {
-                return "false"
-            }
-        }
-        
-    }
-}
-
-enum TxOrString: Codable {
-    case string(String)
-    case transaction(Transaction)
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        
-        if let txValue = try? container.decode(Transaction.self) {
-            self = .transaction(txValue)
-        } else if let stringValue = try? container.decode(String.self) {
-            self = .string(stringValue)
-        } else {
-            throw DecodingError.dataCorruptedError(
-                in: container,
-                debugDescription: "Unable to decode Element"
-            )
-        }
-    }
-        
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-
-        switch self {
-        case .string(let stringValue):
-            try container.encode(stringValue)
-        case .transaction(let txValue):
-            try container.encode(txValue)
-        }
-    }
-    
-    func toString() -> String {
-        switch self {
-        case .transaction(let v):
-            let encoder = JSONEncoder()
-            let jsonData = try! encoder.encode(v)
-            let string = String(data: jsonData, encoding: .utf8)!
-            return string
-        case.string(let v):
-            return v
-        }
-    }
-    
-    func toTransaction() -> Transaction? {
-        switch self {
-        case .transaction(let v):
-            return v
-        case .string(_):
-            return nil
-        }
-    }
-}
-
-public struct ParamsEthCall: CodableData {
-    public var tx: Transaction
-    public var tag: String
-    
-    public init(tx: Transaction, tag: String) {
-        self.tx = tx
-        self.tag = tag
-    }
-    
-    public func socketRepresentation() throws -> SocketData {
-        return [
-         [
-            "data": self.tx.data,
-            "type": self.tx.type,
-            "to": self.tx.to
-         ], self.tag
-        ]
-    }
-}
-
-public struct CustomBoolOrStringArray: CodableData {
-    let tag: String
-    let include: Bool
-    
-    public func socketRepresentation() -> NetworkData {
-        [self.tag, self.include]
-    }
-}
 
 public class MetamaskProvider: Plugin {
     var provider: Ethereum
@@ -294,107 +50,6 @@ public class MetamaskProvider: Plugin {
             }
         }).store(in: &cancellables)
    }
-        
-    
-    func handleGetBlockByNumber(block: String, includeTx: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
-        
-        let jsonData = try? JSONSerialization.data(withJSONObject:[
-            "id": "1",
-            "jsonrpc":"2.0",
-            "method": "eth_getBlockByNumber",
-            "params": [block, includeTx]
-        ])
-
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                print("error :/ \(error)")
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
-                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
-                return completion(.success(String(data:stringJson, encoding: .utf8)!))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
-    }
-    
-    func handleFeeHistory(blockCount: String, newestBlock: String, rewardPercentiles: [Float]?, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
-        
-        let jsonData = try? JSONSerialization.data(withJSONObject:[
-            "id": "1",
-            "jsonrpc":"2.0",
-            "method": "eth_feeHistory",
-            "params": [blockCount, newestBlock, rewardPercentiles]
-        ])
-
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                print("error :/ \(error)")
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
-                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
-                return completion(.success(String(data:stringJson, encoding: .utf8)!))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
-    }
-    
-    func handleEthCall(transaction: Transaction, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
-        let jsonData = try? JSONSerialization.data(withJSONObject:[
-            "id": "1",
-            "jsonrpc":"2.0",
-            "method": "eth_call",
-            "params": [
-                [
-                    "to": transaction.to!,
-                    "data": transaction.data,
-                    "type": transaction.type!
-                ]
-            ]
-        ])
-
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : String]
-                let result = json["result"]!
-                return completion(.success("\"\(result)\""))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
-    }
     
     func request(args: ArgsRequest, completion: @escaping (Result<String, Error>) -> Void) {
         if !provider.connected {
@@ -405,8 +60,6 @@ public class MetamaskProvider: Plugin {
         if self.isTransactionMethod(args.method) {
             if args.method == "eth_call" {
                 if let params = args.params {
-                    print("params: \(params)")
-//                    print("transaction maybe? \(params[0])")
                     let json = params.data(using: .utf8)!
                     let jsonDecoder = JSONDecoder()
                     let mixedArray = try! jsonDecoder.decode([TxOrString].self, from: json)
@@ -442,6 +95,23 @@ public class MetamaskProvider: Plugin {
         } else {
             if args.method == "eth_getBlockByNumber" {
                 handleGetBlockByNumber(block: "latest", includeTx: false, completion: completion)
+            } else if args.method == "eth_signTypedData_v4" {
+                if let params = args.params {
+                    let json = params.data(using: .utf8)!
+                    let jsonDecoder = JSONDecoder()
+                    let mixedArray = try! jsonDecoder.decode([AddressOrTypedData].self, from: json)
+                    let params = [mixedArray[0].toString(), mixedArray[1].toString()]
+                    let request = EthereumRequest(method: args.method, params: params)
+                    let publisher = provider.request(request)
+                    executeRequest(publisher: publisher) { result in
+                        switch result {
+                        case .success(let response):
+                            return completion(.success(response))
+                        case .failure(let error):
+                            return completion(.failure(error))
+                        }
+                    }
+                }
             } else if args.method == "eth_feeHistory" {
                 handleFeeHistory(blockCount: "0xa", newestBlock: "latest", rewardPercentiles: [5.0], completion: completion)
             } else {
@@ -550,7 +220,7 @@ public class MetamaskProvider: Plugin {
         self.provider.chainId
     }
     
-    func isTransactionMethod(_ method: String) -> Bool {
+    private func isTransactionMethod(_ method: String) -> Bool {
         let transactionMethods = [
             "eth_sendTransaction",
             "eth_estimateGas",
@@ -558,6 +228,109 @@ public class MetamaskProvider: Plugin {
         ]
         
         return transactionMethods.contains(method)
+    }
+    
+    // Metamask does not handle well arguments with different types, this is a hack to make the plugin work as expected
+    // but this should not be the case. The way it's commented in the readme doesn't really work:
+    // https://github.com/MetaMask/metamask-ios-sdk#using-a-struct
+    private func handleGetBlockByNumber(block: String, includeTx: Bool, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_getBlockByNumber",
+            "params": [block, includeTx]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                print("error :/ \(error)")
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
+                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
+                return completion(.success(String(data:stringJson, encoding: .utf8)!))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
+    }
+    
+    private func handleFeeHistory(blockCount: String, newestBlock: String, rewardPercentiles: [Float]?, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_feeHistory",
+            "params": [blockCount, newestBlock, rewardPercentiles]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                print("error :/ \(error)")
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
+                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
+                return completion(.success(String(data:stringJson, encoding: .utf8)!))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
+    }
+    
+    private func handleEthCall(transaction: Transaction, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
+        var httpRequest = URLRequest(url: endpoint)
+        httpRequest.httpMethod = "post"
+        let jsonData = try? JSONSerialization.data(withJSONObject:[
+            "id": "1",
+            "jsonrpc":"2.0",
+            "method": "eth_call",
+            "params": [
+                [
+                    "to": transaction.to!,
+                    "data": transaction.data,
+                    "type": transaction.type!
+                ]
+            ]
+        ])
+
+        httpRequest.httpBody = jsonData
+        
+        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
+        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
+       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
+            if let error = error {
+                return completion(.failure(error))
+            } else if let data = data {
+                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : String]
+                let result = json["result"]!
+                return completion(.success("\"\(result)\""))
+            } else {
+                print("unexpected error")
+            }
+        }
+           
+       task.resume()
     }
     
     private enum DelayUnit: UInt64 {
