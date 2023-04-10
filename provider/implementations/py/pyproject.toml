@@ -11,8 +11,8 @@ authors = ["Cesar <cesar@polywrap.io>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 web3 = "6.1.0"
-polywrap-plugin = "0.1.0a14"
-polywrap-result = "0.1.0a14"
+eth_account = "0.8.0"
+polywrap-plugin = "0.1.0a15"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
@@ -25,6 +25,8 @@ tox-poetry = "^0.4.1"
 isort = "^5.10.1"
 pyright = "^1.1.275"
 pydocstyle = "^6.1.1"
+polywrap-client = "0.1.0a15"
+polywrap-client-config-builder = "0.1.0a15"
 
 [tool.bandit]
 exclude_dirs = ["tests"]

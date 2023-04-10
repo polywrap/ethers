@@ -69,14 +69,6 @@ tests = ["attrs[tests-no-zope]", "zope.interface"]
 tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy (>=0.971,<0.990)", "mypy (>=0.971,<0.990)", "pympler", "pympler", "pytest (>=4.3.0)", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-mypy-plugins", "pytest-xdist[psutil]", "pytest-xdist[psutil]"]
 
 [[package]]
-name = "backoff"
-version = "2.2.1"
-description = "Function decoration for backoff and retry"
-category = "main"
-optional = false
-python-versions = ">=3.7,<4.0"
-
-[[package]]
 name = "bandit"
 version = "1.7.5"
 description = "Security oriented static analyser for python code."
@@ -402,37 +394,6 @@ python-versions = ">=3.7"
 gitdb = ">=4.0.1,<5"
 
 [[package]]
-name = "gql"
-version = "3.4.0"
-description = "GraphQL client for Python"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-backoff = ">=1.11.1,<3.0"
-graphql-core = ">=3.2,<3.3"
-yarl = ">=1.6,<2.0"
-
-[package.extras]
-aiohttp = ["aiohttp (>=3.7.1,<3.9.0)"]
-all = ["aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "websockets (>=10,<11)", "websockets (>=9,<10)"]
-botocore = ["botocore (>=1.21,<2)"]
-dev = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "black (==22.3.0)", "botocore (>=1.21,<2)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.910)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "sphinx (>=3.0.0,<4)", "sphinx-argparse (==0.2.5)", "sphinx-rtd-theme (>=0.4,<1)", "types-aiofiles", "types-mock", "types-requests", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)", "websockets (>=9,<10)"]
-requests = ["requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)"]
-test = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)", "websockets (>=9,<10)"]
-test-no-transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "vcrpy (==4.0.2)"]
-websockets = ["websockets (>=10,<11)", "websockets (>=9,<10)"]
-
-[[package]]
-name = "graphql-core"
-version = "3.2.3"
-description = "GraphQL implementation for Python, a port of GraphQL.js, the JavaScript reference implementation for GraphQL."
-category = "main"
-optional = false
-python-versions = ">=3.6,<4"
-
-[[package]]
 name = "hexbytes"
 version = "0.3.0"
 description = "hexbytes: Python `bytes` subclass that decodes hex, with a readable console output"
@@ -643,36 +604,58 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "polywrap-client"
+version = "0.1.0a15"
+description = ""
+category = "dev"
+optional = false
+python-versions = ">=3.10,<4.0"
+
+[package.dependencies]
+polywrap-core = ">=0.1.0a15,<0.2.0"
+polywrap-manifest = ">=0.1.0a15,<0.2.0"
+polywrap-msgpack = ">=0.1.0a15,<0.2.0"
+polywrap-uri-resolvers = ">=0.1.0a15,<0.2.0"
+
+[[package]]
+name = "polywrap-client-config-builder"
+version = "0.1.0a15"
+description = ""
+category = "dev"
+optional = false
+python-versions = ">=3.10,<4.0"
+
+[package.dependencies]
+polywrap-core = ">=0.1.0a15,<0.2.0"
+polywrap-uri-resolvers = ">=0.1.0a15,<0.2.0"
+
+[[package]]
 name = "polywrap-core"
-version = "0.1.0a14"
+version = "0.1.0a15"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-gql = "3.4.0"
-graphql-core = ">=3.2.1,<4.0.0"
-polywrap-manifest = "0.1.0a14"
-polywrap-result = "0.1.0a14"
-pydantic = ">=1.10.2,<2.0.0"
+polywrap-manifest = "0.1.0a15"
+polywrap-msgpack = "0.1.0a15"
 
 [[package]]
 name = "polywrap-manifest"
-version = "0.1.0a14"
+version = "0.1.0a15"
 description = "WRAP manifest"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-msgpack = "0.1.0a14"
-polywrap-result = "0.1.0a14"
+polywrap-msgpack = "0.1.0a15"
 pydantic = ">=1.10.2,<2.0.0"
 
 [[package]]
 name = "polywrap-msgpack"
-version = "0.1.0a14"
+version = "0.1.0a15"
 description = "WRAP msgpack encoding"
 category = "main"
 optional = false
@@ -683,25 +666,44 @@ msgpack = ">=1.0.4,<2.0.0"
 
 [[package]]
 name = "polywrap-plugin"
-version = "0.1.0a14"
+version = "0.1.0a15"
 description = "Plugin package"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap_core = "0.1.0a14"
-polywrap_manifest = "0.1.0a14"
-polywrap_msgpack = "0.1.0a14"
-polywrap_result = "0.1.0a14"
+polywrap_core = "0.1.0a15"
+polywrap_manifest = "0.1.0a15"
+polywrap_msgpack = "0.1.0a15"
 
 [[package]]
-name = "polywrap-result"
-version = "0.1.0a14"
-description = "Result object"
-category = "main"
+name = "polywrap-uri-resolvers"
+version = "0.1.0a15"
+description = ""
+category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
+
+[package.dependencies]
+polywrap-core = "0.1.0a15"
+polywrap-wasm = "0.1.0a15"
+
+[[package]]
+name = "polywrap-wasm"
+version = "0.1.0a15"
+description = ""
+category = "dev"
+optional = false
+python-versions = ">=3.10,<4.0"
+
+[package.dependencies]
+polywrap-core = "0.1.0a15"
+polywrap-manifest = "0.1.0a15"
+polywrap-msgpack = "0.1.0a15"
+unsync = ">=1.4.0,<2.0.0"
+unsync-stubs = ">=0.1.2,<0.2.0"
+wasmtime = ">=6.0.0,<7.0.0"
 
 [[package]]
 name = "protobuf"
@@ -758,11 +760,11 @@ toml = ["tomli (>=1.2.3)"]
 
 [[package]]
 name = "pygments"
-version = "2.14.0"
+version = "2.15.0"
 description = "Pygments is a syntax highlighting package written in Python."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.extras]
 plugins = ["importlib-metadata"]
@@ -1050,6 +1052,22 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "unsync"
+version = "1.4.0"
+description = "Unsynchronize asyncio"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "unsync-stubs"
+version = "0.1.2"
+description = ""
+category = "dev"
+optional = false
+python-versions = ">=3.10,<4.0"
+
+[[package]]
 name = "urllib3"
 version = "1.26.15"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1078,6 +1096,17 @@ platformdirs = ">=2.4,<4"
 [package.extras]
 docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=6.1.3)", "sphinx-argparse (>=0.4)", "sphinxcontrib-towncrier (>=0.2.1a0)", "towncrier (>=22.12)"]
 test = ["covdefaults (>=2.2.2)", "coverage (>=7.1)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=23)", "pytest (>=7.2.1)", "pytest-env (>=0.8.1)", "pytest-freezegun (>=0.4.2)", "pytest-mock (>=3.10)", "pytest-randomly (>=3.12)", "pytest-timeout (>=2.1)"]
+
+[[package]]
+name = "wasmtime"
+version = "6.0.0"
+description = "A WebAssembly runtime powered by Wasmtime"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+testing = ["coverage", "flake8 (==4.0.1)", "pycparser", "pytest", "pytest-flake8", "pytest-mypy"]
 
 [[package]]
 name = "web3"
@@ -1140,7 +1169,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "6bebf1c7dc1c894ce6c5741d5fdc99ac4343fa39d176f5076ff4d88208c1139a"
+content-hash = "e305b276aa95183c7c9e8343c81943c451440fa206ad1b588087418162a5ba77"
 
 [metadata.files]
 aiohttp = [
@@ -1247,10 +1276,6 @@ async-timeout = [
 attrs = [
     {file = "attrs-22.2.0-py3-none-any.whl", hash = "sha256:29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836"},
     {file = "attrs-22.2.0.tar.gz", hash = "sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99"},
-]
-backoff = [
-    {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
-    {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
 ]
 bandit = [
     {file = "bandit-1.7.5-py3-none-any.whl", hash = "sha256:75665181dc1e0096369112541a056c59d1c5f66f9bb74a8d686c3c362b83f549"},
@@ -1680,14 +1705,6 @@ gitpython = [
     {file = "GitPython-3.1.31-py3-none-any.whl", hash = "sha256:f04893614f6aa713a60cbbe1e6a97403ef633103cdd0ef5eb6efe0deb98dbe8d"},
     {file = "GitPython-3.1.31.tar.gz", hash = "sha256:8ce3bcf69adfdf7c7d503e78fd3b1c492af782d58893b650adb2ac8912ddd573"},
 ]
-gql = [
-    {file = "gql-3.4.0-py2.py3-none-any.whl", hash = "sha256:59c8a0b8f0a2f3b0b2ff970c94de86f82f65cb1da3340bfe57143e5f7ea82f71"},
-    {file = "gql-3.4.0.tar.gz", hash = "sha256:ca81aa8314fa88a8c57dd1ce34941278e0c352d762eb721edcba0387829ea7c0"},
-]
-graphql-core = [
-    {file = "graphql-core-3.2.3.tar.gz", hash = "sha256:06d2aad0ac723e35b1cb47885d3e5c45e956a53bc1b209a9fc5369007fe46676"},
-    {file = "graphql_core-3.2.3-py3-none-any.whl", hash = "sha256:5766780452bd5ec8ba133f8bf287dc92713e3868ddd83aee4faab9fc3e303dc3"},
-]
 hexbytes = [
     {file = "hexbytes-0.3.0-py3-none-any.whl", hash = "sha256:21c3a5bd00a383097f0369c387174e79839d75c4ccc3a7edda315c9644f4458a"},
     {file = "hexbytes-0.3.0.tar.gz", hash = "sha256:afeebfb800f5f15a3ca5bab52e49eabcb4b6dac06ec8ff01a94fdb890c6c0712"},
@@ -1980,25 +1997,37 @@ pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
+polywrap-client = [
+    {file = "polywrap_client-0.1.0a15-py3-none-any.whl", hash = "sha256:7fcb645ea6b57d7b236dfb41494475d11cb7e47fc869784b7681a8e1615e85af"},
+    {file = "polywrap_client-0.1.0a15.tar.gz", hash = "sha256:29c1e41a92f04ea279fa3e18e765939b5f7e81777e16058076409202d64d6afb"},
+]
+polywrap-client-config-builder = [
+    {file = "polywrap_client_config_builder-0.1.0a15-py3-none-any.whl", hash = "sha256:a25078f510c3e45bc5bd911955968e9c5e09eb0805dfb2ceb5d712d55d260f7f"},
+    {file = "polywrap_client_config_builder-0.1.0a15.tar.gz", hash = "sha256:1c88bc44dc1d174eb9b00d3c582630ac63ca3b27597c83558f68ce694827d8b3"},
+]
 polywrap-core = [
-    {file = "polywrap_core-0.1.0a14-py3-none-any.whl", hash = "sha256:4e76294534670f903fecb0df9662cdeb2815dc7029031114fbc97357387a9bea"},
-    {file = "polywrap_core-0.1.0a14.tar.gz", hash = "sha256:d40b14133b0d168bc729e729a0a5f625c9237bfe273f17d8947f691179807f90"},
+    {file = "polywrap_core-0.1.0a15-py3-none-any.whl", hash = "sha256:2f9674a6ae27aa46c08399c1abf56b848ea1dcee381bb138bc4be0916b02bd46"},
+    {file = "polywrap_core-0.1.0a15.tar.gz", hash = "sha256:386b20f7b6df14fdb9502f6c6f66568d09466e167529fa7837a75623df657beb"},
 ]
 polywrap-manifest = [
-    {file = "polywrap_manifest-0.1.0a14-py3-none-any.whl", hash = "sha256:eb2714c7ba2454d50c97f3bd795dffce6c8dd52ebf7ed27bbe04103009ec4711"},
-    {file = "polywrap_manifest-0.1.0a14.tar.gz", hash = "sha256:4ff268fed21f525ba706294fe26b7f2f470d9902d612cfc28a2e8856f6141109"},
+    {file = "polywrap_manifest-0.1.0a15-py3-none-any.whl", hash = "sha256:0642ad1a97a7f74bb164ff9660b878ff2cb7df490ce2a1a0c9781b02c0e30866"},
+    {file = "polywrap_manifest-0.1.0a15.tar.gz", hash = "sha256:7f8c86e303157086ba18ed39da109220562d55a2c35a87bac099d6c23926ba6d"},
 ]
 polywrap-msgpack = [
-    {file = "polywrap_msgpack-0.1.0a14-py3-none-any.whl", hash = "sha256:aceef5820c243bc4a678630c52b2fa2f6f8524e36eb9039be215b36ac13a0bcf"},
-    {file = "polywrap_msgpack-0.1.0a14.tar.gz", hash = "sha256:ae3d33f270afbe91c3c4b6c8437db490a7d12f227b412ce95ad8acfaada987a1"},
+    {file = "polywrap_msgpack-0.1.0a15-py3-none-any.whl", hash = "sha256:6defd861332337d6d26b02af4eecb00ad6556e94d6812cd3df7f368a410e1e56"},
+    {file = "polywrap_msgpack-0.1.0a15.tar.gz", hash = "sha256:d35ef8e2b749bfe42058fcf29bd70866f11657ebfa38c22b74bebe725eab2dd5"},
 ]
 polywrap-plugin = [
-    {file = "polywrap_plugin-0.1.0a14-py3-none-any.whl", hash = "sha256:78e9935a06807d3f51162b6ea0c9648da419277f866343cbcc0aec03b532dd1d"},
-    {file = "polywrap_plugin-0.1.0a14.tar.gz", hash = "sha256:74d60629668fdc9c1449d04d87f016d7b00968daa623e6a9dc8940e17d31293e"},
+    {file = "polywrap_plugin-0.1.0a15-py3-none-any.whl", hash = "sha256:a52d0342c1a3d4b1f258e73155f0b00c99bdbcf9075f4033d2c9fd810dbd8e23"},
+    {file = "polywrap_plugin-0.1.0a15.tar.gz", hash = "sha256:619a8b0ca01cf1adeec85ceb4456f74a679309597b817dc723bed7f184a8b142"},
 ]
-polywrap-result = [
-    {file = "polywrap_result-0.1.0a14-py3-none-any.whl", hash = "sha256:27b0a918a33c88e07da28b28dfa514f42d927ec3de97a91614ad78b8eb6f4f8c"},
-    {file = "polywrap_result-0.1.0a14.tar.gz", hash = "sha256:a51dea095b4ba86af595aaeeb743af12d729e2b482c23fd491fdd8fc3fd71eee"},
+polywrap-uri-resolvers = [
+    {file = "polywrap_uri_resolvers-0.1.0a15-py3-none-any.whl", hash = "sha256:c2f911cae314f572a78af8bba2b27096df8db3be7bf5ab58a237ae076d50ea83"},
+    {file = "polywrap_uri_resolvers-0.1.0a15.tar.gz", hash = "sha256:388d95826bb85eb1bd1ac5a0d14d3db45de5fa92d5070f4d88284dc2d3de06a0"},
+]
+polywrap-wasm = [
+    {file = "polywrap_wasm-0.1.0a15-py3-none-any.whl", hash = "sha256:1696c04f44af05af8bc2554f52274fe042c7c5e924f09ab9261971267c71f7de"},
+    {file = "polywrap_wasm-0.1.0a15.tar.gz", hash = "sha256:8404233eeab41e689e2f8f9cdcb6718a42ad7fe379c4d7ea136969fd39dff1ff"},
 ]
 protobuf = [
     {file = "protobuf-4.22.1-cp310-abi3-win32.whl", hash = "sha256:85aa9acc5a777adc0c21b449dafbc40d9a0b6413ff3a4f77ef9df194be7f975b"},
@@ -2097,8 +2126,8 @@ pydocstyle = [
     {file = "pydocstyle-6.3.0.tar.gz", hash = "sha256:7ce43f0c0ac87b07494eb9c0b462c0b73e6ff276807f204d6b53edc72b7e44e1"},
 ]
 pygments = [
-    {file = "Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
-    {file = "Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
+    {file = "Pygments-2.15.0-py3-none-any.whl", hash = "sha256:77a3299119af881904cd5ecd1ac6a66214b6e9bed1f2db16993b54adede64094"},
+    {file = "Pygments-2.15.0.tar.gz", hash = "sha256:f7e36cffc4c517fbc252861b9a6e4644ca0e5abadf9a113c72d1358ad09b9500"},
 ]
 pylint = [
     {file = "pylint-2.17.2-py3-none-any.whl", hash = "sha256:001cc91366a7df2970941d7e6bbefcbf98694e00102c1f121c531a814ddc2ea8"},
@@ -2325,6 +2354,13 @@ typing-extensions = [
     {file = "typing_extensions-4.5.0-py3-none-any.whl", hash = "sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4"},
     {file = "typing_extensions-4.5.0.tar.gz", hash = "sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb"},
 ]
+unsync = [
+    {file = "unsync-1.4.0.tar.gz", hash = "sha256:a29e0f8952ffb0b3a0453ce436819a5a1ba2febbb5caa707c319f6f98d35f3c5"},
+]
+unsync-stubs = [
+    {file = "unsync_stubs-0.1.2-py3-none-any.whl", hash = "sha256:a65aa80480c6b7ba985681d3833a202f0a33e159801c2a747bfcf6a0fb328a07"},
+    {file = "unsync_stubs-0.1.2.tar.gz", hash = "sha256:9f5b7d5cd35a03e36b735be2ba5f1c2c3848c613ad124ccbf5fc0c3cdb21cc50"},
+]
 urllib3 = [
     {file = "urllib3-1.26.15-py2.py3-none-any.whl", hash = "sha256:aa751d169e23c7479ce47a0cb0da579e3ede798f994f5816a74e4f4500dcea42"},
     {file = "urllib3-1.26.15.tar.gz", hash = "sha256:8a388717b9476f934a21484e8c8e61875ab60644d29b9b39e11e4b9dc1c6b305"},
@@ -2332,6 +2368,14 @@ urllib3 = [
 virtualenv = [
     {file = "virtualenv-20.21.0-py3-none-any.whl", hash = "sha256:31712f8f2a17bd06234fa97fdf19609e789dd4e3e4bf108c3da71d710651adbc"},
     {file = "virtualenv-20.21.0.tar.gz", hash = "sha256:f50e3e60f990a0757c9b68333c9fdaa72d7188caa417f96af9e52407831a3b68"},
+]
+wasmtime = [
+    {file = "wasmtime-6.0.0-py3-none-any.whl", hash = "sha256:4b9ccb4c29a6c03729b8eb376de2c7e7e27a92ed5b6f84c2b1a37379eeeeb255"},
+    {file = "wasmtime-6.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:dfb974d82f09f8b9f4993a9c3256c42b40d9f223128f54da7d9a07043645ed35"},
+    {file = "wasmtime-6.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:df1e6f735642490de585701c1030dc4e9cc4d853628370183fa3d91e9b5d816c"},
+    {file = "wasmtime-6.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:5a457ae39c77521aced2a9d66148a38583965ded101cd97803a2f0aa86139b9e"},
+    {file = "wasmtime-6.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:694420c5049d1bdd767daa7969eb73d1dd70a778f2d831d13c4aa14fe63beeef"},
+    {file = "wasmtime-6.0.0-py3-none-win_amd64.whl", hash = "sha256:fe77820fecc6f12da97be35d2a3bf0be8e47904e8b7e75e0e07b156a79eadba0"},
 ]
 web3 = [
     {file = "web3-6.1.0-py3-none-any.whl", hash = "sha256:31b079fccf6fd0f7e71080b77dc84347fff280f5c197793d973048755358fac4"},
