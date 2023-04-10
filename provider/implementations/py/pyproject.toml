@@ -1,0 +1,58 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "ethereum-provider-py"
+version = "0.0.1"
+description = "Ethereum provider in python"
+authors = ["Cesar <cesar@polywrap.io>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+web3 = "6.1.0"
+polywrap-plugin = "0.1.0a14"
+polywrap-result = "0.1.0a14"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+pytest-asyncio = "^0.19.0"
+pylint = "^2.15.4"
+black = "^22.10.0"
+bandit = { version = "^1.7.4", extras = ["toml"]}
+tox = "^3.26.0"
+tox-poetry = "^0.4.1"
+isort = "^5.10.1"
+pyright = "^1.1.275"
+pydocstyle = "^6.1.1"
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+reportShadowedImports = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "tests"
+]
+
+[tool.pylint]
+disable = [
+    "too-many-return-statements",
+]
+ignore = [
+    "tests/"
+]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pydocstyle]
+# default
