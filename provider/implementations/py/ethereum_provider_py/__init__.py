@@ -1,10 +1,11 @@
+from polywrap_core import Invoker, UriPackageOrWrapper, Env
 from polywrap_plugin import PluginModule, PluginPackage
 
 from web3.types import RPCEndpoint
 import json
+from typing import Optional, Dict, Any
 
 from ethereum_provider_py.connections import Connections
-from ethereum_provider_py.wrap.types import ArgsRequest
 
 
 class EthereumProviderPlugin(PluginModule[Connections]):
@@ -12,11 +13,16 @@ class EthereumProviderPlugin(PluginModule[Connections]):
         super().__init__(connections)
         self.connections = connections
 
-    async def request(self, args: ArgsRequest) -> str:
-        connection = self.connections.get_connection(args.connection)
+    async def request(
+        self,
+        args: Dict[str, Any], # TODO(cbrzn): Use generated types
+        client: Invoker[UriPackageOrWrapper],
+        env: Optional[Env] = None,
+    ) -> str:
+        connection = self.connections.get_connection(args.get("connection"))
         provider = connection.get_provider()
         response = provider.make_request(
-            method=RPCEndpoint(args.method), params=args.params
+            method=RPCEndpoint(args["method"]), params=args.get("params")
         )
         error = response.get("error")
         if error:

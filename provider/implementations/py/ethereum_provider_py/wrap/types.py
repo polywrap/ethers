@@ -10,7 +10,7 @@ class Connection:
 @dataclass(slots=True, kw_only=True)
 class ArgsRequest:
     method: str
-    params: str
+    params: Optional[str]
     connection: Optional[Connection]
 
 
