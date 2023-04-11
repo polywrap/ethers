@@ -11,29 +11,15 @@ from ethereum_provider_py.connections import Connections
 
 @fixture
 def client_without_signer():
-    ethereum_provider_uri = Uri.from_str("plugin/ethereum-provider")
-
     config = ConnectionConfig(
         provider="https://sepolia.infura.io/v3/1a8e6a8ab1df44ccb77d3e954082c5d4",
         signer=None,
     )
-    connection = Connection(config=config)
-    connections = Connections(
-        networks={"sepolia": connection}, default_network="sepolia"
-    )
-
-    resolver = StaticResolver(
-        {ethereum_provider_uri: ethereum_provider_plugin(connections=connections)}
-    )
-
-    config = ClientConfig(resolver=resolver)
-    return PolywrapClient(config)
+    return create_client(config)
 
 
 @fixture
 def client_with_signer():
-    ethereum_provider_uri = Uri.from_str("plugin/ethereum-provider")
-
     signer = Account.from_key(
         "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
     )
@@ -42,6 +28,12 @@ def client_with_signer():
         provider="https://sepolia.infura.io/v3/1a8e6a8ab1df44ccb77d3e954082c5d4",
         signer=signer,
     )
+
+    return create_client(config)
+
+
+def create_client(config: ConnectionConfig):
+    ethereum_provider_uri = Uri.from_str("plugin/ethereum-provider")
     connection = Connection(config=config)
     connections = Connections(
         networks={"sepolia": connection}, default_network="sepolia"
@@ -51,5 +43,5 @@ def client_with_signer():
         {ethereum_provider_uri: ethereum_provider_plugin(connections=connections)}
     )
 
-    config = ClientConfig(resolver=resolver)
-    return PolywrapClient(config)
+    client_config = ClientConfig(resolver=resolver)
+    return PolywrapClient(client_config)
