@@ -10,6 +10,7 @@ class Connections:
     default_network: str
 
     def __init__(self, networks: Dict[str, Connection], default_network: Optional[str]):
+        self.connections = {}
         for network, connection in networks.items():
             self.set(network, connection)
 
