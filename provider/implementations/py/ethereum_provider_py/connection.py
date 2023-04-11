@@ -35,6 +35,11 @@ class Connection:
 
     def get_provider(self) -> Web3.HTTPProvider:
         return self.provider
+    
+    def get_signer(self) -> LocalAccount:
+        if not self.signer:
+            raise RuntimeError("Signer not found")
+        return self.signer
 
     @staticmethod
     def from_node(node: str):
