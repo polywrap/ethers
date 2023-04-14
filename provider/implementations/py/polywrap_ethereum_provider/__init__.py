@@ -7,7 +7,7 @@ from web3.types import RPCEndpoint
 import json
 from typing import Optional, Dict, Any, cast
 
-from ethereum_provider_py.connections import Connections
+from polywrap_ethereum_provider.connections import Connections
 
 
 class EthereumProviderPlugin(PluginModule[Connections]):
@@ -15,7 +15,7 @@ class EthereumProviderPlugin(PluginModule[Connections]):
         super().__init__(connections)
         self.connections = connections
 
-    def request(
+    async def request(
         self,
         args: Dict[str, Any],  # TODO(cbrzn): Use generated types
         client: Invoker[UriPackageOrWrapper],
@@ -49,7 +49,7 @@ class EthereumProviderPlugin(PluginModule[Connections]):
         return json.dumps(response.get("result"))
 
     # TODO(cbrzn): Handle confirmations & timeout
-    def wait_for_transaction(
+    async def wait_for_transaction(
         self,
         args: Dict[str, Any],
         client: Invoker[UriPackageOrWrapper],
@@ -61,7 +61,7 @@ class EthereumProviderPlugin(PluginModule[Connections]):
         web3.eth.wait_for_transaction_receipt(args["tx_hash"])
         return True
 
-    def signer_address(
+    async def signer_address(
         self,
         args: Dict[str, Any],
         client: Invoker[UriPackageOrWrapper],

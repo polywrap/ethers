@@ -3,7 +3,7 @@ from web3 import Web3
 from eth_account.signers.local import LocalAccount
 from typing import Optional, Union, cast
 
-from ethereum_provider_py.networks import KnownNetwork, get_network_name
+from polywrap_ethereum_provider.networks import KnownNetwork, get_network_name
 
 EthereumProvider = str | Web3.HTTPProvider
 

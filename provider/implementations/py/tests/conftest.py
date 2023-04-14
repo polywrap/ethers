@@ -4,9 +4,9 @@ from polywrap_client import PolywrapClient, ClientConfig
 from polywrap_core import Uri
 from polywrap_uri_resolvers import StaticResolver
 
-from ethereum_provider_py import ethereum_provider_plugin
-from ethereum_provider_py.connection import ConnectionConfig, Connection
-from ethereum_provider_py.connections import Connections
+from polywrap_ethereum_provider import ethereum_provider_plugin
+from polywrap_ethereum_provider.connection import ConnectionConfig, Connection
+from polywrap_ethereum_provider.connections import Connections
 
 
 @fixture

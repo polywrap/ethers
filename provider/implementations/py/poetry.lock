@@ -546,7 +546,7 @@ setuptools = "*"
 
 [[package]]
 name = "packaging"
-version = "23.0"
+version = "23.1"
 description = "Core utilities for Python packages"
 category = "dev"
 optional = false
@@ -605,57 +605,57 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "polywrap-client"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = ""
 category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-core = ">=0.1.0a15,<0.2.0"
-polywrap-manifest = ">=0.1.0a15,<0.2.0"
-polywrap-msgpack = ">=0.1.0a15,<0.2.0"
-polywrap-uri-resolvers = ">=0.1.0a15,<0.2.0"
+polywrap-core = ">=0.1.0a28,<0.2.0"
+polywrap-manifest = ">=0.1.0a28,<0.2.0"
+polywrap-msgpack = ">=0.1.0a28,<0.2.0"
+polywrap-uri-resolvers = ">=0.1.0a28,<0.2.0"
 
 [[package]]
 name = "polywrap-client-config-builder"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = ""
 category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-core = ">=0.1.0a15,<0.2.0"
-polywrap-uri-resolvers = ">=0.1.0a15,<0.2.0"
+polywrap-core = ">=0.1.0a28,<0.2.0"
+polywrap-uri-resolvers = ">=0.1.0a28,<0.2.0"
 
 [[package]]
 name = "polywrap-core"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-manifest = "0.1.0a15"
-polywrap-msgpack = "0.1.0a15"
+polywrap-manifest = ">=0.1.0a28,<0.2.0"
+polywrap-msgpack = ">=0.1.0a28,<0.2.0"
 
 [[package]]
 name = "polywrap-manifest"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = "WRAP manifest"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-msgpack = "0.1.0a15"
+polywrap-msgpack = ">=0.1.0a28,<0.2.0"
 pydantic = ">=1.10.2,<2.0.0"
 
 [[package]]
 name = "polywrap-msgpack"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = "WRAP msgpack encoding"
 category = "main"
 optional = false
@@ -666,48 +666,48 @@ msgpack = ">=1.0.4,<2.0.0"
 
 [[package]]
 name = "polywrap-plugin"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = "Plugin package"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap_core = "0.1.0a15"
-polywrap_manifest = "0.1.0a15"
-polywrap_msgpack = "0.1.0a15"
+polywrap-core = ">=0.1.0a28,<0.2.0"
+polywrap-manifest = ">=0.1.0a28,<0.2.0"
+polywrap-msgpack = ">=0.1.0a28,<0.2.0"
 
 [[package]]
 name = "polywrap-uri-resolvers"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = ""
 category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-core = "0.1.0a15"
-polywrap-wasm = "0.1.0a15"
+polywrap-core = ">=0.1.0a28,<0.2.0"
+polywrap-wasm = ">=0.1.0a28,<0.2.0"
 
 [[package]]
 name = "polywrap-wasm"
-version = "0.1.0a15"
+version = "0.1.0a28"
 description = ""
 category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
-polywrap-core = "0.1.0a15"
-polywrap-manifest = "0.1.0a15"
-polywrap-msgpack = "0.1.0a15"
+polywrap-core = ">=0.1.0a28,<0.2.0"
+polywrap-manifest = ">=0.1.0a28,<0.2.0"
+polywrap-msgpack = ">=0.1.0a28,<0.2.0"
 unsync = ">=1.4.0,<2.0.0"
 unsync-stubs = ">=0.1.2,<0.2.0"
 wasmtime = ">=6.0.0,<7.0.0"
 
 [[package]]
 name = "protobuf"
-version = "4.22.1"
+version = "4.22.3"
 description = ""
 category = "main"
 optional = false
@@ -894,7 +894,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rich"
-version = "13.3.3"
+version = "13.3.4"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 category = "dev"
 optional = false
@@ -1169,7 +1169,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e305b276aa95183c7c9e8343c81943c451440fa206ad1b588087418162a5ba77"
+content-hash = "cbae4864ef92f15af4eca7fb0c03983b36132f18a5c3eac0ecb72a67e925a932"
 
 [metadata.files]
 aiohttp = [
@@ -1975,8 +1975,8 @@ nodeenv = [
     {file = "nodeenv-1.7.0.tar.gz", hash = "sha256:e0e7f7dfb85fc5394c6fe1e8fa98131a2473e04311a45afb6508f7cf1836fa2b"},
 ]
 packaging = [
-    {file = "packaging-23.0-py3-none-any.whl", hash = "sha256:714ac14496c3e68c99c29b00845f7a2b85f3bb6f1078fd9f72fd20f0570002b2"},
-    {file = "packaging-23.0.tar.gz", hash = "sha256:b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97"},
+    {file = "packaging-23.1-py3-none-any.whl", hash = "sha256:994793af429502c4ea2ebf6bf664629d07c1a9fe974af92966e4b8d2df7edc61"},
+    {file = "packaging-23.1.tar.gz", hash = "sha256:a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f"},
 ]
 parsimonious = [
     {file = "parsimonious-0.9.0.tar.gz", hash = "sha256:b2ad1ae63a2f65bd78f5e0a8ac510a98f3607a43f1db2a8d46636a5d9e4a30c1"},
@@ -1998,51 +1998,51 @@ pluggy = [
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
 polywrap-client = [
-    {file = "polywrap_client-0.1.0a15-py3-none-any.whl", hash = "sha256:7fcb645ea6b57d7b236dfb41494475d11cb7e47fc869784b7681a8e1615e85af"},
-    {file = "polywrap_client-0.1.0a15.tar.gz", hash = "sha256:29c1e41a92f04ea279fa3e18e765939b5f7e81777e16058076409202d64d6afb"},
+    {file = "polywrap_client-0.1.0a28-py3-none-any.whl", hash = "sha256:9d0d22840e6c1d370933e21ed81af44421c86f238cf7583869dc89c48daa216a"},
+    {file = "polywrap_client-0.1.0a28.tar.gz", hash = "sha256:2b28ac962b92cdea36125dd972eb99fc8ee754555730ad05303d288850d8deae"},
 ]
 polywrap-client-config-builder = [
-    {file = "polywrap_client_config_builder-0.1.0a15-py3-none-any.whl", hash = "sha256:a25078f510c3e45bc5bd911955968e9c5e09eb0805dfb2ceb5d712d55d260f7f"},
-    {file = "polywrap_client_config_builder-0.1.0a15.tar.gz", hash = "sha256:1c88bc44dc1d174eb9b00d3c582630ac63ca3b27597c83558f68ce694827d8b3"},
+    {file = "polywrap_client_config_builder-0.1.0a28-py3-none-any.whl", hash = "sha256:008c70092348441087e9dd1f042d4a14d72fc1f1c5cf5011b3ee9645d61026f3"},
+    {file = "polywrap_client_config_builder-0.1.0a28.tar.gz", hash = "sha256:257d0c1c04b72456cb57b596b20c82035573d37eb23702bdc828a28dd90791f2"},
 ]
 polywrap-core = [
-    {file = "polywrap_core-0.1.0a15-py3-none-any.whl", hash = "sha256:2f9674a6ae27aa46c08399c1abf56b848ea1dcee381bb138bc4be0916b02bd46"},
-    {file = "polywrap_core-0.1.0a15.tar.gz", hash = "sha256:386b20f7b6df14fdb9502f6c6f66568d09466e167529fa7837a75623df657beb"},
+    {file = "polywrap_core-0.1.0a28-py3-none-any.whl", hash = "sha256:addf36c93c87500961619ed0b90075b7412f6ef9608a654d56255fb338732211"},
+    {file = "polywrap_core-0.1.0a28.tar.gz", hash = "sha256:ef165e4e1b02de2df8711b56a144a9070b687efe565ab8faa5d659f621b3fcb4"},
 ]
 polywrap-manifest = [
-    {file = "polywrap_manifest-0.1.0a15-py3-none-any.whl", hash = "sha256:0642ad1a97a7f74bb164ff9660b878ff2cb7df490ce2a1a0c9781b02c0e30866"},
-    {file = "polywrap_manifest-0.1.0a15.tar.gz", hash = "sha256:7f8c86e303157086ba18ed39da109220562d55a2c35a87bac099d6c23926ba6d"},
+    {file = "polywrap_manifest-0.1.0a28-py3-none-any.whl", hash = "sha256:6caf12b5fe47ea36754e12f9b389c8f444e76abe59580dd7696a632cec50aa90"},
+    {file = "polywrap_manifest-0.1.0a28.tar.gz", hash = "sha256:a7e6ee4667d0f0fd30b48d0833a80de1e023ce30e4f3b41dd94a0717e4f9d266"},
 ]
 polywrap-msgpack = [
-    {file = "polywrap_msgpack-0.1.0a15-py3-none-any.whl", hash = "sha256:6defd861332337d6d26b02af4eecb00ad6556e94d6812cd3df7f368a410e1e56"},
-    {file = "polywrap_msgpack-0.1.0a15.tar.gz", hash = "sha256:d35ef8e2b749bfe42058fcf29bd70866f11657ebfa38c22b74bebe725eab2dd5"},
+    {file = "polywrap_msgpack-0.1.0a28-py3-none-any.whl", hash = "sha256:0cfae5da732c219648b391ed3835715c03f510bd7d96045916f1d1f0e42a38a4"},
+    {file = "polywrap_msgpack-0.1.0a28.tar.gz", hash = "sha256:3a73a4d0c4f820509e992abec326e1203519e880837c07eef84a2f5e600c82b5"},
 ]
 polywrap-plugin = [
-    {file = "polywrap_plugin-0.1.0a15-py3-none-any.whl", hash = "sha256:a52d0342c1a3d4b1f258e73155f0b00c99bdbcf9075f4033d2c9fd810dbd8e23"},
-    {file = "polywrap_plugin-0.1.0a15.tar.gz", hash = "sha256:619a8b0ca01cf1adeec85ceb4456f74a679309597b817dc723bed7f184a8b142"},
+    {file = "polywrap_plugin-0.1.0a28-py3-none-any.whl", hash = "sha256:61ef94f90608e57eabd9a237155ee8349fe986faec722dd5de9d549df6dc7663"},
+    {file = "polywrap_plugin-0.1.0a28.tar.gz", hash = "sha256:7fbbc5b26bba1fc036185d7b42f17f92c380db316e875a7f207f9b473bb4dc02"},
 ]
 polywrap-uri-resolvers = [
-    {file = "polywrap_uri_resolvers-0.1.0a15-py3-none-any.whl", hash = "sha256:c2f911cae314f572a78af8bba2b27096df8db3be7bf5ab58a237ae076d50ea83"},
-    {file = "polywrap_uri_resolvers-0.1.0a15.tar.gz", hash = "sha256:388d95826bb85eb1bd1ac5a0d14d3db45de5fa92d5070f4d88284dc2d3de06a0"},
+    {file = "polywrap_uri_resolvers-0.1.0a28-py3-none-any.whl", hash = "sha256:62b72fbe3dbd817507dbaea947ac489d18deaccba0f74b4fb1d6593342ad78e4"},
+    {file = "polywrap_uri_resolvers-0.1.0a28.tar.gz", hash = "sha256:fd6cbaf88d0660532883e5e5ad162e3646f62970540e54a31d7bc8da2c8dc196"},
 ]
 polywrap-wasm = [
-    {file = "polywrap_wasm-0.1.0a15-py3-none-any.whl", hash = "sha256:1696c04f44af05af8bc2554f52274fe042c7c5e924f09ab9261971267c71f7de"},
-    {file = "polywrap_wasm-0.1.0a15.tar.gz", hash = "sha256:8404233eeab41e689e2f8f9cdcb6718a42ad7fe379c4d7ea136969fd39dff1ff"},
+    {file = "polywrap_wasm-0.1.0a28-py3-none-any.whl", hash = "sha256:9a39a85d1a32f3530c64a6d7871ac3c23a9f206a765996e36aa9ebc2936cd22d"},
+    {file = "polywrap_wasm-0.1.0a28.tar.gz", hash = "sha256:4411e4d6f6457ab67bf601875067b42f2ec2e7be1ac83102f3d30e61970c98b3"},
 ]
 protobuf = [
-    {file = "protobuf-4.22.1-cp310-abi3-win32.whl", hash = "sha256:85aa9acc5a777adc0c21b449dafbc40d9a0b6413ff3a4f77ef9df194be7f975b"},
-    {file = "protobuf-4.22.1-cp310-abi3-win_amd64.whl", hash = "sha256:8bc971d76c03f1dd49f18115b002254f2ddb2d4b143c583bb860b796bb0d399e"},
-    {file = "protobuf-4.22.1-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:5917412347e1da08ce2939eb5cd60650dfb1a9ab4606a415b9278a1041fb4d19"},
-    {file = "protobuf-4.22.1-cp37-abi3-manylinux2014_aarch64.whl", hash = "sha256:9e12e2810e7d297dbce3c129ae5e912ffd94240b050d33f9ecf023f35563b14f"},
-    {file = "protobuf-4.22.1-cp37-abi3-manylinux2014_x86_64.whl", hash = "sha256:953fc7904ef46900262a26374b28c2864610b60cdc8b272f864e22143f8373c4"},
-    {file = "protobuf-4.22.1-cp37-cp37m-win32.whl", hash = "sha256:6e100f7bc787cd0a0ae58dbf0ab8bbf1ee7953f862b89148b6cf5436d5e9eaa1"},
-    {file = "protobuf-4.22.1-cp37-cp37m-win_amd64.whl", hash = "sha256:87a6393fa634f294bf24d1cfe9fdd6bb605cbc247af81b9b10c4c0f12dfce4b3"},
-    {file = "protobuf-4.22.1-cp38-cp38-win32.whl", hash = "sha256:e3fb58076bdb550e75db06ace2a8b3879d4c4f7ec9dd86e4254656118f4a78d7"},
-    {file = "protobuf-4.22.1-cp38-cp38-win_amd64.whl", hash = "sha256:651113695bc2e5678b799ee5d906b5d3613f4ccfa61b12252cfceb6404558af0"},
-    {file = "protobuf-4.22.1-cp39-cp39-win32.whl", hash = "sha256:67b7d19da0fda2733702c2299fd1ef6cb4b3d99f09263eacaf1aa151d9d05f02"},
-    {file = "protobuf-4.22.1-cp39-cp39-win_amd64.whl", hash = "sha256:b8700792f88e59ccecfa246fa48f689d6eee6900eddd486cdae908ff706c482b"},
-    {file = "protobuf-4.22.1-py3-none-any.whl", hash = "sha256:3e19dcf4adbf608924d3486ece469dd4f4f2cf7d2649900f0efcd1a84e8fd3ba"},
-    {file = "protobuf-4.22.1.tar.gz", hash = "sha256:dce7a55d501c31ecf688adb2f6c3f763cf11bc0be815d1946a84d74772ab07a7"},
+    {file = "protobuf-4.22.3-cp310-abi3-win32.whl", hash = "sha256:8b54f56d13ae4a3ec140076c9d937221f887c8f64954673d46f63751209e839a"},
+    {file = "protobuf-4.22.3-cp310-abi3-win_amd64.whl", hash = "sha256:7760730063329d42a9d4c4573b804289b738d4931e363ffbe684716b796bde51"},
+    {file = "protobuf-4.22.3-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:d14fc1a41d1a1909998e8aff7e80d2a7ae14772c4a70e4bf7db8a36690b54425"},
+    {file = "protobuf-4.22.3-cp37-abi3-manylinux2014_aarch64.whl", hash = "sha256:70659847ee57a5262a65954538088a1d72dfc3e9882695cab9f0c54ffe71663b"},
+    {file = "protobuf-4.22.3-cp37-abi3-manylinux2014_x86_64.whl", hash = "sha256:13233ee2b9d3bd9a5f216c1fa2c321cd564b93d8f2e4f521a85b585447747997"},
+    {file = "protobuf-4.22.3-cp37-cp37m-win32.whl", hash = "sha256:ecae944c6c2ce50dda6bf76ef5496196aeb1b85acb95df5843cd812615ec4b61"},
+    {file = "protobuf-4.22.3-cp37-cp37m-win_amd64.whl", hash = "sha256:d4b66266965598ff4c291416be429cef7989d8fae88b55b62095a2331511b3fa"},
+    {file = "protobuf-4.22.3-cp38-cp38-win32.whl", hash = "sha256:f08aa300b67f1c012100d8eb62d47129e53d1150f4469fd78a29fa3cb68c66f2"},
+    {file = "protobuf-4.22.3-cp38-cp38-win_amd64.whl", hash = "sha256:f2f4710543abec186aee332d6852ef5ae7ce2e9e807a3da570f36de5a732d88e"},
+    {file = "protobuf-4.22.3-cp39-cp39-win32.whl", hash = "sha256:7cf56e31907c532e460bb62010a513408e6cdf5b03fb2611e4b67ed398ad046d"},
+    {file = "protobuf-4.22.3-cp39-cp39-win_amd64.whl", hash = "sha256:e0e630d8e6a79f48c557cd1835865b593d0547dce221c66ed1b827de59c66c97"},
+    {file = "protobuf-4.22.3-py3-none-any.whl", hash = "sha256:52f0a78141078077cfe15fe333ac3e3a077420b9a3f5d1bf9b5fe9d286b4d881"},
+    {file = "protobuf-4.22.3.tar.gz", hash = "sha256:23452f2fdea754a8251d0fc88c0317735ae47217e0d27bf330a30eec2848811a"},
 ]
 py = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
@@ -2299,8 +2299,8 @@ requests = [
     {file = "requests-2.28.2.tar.gz", hash = "sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf"},
 ]
 rich = [
-    {file = "rich-13.3.3-py3-none-any.whl", hash = "sha256:540c7d6d26a1178e8e8b37e9ba44573a3cd1464ff6348b99ee7061b95d1c6333"},
-    {file = "rich-13.3.3.tar.gz", hash = "sha256:dc84400a9d842b3a9c5ff74addd8eb798d155f36c1c91303888e0a66850d2a15"},
+    {file = "rich-13.3.4-py3-none-any.whl", hash = "sha256:22b74cae0278fd5086ff44144d3813be1cedc9115bdfabbfefd86400cb88b20a"},
+    {file = "rich-13.3.4.tar.gz", hash = "sha256:b5d573e13605423ec80bdd0cd5f8541f7844a0e71a13f74cf454ccb2f490708b"},
 ]
 rlp = [
     {file = "rlp-3.0.0-py2.py3-none-any.whl", hash = "sha256:d2a963225b3f26795c5b52310e0871df9824af56823d739511583ef459895a7d"},

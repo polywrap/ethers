@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "ethereum-provider-py"
+name = "polywrap_ethereum-provider"
 version = "0.0.1"
 description = "Ethereum provider in python"
 authors = ["Cesar <cesar@polywrap.io>"]
@@ -12,7 +12,7 @@ authors = ["Cesar <cesar@polywrap.io>"]
 python = "^3.10"
 web3 = "6.1.0"
 eth_account = "0.8.0"
-polywrap-plugin = "0.1.0a15"
+polywrap-plugin = "0.1.0a28"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
@@ -25,8 +25,8 @@ tox-poetry = "^0.4.1"
 isort = "^5.10.1"
 pyright = "^1.1.275"
 pydocstyle = "^6.1.1"
-polywrap-client = "0.1.0a15"
-polywrap-client-config-builder = "0.1.0a15"
+polywrap-client = "0.1.0a28"
+polywrap-client-config-builder = "0.1.0a28"
 
 [tool.bandit]
 exclude_dirs = ["tests"]

@@ -1,8 +1,8 @@
 from typing import Dict, Optional
 
-from ethereum_provider_py.networks import KnownNetworkId, KnownNetwork, get_network_name
-from ethereum_provider_py.connection import Connection
-from ethereum_provider_py.wrap.types import Connection as SchemaConnection
+from polywrap_ethereum_provider.networks import KnownNetworkId, KnownNetwork, get_network_name
+from polywrap_ethereum_provider.connection import Connection
+from polywrap_ethereum_provider.wrap.types import Connection as SchemaConnection
 
 
 class Connections:
