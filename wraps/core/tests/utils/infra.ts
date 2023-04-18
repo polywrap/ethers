@@ -1,11 +1,12 @@
-import { runCLI, ensAddresses } from "@polywrap/test-env-js";
+import { runCli } from "@polywrap/cli-js";
 import axios from "axios";
+import {ETH_ENS_IPFS_MODULE_CONSTANTS} from "polywrap";
 
 export const initInfra = async (cli?: string): Promise<void> => {
   // Start the test environment
-  const { exitCode, stderr, stdout } = await runCLI({
-    args: ["infra", "up", "--verbose", "--modules", "eth-ens-ipfs"],
-    cli,
+  const { exitCode, stderr, stdout } = await runCli({
+    args: ["infra", "up", "--verbose"],
+    config: { cli },
   });
 
   if (exitCode) {
@@ -51,7 +52,7 @@ export const initInfra = async (cli?: string): Promise<void> => {
     "post",
     2000,
     20000,
-    `{"jsonrpc":"2.0","method":"eth_getCode","params":["${ensAddresses.ensAddress}", "0x2"],"id":1}`
+    `{"jsonrpc":"2.0","method":"eth_getCode","params":["${ETH_ENS_IPFS_MODULE_CONSTANTS.ensAddresses.ensAddress}", "0x2"],"id":1}`
   );
 
   if (!success) {
@@ -60,8 +61,8 @@ export const initInfra = async (cli?: string): Promise<void> => {
 };
 
 export async function stopInfra(): Promise<void> {
-  const { exitCode, stderr, stdout } = await runCLI({
-    args: ["infra", "down", "--verbose", "--modules", "eth-ens-ipfs"],
+  const { exitCode, stderr, stdout } = await runCli({
+    args: ["infra", "down", "--verbose"]
   });
 
   if (exitCode) {

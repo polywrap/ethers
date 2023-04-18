@@ -12,12 +12,12 @@ edition = "2021"
 
 [dependencies]
 thiserror = "1.0.38"
-polywrap-wasm-rs = "0.10.0-pre.10"
+polywrap-wasm-rs = "0.10.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = { version = "1.0.93", default-features = false, features = ["raw_value"] }
-ethers-providers = { version = "=1.0.2", features = [] }
-ethers-core = { git="https://github.com/gakonst/ethers-rs", features = ["eip712"] }
-ethers-signers = { version = "=1.0.2", features = [] }
+ethers-providers = { version = "=2.0.3", features = [] }
+ethers-core = { version="2.0.3", features = ["eip712"] }
+ethers-signers = { version = "=2.0.3", features = [] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 ethers-utils = { path = "../../crates/util" }
 ethers-provider = { path = "../../crates/provider" }

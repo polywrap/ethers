@@ -1,5 +1,4 @@
-#import { Module } into IProvider from "wrap://ens/wraps.eth:ethereum-provider@1.1.0"
-#use { getImplementations } for IProvider
+#import { Module } into Provider from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
 
 type Connection {
     node: String
@@ -182,10 +181,6 @@ type Module {
     connection: Connection
   ): Boolean!
 
-  toWei(eth: String!): String!
-
-  toEth(wei: String!): String!
-
   estimateTransactionGas(
     tx: TxRequest!
     connection: Connection
@@ -263,12 +258,3 @@ type Module {
     connection: Connection
   ): String!
 }
-
-# TODO: implement the following methods
-
-#     waitForEvent(
-#       address: String!
-#       event: String!
-#       args: [String!]
-#       timeout: UInt32
-#     ): EventNotification!

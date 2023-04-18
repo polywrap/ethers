@@ -19,6 +19,11 @@ export interface ConnectionConfig {
   signer?: EthereumSigner;
 }
 
+export enum SignerType {
+  CUSTOM_SIGNER,
+  PROVIDER_SIGNER
+}
+
 export class Connection {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore: initialized within setProvider
@@ -111,5 +116,13 @@ export class Connection {
         `Signer is an unrecognized type, this should never happen. \n${signer}`
       );
     }
+  }
+
+  public getSignerType(): SignerType {
+    if (Signer.isSigner(this._config.signer)) {
+      return SignerType.CUSTOM_SIGNER
+    }
+
+    return SignerType.PROVIDER_SIGNER
   }
 }

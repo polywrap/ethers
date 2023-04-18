@@ -1,17 +1,22 @@
 use std::fmt::Debug;
-use ethers_providers::{ProviderError};
 
 use ethers_core::types::transaction::eip2718::TypedTransaction;
-use ethers_core::types::{Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Transaction, TransactionReceipt, TxHash, U256};
-use ethers_core::{utils};
+use ethers_core::types::{
+    Block, BlockId, BlockNumber, Bytes, FeeHistory, NameOrAddress, Transaction, TransactionReceipt,
+    TxHash, U256,
+};
+use ethers_core::utils;
+use ethers_providers::{ProviderError, RpcError};
+use polywrap_wasm_rs::JSON;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
 
 use crate::wrap::connection::Connection;
-use crate::wrap::imported::{IProviderConnection, IProviderModule, ArgsRequest, ArgsWaitForTransaction};
+use crate::wrap::imported::{
+    ArgsRequest, ArgsWaitForTransaction, ProviderConnection, ProviderModule,
+};
 
 use ethers_provider::Provider;
-use super::iprovider::get_iprovider;
 
 #[derive(Error, Debug)]
 /// Error thrown when sending an HTTP request
@@ -25,6 +30,24 @@ pub enum ClientError {
     /// Serde JSON Error
     #[error("Client error: {0}")]
     Error(String),
+    /// Error in rpc request using provider
+    #[error(transparent)]
+    RpcClientError(ProviderError)
+
+}
+
+// @TODO(cbrzn): This need to be implemented before merging new packages structure
+// Relevant:
+// https://docs.rs/ethers/2.0.3/ethers/providers/struct.JsonRpcError.html
+// https://github.com/ethers-io/ethers.js/blob/9f990c57f0486728902d4b8e049536f2bb3487ee/packages/providers/src.ts/json-rpc-provider.ts#L25-L53
+impl RpcError for ClientError {
+    fn as_error_response(&self) -> Option<&ethers_providers::JsonRpcError> {
+        todo!()
+    }
+
+    fn as_serde_error(&self) -> Option<&JSON::Error> {
+        todo!()
+    }
 }
 
 impl From<ClientError> for ProviderError {
@@ -37,19 +60,17 @@ impl From<ClientError> for ProviderError {
 
 #[derive(Debug)]
 pub struct WrapProvider {
-    pub(super) connection: Option<IProviderConnection>,
-    pub(super) iprovider: IProviderModule,
+    pub(super) connection: Option<ProviderConnection>,
 }
 
 impl WrapProvider {
     pub fn new(connection: &Option<Connection>) -> Self {
-        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+        let iprovider_connection = connection.as_ref().map(|conn| ProviderConnection {
             network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
             node: conn.node.clone(),
         });
         Self {
             connection: iprovider_connection,
-            iprovider: get_iprovider(),
         }
     }
 
@@ -58,14 +79,14 @@ impl WrapProvider {
         method: &str,
         params: T,
     ) -> Result<R, ProviderError> {
-        let params_s = serde_json::to_string(&params).unwrap();
-        let res = self.iprovider.request(&ArgsRequest {
+        let params_v: serde_json::Value = JSON::to_value(&params).unwrap();
+        let res = ProviderModule::request(&ArgsRequest {
             method: method.to_string(),
-            params: Some(params_s),
+            params: Some(params_v),
             connection: self.connection.clone(),
         })
-            .map_err(|err| ClientError::Error(err))?;
-        let res = serde_json::from_str(&res).map_err(|err| ClientError::SerdeJson {
+        .map_err(|err| ClientError::Error(err))?;
+        let res = JSON::from_value(res).map_err(|err| ClientError::SerdeJson {
             err,
             text: "from str failed".to_string(),
         })?;
@@ -80,13 +101,13 @@ impl WrapProvider {
     ) -> Result<bool, ProviderError> {
         let hash = transaction_hash.into();
 
-        let res = self.iprovider.wait_for_transaction(&ArgsWaitForTransaction {
+        let res = ProviderModule::wait_for_transaction(&ArgsWaitForTransaction {
             tx_hash: format!("{:#x}", hash),
             confirmations,
             timeout,
             connection: self.connection.clone(),
         })
-            .map_err(|err| ClientError::Error(err))?;
+        .map_err(|err| ClientError::Error(err))?;
         Ok(res)
     }
 }
@@ -100,8 +121,10 @@ impl Provider for WrapProvider {
     ) -> Result<U256, ProviderError> {
         let from = match from.into() {
             NameOrAddress::Name(ens_name) => {
-                return Err(ProviderError::EnsError(format!("Cannot resolve ENS name {ens_name}. ENS name resolution is not supported.")))
-            },
+                return Err(ProviderError::EnsError(format!(
+                    "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
+                )))
+            }
             NameOrAddress::Address(addr) => addr,
         };
 
@@ -150,24 +173,29 @@ impl Provider for WrapProvider {
         // The blockCount param is expected to be an unsigned integer up to geth v1.10.6.
         // Geth v1.10.7 onwards, this has been updated to a hex encoded form. Failure to
         // decode the param from client side would fallback to the old API spec.
-        match self
-            .request::<_, FeeHistory>(
-                "eth_feeHistory",
-                [utils::serialize(&block_count), last_block.clone(), reward_percentiles.clone()],
-            )
-        {
+        match self.request::<_, FeeHistory>(
+            "eth_feeHistory",
+            [
+                utils::serialize(&block_count),
+                last_block.clone(),
+                reward_percentiles.clone(),
+            ],
+        ) {
             success @ Ok(_) => success,
             err @ Err(_) => {
-                let fallback = self
-                    .request::<_, FeeHistory>(
-                        "eth_feeHistory",
-                        [utils::serialize(&block_count.as_u64()), last_block, reward_percentiles],
-                    );
+                let fallback = self.request::<_, FeeHistory>(
+                    "eth_feeHistory",
+                    [
+                        utils::serialize(&block_count.as_u64()),
+                        last_block,
+                        reward_percentiles,
+                    ],
+                );
 
                 if fallback.is_err() {
                     // if the older fallback also resulted in an error, we return the error from the
                     // initial attempt
-                    return err
+                    return err;
                 }
                 fallback
             }
@@ -213,12 +241,11 @@ impl Provider for WrapProvider {
             .base_fee_per_gas
             .ok_or_else(|| ProviderError::CustomError("EIP-1559 not activated".into()))?;
 
-        let fee_history = self
-            .fee_history(
-                utils::EIP1559_FEE_ESTIMATION_PAST_BLOCKS,
-                BlockNumber::Latest,
-                &[utils::EIP1559_FEE_ESTIMATION_REWARD_PERCENTILE],
-            )?;
+        let fee_history = self.fee_history(
+            utils::EIP1559_FEE_ESTIMATION_PAST_BLOCKS,
+            BlockNumber::Latest,
+            &[utils::EIP1559_FEE_ESTIMATION_REWARD_PERCENTILE],
+        )?;
 
         // use the provided fee estimator function, or fallback to the default implementation.
         let (max_fee_per_gas, max_priority_fee_per_gas) = if let Some(es) = estimator {
@@ -255,10 +282,11 @@ impl Provider for WrapProvider {
         tx: &mut TypedTransaction,
         block: Option<BlockId>,
     ) -> Result<(), ProviderError> {
-
         // set the ENS name
         if let Some(NameOrAddress::Name(ref ens_name)) = tx.to() {
-            return Err(ProviderError::EnsError(format!("Cannot resolve ENS name {ens_name}. ENS name resolution is not supported.")));
+            return Err(ProviderError::EnsError(format!(
+                "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
+            )));
         }
 
         // fill gas price
@@ -288,8 +316,10 @@ impl Provider for WrapProvider {
     ) -> Result<U256, ProviderError> {
         let from = match from.into() {
             NameOrAddress::Name(ens_name) => {
-                return Err(ProviderError::EnsError(format!("Cannot resolve ENS name {ens_name}. ENS name resolution is not supported.")))
-            },
+                return Err(ProviderError::EnsError(format!(
+                    "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
+                )))
+            }
             NameOrAddress::Address(addr) => addr,
         };
 
@@ -319,11 +349,7 @@ impl Provider for WrapProvider {
     /// Sends the read-only (constant) transaction to a single Ethereum node and return the result
     /// (as bytes) of executing it. This is free, since it does not change any state on the
     /// blockchain.
-    fn call(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<Bytes, ProviderError> {
+    fn call(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, ProviderError> {
         let tx = utils::serialize(tx);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
         self.request("eth_call", [tx, block])

@@ -17,4 +17,9 @@ type Module {
     method: String!
     args: [String!]
   ): String!
+
+  # solidityPack(
+  #   types: [String!]!
+  #   values: [String!]!
+  # ): String!
 }

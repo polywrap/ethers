@@ -1,17 +1,22 @@
 use std::str::FromStr;
 
-use ethers_core::{types::{transaction::{eip2718::TypedTransaction,eip712::Eip712}, Signature, BlockId, Bytes}, abi::{Address}};
-use ethers_signers::{to_eip155_v};
+use ethers_core::{
+    abi::Address,
+    types::{
+        transaction::{eip2718::TypedTransaction, eip712::Eip712},
+        BlockId, Bytes, Signature,
+    },
+};
+use ethers_signers::to_eip155_v;
 
 use crate::wrap::{
+    connection::Connection,
     imported::{
-        IProviderConnection, IProviderModule, ArgsAddress,
-        ArgsChainId, ArgsSignTransaction,
-        ArgsSignMessage
+        ArgsRequest, ArgsSignMessage, ArgsSignTransaction, ArgsSignerAddress, ProviderConnection,
+        ProviderModule,
     },
-    connection::Connection};
+};
 
-use super::iprovider::get_iprovider;
 use ethers_provider::{Signer, SignerError};
 
 #[derive(Clone, Debug)]
@@ -21,35 +26,47 @@ pub struct WrapSigner {
     /// The wallet's chain id (for EIP-155)
     chain_id: u64,
     /// Ethereum connection to use
-    connection: Option<IProviderConnection>,
-    iprovider: IProviderModule,
+    connection: Option<ProviderConnection>,
 }
 
 impl WrapSigner {
     pub fn new(connection: &Option<Connection>) -> Self {
-        let iprovider_connection = connection.as_ref().map(|conn| IProviderConnection {
+        let iprovider_connection = connection.as_ref().map(|conn| ProviderConnection {
             network_name_or_chain_id: conn.network_name_or_chain_id.clone(),
             node: conn.node.clone(),
         });
-        let iprovider = get_iprovider();
-        let address = iprovider.address(&ArgsAddress { connection: iprovider_connection.clone() }).unwrap();
-        let chain_id = iprovider.chain_id(&ArgsChainId { connection: iprovider_connection.clone() })
-            .expect("failed to obtain signer chain id from provider plugin");
+        let address = ProviderModule::signer_address(&ArgsSignerAddress {
+            connection: iprovider_connection.clone(),
+        })
+        .unwrap()
+        .unwrap();
+        let chain_id = ProviderModule::request(&ArgsRequest {
+            method: "eth_chainId".to_string(),
+            params: None,
+            connection: iprovider_connection.clone(),
+        })
+        .expect("failed to obtain signer chain id from provider plugin");
+        let chain_id = chain_id.as_str().unwrap();
         Self {
-            address: Address::from_str(&address).unwrap(),
-            chain_id: u64::from_str(&chain_id).unwrap(),
+            address: Address::from_str(&address.as_str()).unwrap(),
+            chain_id: u64::from_str_radix(&chain_id[2..], 16).unwrap(),
             connection: iprovider_connection,
-            iprovider,
         }
     }
 
     pub(super) fn sign_rlp(&self, rlp: Vec<u8>) -> Result<Signature, String> {
-        let signature = self.iprovider.sign_transaction(&ArgsSignTransaction { rlp, connection: self.connection.clone(), })?;
+        let signature = ProviderModule::sign_transaction(&ArgsSignTransaction {
+            rlp,
+            connection: self.connection.clone(),
+        })?;
         Ok(Signature::from_str(&signature).unwrap())
     }
 
     pub(super) fn sign_bytes(&self, message: Vec<u8>) -> Result<Signature, String> {
-        let signature = self.iprovider.sign_message(&ArgsSignMessage { message, connection: self.connection.clone(), })?;
+        let signature = ProviderModule::sign_message(&ArgsSignMessage {
+            message,
+            connection: self.connection.clone(),
+        })?;
         Ok(Signature::from_str(&signature).unwrap())
     }
 
@@ -69,12 +86,16 @@ impl Signer for WrapSigner {
         message: S,
     ) -> Result<Signature, SignerError> {
         let bytes = message.as_ref().to_vec();
-        self.sign_bytes(bytes).map_err(|e| SignerError::Eip712Error(e))
+        self.sign_bytes(bytes)
+            .map_err(|e| SignerError::Eip712Error(e))
     }
 
     fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, SignerError> {
         // rlp must have the same chain id as v in the signature
-        let chain_id = tx.chain_id().map(|id| id.as_u64()).unwrap_or(self.chain_id());
+        let chain_id = tx
+            .chain_id()
+            .map(|id| id.as_u64())
+            .unwrap_or(self.chain_id());
         let mut tx = tx.clone();
         tx.set_chain_id(chain_id);
         let rlp = tx.rlp().to_vec();
@@ -84,8 +105,8 @@ impl Signer for WrapSigner {
                 // sign_hash sets `v` to recid + 27, so we need to subtract 27 before normalizing
                 sig.v = to_eip155_v(sig.v as u8 - 27, chain_id);
                 Ok(sig)
-            },
-            Err(e) => Err(SignerError::Eip712Error(e))
+            }
+            Err(e) => Err(SignerError::Eip712Error(e)),
         }
     }
 
