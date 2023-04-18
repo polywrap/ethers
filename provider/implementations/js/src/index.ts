@@ -8,6 +8,7 @@ import {
   Args_waitForTransaction,
   Connection as SchemaConnection,
   Args_signerAddress,
+  Env,
 } from "./wrap";
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
@@ -37,9 +38,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async request(
     args: Args_request,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const paramsStr = args?.params ?? "[]";
     const provider = connection.getProvider();
 
@@ -128,9 +130,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   async waitForTransaction(
     args: Args_waitForTransaction,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<boolean> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const provider = connection.getProvider();
 
     await provider.waitForTransaction(
@@ -144,10 +147,11 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signerAddress(
     args: Args_signerAddress,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string | null> {
     try {
-      const connection = await this._getConnection(args.connection);
+      const connection = await this._getConnection(args.connection, env);
       return await connection.getSigner().getAddress();
     } catch (_error) {
       return null;
@@ -156,17 +160,19 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signMessage(
     args: Args_signMessage,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     return await connection.getSigner().signMessage(args.message);
   }
 
   public async signTransaction(
     args: Args_signTransaction,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const request = this._parseTransaction(args.rlp);
     const signedTxHex = await connection.getSigner().signTransaction(request);
     const signedTx = ethers.utils.parseTransaction(signedTxHex);
@@ -176,9 +182,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   }
 
   private async _getConnection(
-    connection?: SchemaConnection | null
+    connection?: SchemaConnection | null,
+    env?: Env | null
   ): Promise<Connection> {
-    return this._connections.getConnection(connection ?? this.env.connection);
+    return this._connections.getConnection(connection ?? env?.connection);
   }
 
   private _parseTransaction(
