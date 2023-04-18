@@ -8,13 +8,14 @@ import {
   Args_waitForTransaction,
   Connection as SchemaConnection,
   Args_signerAddress,
+  Env,
 } from "./wrap";
 import { Connection, SignerType } from "./Connection";
 import { Connections } from "./Connections";
 import {
   eth_encodePacked,
   eth_sendTransaction,
-  eth_signTypedData
+  eth_signTypedData,
 } from "./rpc";
 
 import { PluginFactory, PluginPackage } from "@polywrap/plugin-js";
@@ -37,9 +38,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async request(
     args: Args_request,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const paramsStr = args?.params ?? "[]";
     const provider = connection.getProvider();
 
@@ -54,39 +56,40 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
       connection.getSignerType() == SignerType.CUSTOM_SIGNER
     ) {
       const signer = await connection.getSigner();
-      const parameters = eth_sendTransaction.deserializeParameters(
-        paramsStr
-      );
-      const request = eth_sendTransaction.toEthers(
-        parameters[0]
-      );
+      const parameters = eth_sendTransaction.deserializeParameters(paramsStr);
+      const request = eth_sendTransaction.toEthers(parameters[0]);
       const res = await signer.sendTransaction(request);
       return JSON.stringify(res.hash);
     }
 
-    if (
-      args.method === "eth_signTypedData_v4" &&
-      connection.getSignerType() == SignerType.CUSTOM_SIGNER
-    ) {
-      const signer = await connection.getSigner();
-      const parameters = eth_signTypedData.deserializeParameters(
-        paramsStr
-      );
-      let signature = "";
-      // This is a hack because in ethers v5.7 this method is experimental
-      // when we update to ethers v6 this won't be needed. More info:
-      // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
-      if ("_signTypedData" in signer) {
-        const [_, data] = parameters
-        const payload = eth_signTypedData.toEthers(data)
-        // @ts-ignore
-        signature = await signer._signTypedData(
-          payload.domain,
-          payload.types,
-          payload.message
-        )
+    if (args.method === "eth_signTypedData_v4") {
+      if (connection.getSignerType() == SignerType.CUSTOM_SIGNER) {
+        const signer = await connection.getSigner();
+        const parameters = eth_signTypedData.deserializeParameters(paramsStr);
+        let signature = "";
+        // This is a hack because in ethers v5.7 this method is experimental
+        // when we update to ethers v6 this won't be needed. More info:
+        // https://github.com/ethers-io/ethers.js/blob/ec1b9583039a14a0e0fa15d0a2a6082a2f41cf5b/packages/abstract-signer/src.ts/index.ts#L53
+        if ("_signTypedData" in signer) {
+          const [_, data] = parameters;
+          const payload = eth_signTypedData.toEthers(data);
+          // @ts-ignore
+          signature = await signer._signTypedData(
+            payload.domain,
+            payload.types,
+            payload.message
+          );
+        }
+        return JSON.stringify(signature);
+      } else {
+        // Metamask expects the payload data as string
+        const params = JSON.parse(paramsStr);
+        const req = await provider.send(args.method, [
+          params[0],
+          JSON.stringify(params[1]),
+        ]);
+        return JSON.stringify(req);
       }
-      return JSON.stringify(signature)
     }
 
     if (args.method === "eth_encodePacked") {
@@ -97,10 +100,7 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
     const params = JSON.parse(paramsStr);
     try {
-      const req = await provider.send(
-        args.method,
-        params
-      );
+      const req = await provider.send(args.method, params);
       return JSON.stringify(req);
     } catch (err) {
       /**
@@ -128,9 +128,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   async waitForTransaction(
     args: Args_waitForTransaction,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<boolean> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const provider = connection.getProvider();
 
     await provider.waitForTransaction(
@@ -144,10 +145,11 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signerAddress(
     args: Args_signerAddress,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string | null> {
     try {
-      const connection = await this._getConnection(args.connection);
+      const connection = await this._getConnection(args.connection, env);
       return await connection.getSigner().getAddress();
     } catch (_error) {
       return null;
@@ -156,17 +158,19 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
 
   public async signMessage(
     args: Args_signMessage,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     return await connection.getSigner().signMessage(args.message);
   }
 
   public async signTransaction(
     args: Args_signTransaction,
-    _client: CoreClient
+    _client: CoreClient,
+    env?: Env | null
   ): Promise<string> {
-    const connection = await this._getConnection(args.connection);
+    const connection = await this._getConnection(args.connection, env);
     const request = this._parseTransaction(args.rlp);
     const signedTxHex = await connection.getSigner().signTransaction(request);
     const signedTx = ethers.utils.parseTransaction(signedTxHex);
@@ -176,9 +180,10 @@ export class EthereumProviderPlugin extends Module<ProviderConfig> {
   }
 
   private async _getConnection(
-    connection?: SchemaConnection | null
+    connection?: SchemaConnection | null,
+    env?: Env | null
   ): Promise<Connection> {
-    return this._connections.getConnection(connection ?? this.env.connection);
+    return this._connections.getConnection(connection ?? env?.connection);
   }
 
   private _parseTransaction(
