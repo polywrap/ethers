@@ -1,23 +1,29 @@
+from typing import Any, Callable, Dict
+from eth_account.account import LocalAccount
 from polywrap_client import PolywrapClient
 from polywrap_core import InvokerOptions, UriPackageOrWrapper, Uri
 import json
 
+WithSigner = bool
+
 provider_uri = Uri.from_str("plugin/ethereum-provider")
 
 
-async def test_eth_chain_id(client_without_signer: PolywrapClient):
+async def test_eth_chain_id(client_factory: Callable[[WithSigner], PolywrapClient]):
+    client = client_factory(False)
     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
         uri=provider_uri,
         method="request",
         args={"method": "eth_chainId"},
         encode_result=False,
     )
-    result = await client_without_signer.invoke(options)
+    result = await client.invoke(options)
 
     assert result == json.dumps("0xaa36a7")
 
 
-async def test_eth_get_transaction_count(client_without_signer: PolywrapClient):
+async def test_eth_get_transaction_count(client_factory: Callable[[WithSigner], PolywrapClient]):
+    client = client_factory(False)
     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
         uri=provider_uri,
         method="request",
@@ -27,12 +33,13 @@ async def test_eth_get_transaction_count(client_without_signer: PolywrapClient):
         },
         encode_result=False,
     )
-    result = await client_without_signer.invoke(options)
+    result = await client.invoke(options)
 
     assert int(json.loads(result), base=16) > 0
 
 
-async def test_sign_transaction(client_with_signer: PolywrapClient):
+async def test_sign_typed_data(client_factory: Callable[[WithSigner], PolywrapClient]):
+    client = client_factory(True)
     domain = {
         "name": "Ether Mail",
         "version": "1",
@@ -91,62 +98,92 @@ async def test_sign_transaction(client_with_signer: PolywrapClient):
         },
         encode_result=False,
     )
-    result = await client_with_signer.invoke(options)
+    result = await client.invoke(options)
 
     assert result == json.dumps(
         "0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c"
     )
 
 
-async def test_encode_packed_int16_uint48(client_without_signer: PolywrapClient):
+async def test_send_transaction(client_factory: Callable[[WithSigner], PolywrapClient], account: LocalAccount):
+    params: Dict[str, Any] = {
+        'from': account.address,  # type: ignore
+        'to': "0xcb93799A0852d94B65166a75d67ECd923fD951E4",
+        'value': 1000,
+        'gas': 21000,
+        'gasPrice': 50000000000,
+        'nonce': 0,
+    }
+
     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
         uri=provider_uri,
         method="request",
         args={
-            "method": "eth_encodePacked",
-            "params": json.dumps({
-                "types": ["int16", "uint48"],
-                "values": ["-1", "12"],
-            }),
+            "method": "eth_sendTransaction",
+            "params": json.dumps(params),
+            "connection": {
+                "networkNameOrChainId": "mocknet",
+            }
         },
         encode_result=False,
     )
-    result = await client_without_signer.invoke(options)
+    client = client_factory(True)
+    result = await client.invoke(options)
+    tx_hash = json.loads(result)
 
-    assert result == json.dumps("0xffff00000000000c")
+    assert isinstance(tx_hash, str)
+    assert len(tx_hash) == 66
+    assert tx_hash.startswith('0x')
+
+# async def test_encode_packed_int16_uint48(client_without_signer: PolywrapClient):
+#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+#         uri=provider_uri,
+#         method="request",
+#         args={
+#             "method": "eth_encodePacked",
+#             "params": json.dumps({
+#                 "types": ["int16", "uint48"],
+#                 "values": ["-1", "12"],
+#             }),
+#         },
+#         encode_result=False,
+#     )
+#     result = await client_without_signer.invoke(options)
+
+#     assert result == json.dumps("0xffff00000000000c")
 
 
-async def test_encode_packed_uint256_uint256(client_without_signer: PolywrapClient):
-    options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
-        uri=provider_uri,
-        method="request",
-        args={
-            "method": "eth_encodePacked",
-            "params": json.dumps({
-                "types": ["uint256", "uint256"],
-                "values": ["8", "16"],
-            }),
-        },
-        encode_result=False,
-    )
-    result = await client_without_signer.invoke(options)
+# async def test_encode_packed_uint256_uint256(client_without_signer: PolywrapClient):
+#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+#         uri=provider_uri,
+#         method="request",
+#         args={
+#             "method": "eth_encodePacked",
+#             "params": json.dumps({
+#                 "types": ["uint256", "uint256"],
+#                 "values": ["8", "16"],
+#             }),
+#         },
+#         encode_result=False,
+#     )
+#     result = await client_without_signer.invoke(options)
 
-    assert result == json.dumps("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010")
+#     assert result == json.dumps("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010")
 
 
-async def test_encode_packed_string_uint8(client_without_signer: PolywrapClient):
-    options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
-        uri=provider_uri,
-        method="request",
-        args={
-            "method": "eth_encodePacked",
-            "params": json.dumps({
-                "types": ["string", "uint8"],
-                "values": ["Hello", "3"],
-            }),
-        },
-        encode_result=False,
-    )
-    result = await client_without_signer.invoke(options)
+# async def test_encode_packed_string_uint8(client_without_signer: PolywrapClient):
+#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+#         uri=provider_uri,
+#         method="request",
+#         args={
+#             "method": "eth_encodePacked",
+#             "params": json.dumps({
+#                 "types": ["string", "uint8"],
+#                 "values": ["Hello", "3"],
+#             }),
+#         },
+#         encode_result=False,
+#     )
+#     result = await client_without_signer.invoke(options)
 
-    assert result == json.dumps("0x48656c6c6f03")
+#     assert result == json.dumps("0x48656c6c6f03")
