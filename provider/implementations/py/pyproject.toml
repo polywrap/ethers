@@ -12,7 +12,10 @@ authors = ["Cesar <cesar@polywrap.io>"]
 python = "^3.10"
 web3 = "6.1.0"
 eth_account = "0.8.0"
-polywrap-plugin = "0.1.0a28"
+polywrap-plugin = "0.1.0a29"
+polywrap-core = "^0.1.0a29"
+polywrap-msgpack = "^0.1.0a29"
+polywrap-manifest = "^0.1.0a29"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
@@ -25,36 +28,45 @@ tox-poetry = "^0.4.1"
 isort = "^5.10.1"
 pyright = "^1.1.275"
 pydocstyle = "^6.1.1"
-polywrap-client = "0.1.0a28"
-polywrap-client-config-builder = "0.1.0a28"
+polywrap-client = "0.1.0a29"
+polywrap-client-config-builder = "0.1.0a29"
+polywrap-uri-resolvers = "^0.1.0a29"
 
 [tool.bandit]
 exclude_dirs = ["tests"]
 
 [tool.black]
 target-version = ["py310"]
+exclude = [
+    "polywrap_ethereum_provider/wrap"
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"
 reportShadowedImports = false
+exclude = [
+    "**/wrap/"
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = [
-    "tests"
+    "tests",
 ]
 
 [tool.pylint]
 disable = [
     "too-many-return-statements",
+    "invalid-name"
 ]
-ignore = [
-    "tests/"
+ignore-paths = [
+    "polywrap_ethereum_provider/wrap"
 ]
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+skip = ["polywrap_ethereum_provider/wrap"]
 
 [tool.pydocstyle]
 # default

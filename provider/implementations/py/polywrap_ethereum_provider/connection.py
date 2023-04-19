@@ -1,63 +1,43 @@
-from dataclasses import dataclass
+from eth_account import Account
 from web3 import Web3
-from eth_account.signers.local import LocalAccount
-from typing import Optional, Union, cast
+from web3.providers.base import JSONBaseProvider
+from typing import Optional
 
-from polywrap_ethereum_provider.networks import KnownNetwork, get_network_name
-
-EthereumProvider = str | Web3.HTTPProvider
-
-
-@dataclass(slots=True, kw_only=True)
-class ConnectionConfig:
-    provider: EthereumProvider
-    signer: Optional[LocalAccount]
+from polywrap_ethereum_provider.networks import KnownNetwork
 
 
 class Connection:
-    provider: Web3.HTTPProvider
-    signer: Optional[LocalAccount]
+    """Defines a connection to an EVM network."""
 
-    def __init__(self, config: ConnectionConfig):
-        self.set_provider(config.provider)
+    __slots__ = ("_provider", "_signer")
 
-        if config.signer:
-            self.set_signer(config.signer)
+    _provider: JSONBaseProvider
+    _signer: Optional[Account]
 
-    def set_provider(self, provider: EthereumProvider):
-        if isinstance(provider, str):
-            self.provider = Web3.HTTPProvider(provider)
-        else:
-            self.provider = provider
-
-    def set_signer(self, signer: LocalAccount):
-        self.signer = signer
-
-    def get_provider(self) -> Web3.HTTPProvider:
-        return self.provider
+    def __init__(self, provider: JSONBaseProvider | str, signer: Optional[Account]):
+        self._provider = Web3.HTTPProvider(provider) if isinstance(provider, str) else provider
+        self._signer = signer
     
-    def get_signer(self) -> LocalAccount:
-        if not self.signer:
-            raise RuntimeError("Signer not found")
-        return self.signer
+    @property
+    def provider(self) -> JSONBaseProvider:
+        return self._provider
 
-    @staticmethod
-    def from_node(node: str):
-        config = ConnectionConfig(provider=node, signer=None)
-        return Connection(config=config)
+    @property
+    def signer(self) -> Account:
+        if not self._signer:
+            raise ValueError(f"signer is not set for {self}")
+        return self._signer
 
-    @staticmethod
-    def from_network(network: Union[KnownNetwork, int]):
-        network_name = (
-            get_network_name(network)
-            if isinstance(network, int)
-            else cast(str, network)
-        )
-        if not network_name:
-            raise RuntimeError(f"Network: {str(network)} not found")
+    @classmethod
+    def from_node(cls, node: str):
+        return cls(provider=node, signer=None)
 
+    @classmethod
+    def from_network(cls, network: KnownNetwork):
         provider = (
-            f"https://{network_name}.infura.io/v3/1a8e6a8ab1df44ccb77d3e954082c5d4"
+            f"https://{network.name}.infura.io/v3/1a8e6a8ab1df44ccb77d3e954082c5d4"
         )
-        config = ConnectionConfig(provider=provider, signer=None)
-        return Connection(config=config)
+        return cls(provider=provider, signer=None)
+
+    def __str__(self) -> str:
+        return f"Connection: {self.provider}"

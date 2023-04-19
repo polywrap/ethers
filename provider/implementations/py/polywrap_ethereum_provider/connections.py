@@ -1,87 +1,54 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
-from polywrap_ethereum_provider.networks import KnownNetworkId, KnownNetwork, get_network_name
+from polywrap_ethereum_provider.networks import KnownNetwork
 from polywrap_ethereum_provider.connection import Connection
 from polywrap_ethereum_provider.wrap.types import Connection as SchemaConnection
 
 
 class Connections:
-    connections: Dict[str, Connection]
-    default_network: str
+    connections: Dict[KnownNetwork, Connection]
+    default_network: KnownNetwork
 
-    def __init__(self, networks: Dict[str, Connection], default_network: Optional[str]):
-        self.connections = {}
-        for network, connection in networks.items():
-            self.set(network, connection)
+    def __init__(
+        self,
+        connections: Dict[KnownNetwork, Connection],
+        default_network: Optional[KnownNetwork],
+    ):
+        self.connections = connections
 
         if default_network:
-            self.set_default_network(default_network)
-        elif "mainnet" in self.connections:
-            self.set_default_network("mainnet")
+            if default_network not in self.connections:
+                raise ValueError(
+                    f"Default network: {default_network} not in connections"
+                )
+            self.default_network = default_network
+        elif KnownNetwork.mainnet in self.connections:
+            self.default_network = KnownNetwork.mainnet
         else:
-            self.set_default_network(
-                "mainnet", Connection.from_network(KnownNetwork.mainnet)
+            self.default_network = KnownNetwork.mainnet
+            self.connections[KnownNetwork.mainnet] = Connection.from_network(
+                KnownNetwork.mainnet
             )
-
-    def get(self, network: Optional[str]) -> Optional[Connection]:
-        if not network:
-            return self.connections[self.default_network.lower()]
-        else:
-            return self.connections[network.lower()]
-
-    def set(self, network: str, connection: Connection):
-        network = network.lower()
-        try:
-            network_id = int(network)
-            network_name = get_network_name(network_id)
-            if not network_name:
-                raise RuntimeError(f"Chain ID: {network_id} not valid")
-            self.connections[network_name] = connection
-        except ValueError:
-            self.connections[network] = connection
-
-    def set_default_network(
-        self, network: str, connection: Optional[Connection] = None
-    ):
-        if connection:
-            self.set(network, connection)
-
-        if not self.get(network):
-            raise RuntimeError(f"No connection found for network: {network}")
-
-        self.default_network = network
-
-    def get_default_network(self) -> str:
-        return self.default_network
 
     def get_connection(self, connection: Optional[SchemaConnection]) -> Connection:
         if not connection:
-            default_connection = self.get(self.default_network)
-            if not default_connection:
-                raise RuntimeError("Default connection not found")
+            return self.connections[self.default_network]
 
-            return default_connection
+        if connection.get("networkNameOrChainId"):
+            network = cast(str, connection["networkNameOrChainId"]).lower()
+            if KnownNetwork.has(network):
+                known_network = KnownNetwork(network)
+                if known_network in self.connections:
+                    return self.connections[known_network]
+                return Connection.from_network(KnownNetwork[network])
+            raise ValueError(
+                f"Network: {network} isn't a known network!\n"
+                f"\tUse one of: {KnownNetwork.chain_ids()}\n"
+                f"\tor set a custom RPC URL using the 'node' field."
+            )
 
-        result: Optional[Connection] = None
+        if connection.get("node"):
+            node = cast(str, connection["node"])
+            return Connection.from_node(node)
 
-        if hasattr(connection, "network_name_or_chain_id"):
-            network_str = connection.network_name_or_chain_id.lower()  # type: ignore
-            network = self.get(network_str)
-            if network:
-                result = network
-            else:
-                try:
-                    chain_id = int(network_str)
-                    result = Connection.from_network(chain_id)
-                except ValueError:
-                    if network in KnownNetworkId.__members__:
-                        result = Connection.from_network(KnownNetwork[network_str])
-                    else:
-                        result = self.get(self.default_network)
-
-        # if hasattr(connection, "node"):
-
-        if not result:
-            raise RuntimeError("No connection found")
-        else:
-            return result
+        return self.connections[self.default_network]
