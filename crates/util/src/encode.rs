@@ -45,10 +45,8 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
         .iter()
         .zip(values.iter())
         .map(|(param, arg)| {
-            if let ParamType::Array(addresses) = &param.kind {
-                if let ParamType::Address = addresses.as_ref() {
-                    return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap()
-                };
+            if arg.starts_with("\"") && arg.ends_with("\"") {
+                return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap()
             }
             LenientTokenizer::tokenize(&param.kind, arg).unwrap()
         })
@@ -91,11 +89,14 @@ pub fn solidity_pack(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
 }
 
 fn tokenize_string_values(types: Vec<String>, values: Vec<String>) -> Vec<Token> {
-    values
+   values
         .iter()
         .zip(types.iter())
         .map(|(arg, t)| {
             let kind = HumanReadableParser::parse_type(&t).unwrap();
+            if arg.starts_with("\"") && arg.ends_with("\"") {
+                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap()
+            }
             LenientTokenizer::tokenize(&kind, arg).unwrap()
         })
         .collect()

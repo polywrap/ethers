@@ -7,8 +7,8 @@ use ethers_core::{
     utils::{serialize},
 };
 use ethers_core::types::{BlockId, Chain};
-use ethers_providers::ProviderError;
 use ethers_provider::Provider;
+use ethers_providers::ProviderError;
 use crate::{error::WrapperError, polywrap_provider::{provider::WrapProvider, signer::WrapSigner}};
 
 use crate::mapping::EthersTxOptions;

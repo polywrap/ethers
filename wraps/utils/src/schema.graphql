@@ -17,6 +17,15 @@ type Module {
     method: String!
     args: [String!]
   ): String!
+
+  toWei(eth: String!): String!
+  toEth(wei: String!): String!
+
+  # solidityPack(
+  #   types: [String!]!
+  #   values: [String!]!
+  # ): String!
+
   encodePacked(
     types: [String!]!
     values: [String!]!
