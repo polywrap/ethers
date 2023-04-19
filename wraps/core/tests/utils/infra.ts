@@ -5,7 +5,7 @@ import {ETH_ENS_IPFS_MODULE_CONSTANTS} from "polywrap";
 export const initInfra = async (cli?: string): Promise<void> => {
   // Start the test environment
   const { exitCode, stderr, stdout } = await runCli({
-    args: ["infra", "up", "--verbose"],
+    args: ["infra", "up", "--verbose", "--modules", "eth-ens-ipfs"],
     config: { cli },
   });
 
@@ -62,7 +62,7 @@ export const initInfra = async (cli?: string): Promise<void> => {
 
 export async function stopInfra(): Promise<void> {
   const { exitCode, stderr, stdout } = await runCli({
-    args: ["infra", "down", "--verbose"]
+    args: ["infra", "down", "--verbose", "--modules", "eth-ens-ipfs"]
   });
 
   if (exitCode) {

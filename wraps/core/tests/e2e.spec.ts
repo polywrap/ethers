@@ -353,34 +353,6 @@ describe("Ethereum Wrapper", () => {
       expect(Number(response.value)).toBeTruthy();
     });
 
-    it("toWei", async () => {
-      const response = await clientWithCustomSigner.invoke<string>({
-        uri,
-        method: "toWei",
-        args: {
-          eth: "20",
-        },
-      });
-
-      if (!response.ok) throw response.error;
-      expect(response.value).toBeDefined();
-      expect(response.value).toEqual("20000000000000000000");
-    });
-
-    it("toEth", async () => {
-      const response = await clientWithCustomSigner.invoke<string>({
-        uri,
-        method: "toEth",
-        args: {
-          wei: "20000000000000000000",
-        },
-      });
-
-      if (!response.ok) throw response.error;
-      expect(response.value).toBeDefined();
-      expect(response.value).toEqual("20");
-    });
-
     it("sendRpc", async () => {
       const res = await clientWithCustomSigner.invoke<string | undefined>({
         uri,

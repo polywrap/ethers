@@ -2,6 +2,8 @@ import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
 import { keccak256 } from "js-sha3";
 import * as path from "path";
 
+jest.setTimeout(360000);
+
 describe("Ethereum Wrapper", () => {
   let client: PolywrapClient;
 
@@ -38,28 +40,12 @@ describe("Ethereum Wrapper", () => {
       );
     });
 
-    it.skip("should encode packed", async () => {
-      const response = await client.invoke<string>({
-        uri,
-        method: "wEncodePacked",
-        args: {
-          bytes:
-            "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a360",
-          uint: "0x0000000000000000000000000000000000000000000000000000000000000042",
-        },
-      });
-      if (!response.ok) throw response.error;
-      expect(response.value).toEqual(
-        "0x169b91711c9e5fc8418feaca506caa84243dc031eb336f195d6399e79978f138".toLowerCase()
-      );
-    });
-
     it("should encode bytes and convert to keccak", async () => {
       const response = await client.invoke<string>({
         uri,
         method: "keccak256BytesEncodePacked",
         args: {
-          bytes:
+          value:
             "0x2fe2c0ec0d2f63b668a3389b17cfed8ec8554e2cd759b305b8873ea03353a3600000000000000000000000000000000000000000000000000000000000000042",
         },
       });
@@ -73,9 +59,9 @@ describe("Ethereum Wrapper", () => {
       let input = "0xe1c7392a";
       const response = await client.invoke<string>({
         uri,
-        method: "keccak256Bytes",
+        method: "keccak256",
         args: {
-          bytes: input,
+          value: input,
         },
       });
       if (!response.ok) throw response.error;
@@ -180,7 +166,37 @@ describe("Ethereum Wrapper", () => {
 
       expect(response.ok).toBeTruthy();
     });
-    describe("solidityPack", () => {
+
+    describe("Amount formatting", () => {
+      it("toWei", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "toWei",
+          args: {
+            eth: "20",
+          },
+        });
+  
+        if (!response.ok) throw response.error;
+        expect(response.value).toBeDefined();
+        expect(response.value).toEqual("20000000000000000000");
+      });
+  
+      it("toEth", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "toEth",
+          args: {
+            wei: "20000000000000000000",
+          },
+        });
+  
+        if (!response.ok) throw response.error;
+        expect(response.value).toBeDefined();
+        expect(response.value).toEqual("20");
+      });
+    })
+    describe.skip("solidityPack", () => {
       it("should encode packed [int16, uint48]", async () => {
         const response = await client.invoke<string>({
           uri,

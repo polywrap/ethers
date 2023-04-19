@@ -2,7 +2,7 @@ use ethers_core::abi::{encode_packed, Function, Token};
 use ethers_core::types::{Address, Bytes};
 use ethers_core::utils::{get_create2_address, keccak256 as keccak256_ethers};
 use ethers_utils::{
-    encode_function as utils_encode_function, encode_params as utils_encode_params,
+    encode_function as utils_encode_function, encode_params as utils_encode_params, to_eth as utils_to_eth, to_wei as utils_to_wei
 };
 use polywrap_wasm_rs::{BigInt, JSON};
 use std::str::FromStr;
@@ -72,6 +72,15 @@ impl ModuleTrait for Module {
         let (_, bytes): (Function, Bytes) = utils_encode_function(&input.method, &args).unwrap();
         Ok(format!("{}", bytes).to_string())
     }
+
+    fn to_wei(input: ArgsToWei) -> Result<String, String> {
+        Ok(utils_to_wei(input.eth).to_string())
+    }
+    
+    fn to_eth(input: ArgsToEth) -> Result<String, String> {
+        Ok(utils_to_eth(input.wei).to_string())
+    }
+    
 
     // fn solidity_pack(args: wrap::ArgsSolidityPack) -> Result<String, String> {
     //     let provider = WrapProvider::new(&None);
