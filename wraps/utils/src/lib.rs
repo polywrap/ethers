@@ -85,8 +85,8 @@ impl ModuleTrait for Module {
         Ok(utils_to_eth(input.wei).to_string())
     }
 
-    pub fn encode_packed(input: wrap::ArgsEncodePacked) -> String {
+    fn encode_packed(input: wrap::ArgsEncodePacked) -> Result<String, String> {
         let encoded = utils_solidity_pack(input.types, input.values);
-        format!("{}", Bytes::from(encoded))
+        Ok(format!("{}", Bytes::from(encoded)))
     }
 }
