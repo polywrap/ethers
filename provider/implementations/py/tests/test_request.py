@@ -96,3 +96,57 @@ async def test_sign_transaction(client_with_signer: PolywrapClient):
     assert result == json.dumps(
         "0x12bdd486cb42c3b3c414bb04253acfe7d402559e7637562987af6bd78508f38623c1cc09880613762cc913d49fd7d3c091be974c0dee83fb233300b6b58727311c"
     )
+
+
+async def test_encode_packed_int16_uint48(client_without_signer: PolywrapClient):
+    options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+        uri=provider_uri,
+        method="request",
+        args={
+            "method": "eth_encodePacked",
+            "params": json.dumps({
+                "types": ["int16", "uint48"],
+                "values": ["-1", "12"],
+            }),
+        },
+        encode_result=False,
+    )
+    result = await client_without_signer.invoke(options)
+
+    assert result == json.dumps("0xffff00000000000c")
+
+
+async def test_encode_packed_uint256_uint256(client_without_signer: PolywrapClient):
+    options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+        uri=provider_uri,
+        method="request",
+        args={
+            "method": "eth_encodePacked",
+            "params": json.dumps({
+                "types": ["uint256", "uint256"],
+                "values": ["8", "16"],
+            }),
+        },
+        encode_result=False,
+    )
+    result = await client_without_signer.invoke(options)
+
+    assert result == json.dumps("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010")
+
+
+async def test_encode_packed_string_uint8(client_without_signer: PolywrapClient):
+    options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
+        uri=provider_uri,
+        method="request",
+        args={
+            "method": "eth_encodePacked",
+            "params": json.dumps({
+                "types": ["string", "uint8"],
+                "values": ["Hello", "3"],
+            }),
+        },
+        encode_result=False,
+    )
+    result = await client_without_signer.invoke(options)
+
+    assert result == json.dumps("0x48656c6c6f03")
