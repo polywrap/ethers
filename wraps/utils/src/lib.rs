@@ -1,4 +1,4 @@
-use ethers_core::abi::{encode_packed as encode_packed_tokens, Function, Token};
+use ethers_core::abi::{encode_packed, Function, Token};
 use ethers_core::types::{Address, Bytes};
 use ethers_core::utils::{get_create2_address, keccak256 as keccak256_ethers};
 use ethers_utils::{
@@ -25,7 +25,7 @@ impl ModuleTrait for Module {
     fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked) -> Result<String, String> {
         let bytes = Bytes::from_str(&args.value).unwrap();
         let bytes = Token::Bytes(bytes.to_vec());
-        let encoded = keccak256_ethers(encode_packed_tokens(&[bytes]).unwrap());
+        let encoded = keccak256_ethers(encode_packed(&[bytes]).unwrap());
         Ok(format!("{}", Bytes::from(encoded)).to_string())
     }
 
@@ -54,7 +54,7 @@ impl ModuleTrait for Module {
         let data = Bytes::from_str(&args.data).unwrap();
         let data_len = utils_encode_params(vec!["uint256".into()], vec![data.len().to_string()]);
 
-        let encoded = encode_packed_tokens(&[
+        let encoded = encode_packed(&[
             operation,
             Token::Address(to),
             Token::Bytes(value.to_vec()),
@@ -85,8 +85,7 @@ impl ModuleTrait for Module {
         Ok(utils_to_eth(input.wei).to_string())
     }
 
-    fn encode_packed(input: wrap::ArgsEncodePacked) -> Result<String, String> {
-        let encoded = utils_solidity_pack(input.types, input.values);
-        Ok(format!("{}", Bytes::from(encoded)))
+    fn solidity_pack(args: wrap::ArgsSolidityPack) -> Result<String, String> {
+        return utils_solidity_pack(args.types, args.values);
     }
 }

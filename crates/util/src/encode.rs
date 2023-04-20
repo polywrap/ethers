@@ -2,7 +2,7 @@ use ethers_core::{
     abi::{
         Param, Token, encode, HumanReadableParser,
         token::LenientTokenizer, token::Tokenizer,
-        Function, Abi, ParamType, encode_packed
+        Function, Abi, encode_packed
     },
     types::{Bytes}
 };
@@ -11,7 +11,16 @@ use crate::error::EncodeError;
 use std::str::FromStr;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
-    let tokens: Vec<Token> = tokenize_string_values(types, values);
+    let tokens: Vec<Token> = values.iter()
+        .zip(types.iter())
+        .map(|(arg, t)| {
+            let kind = HumanReadableParser::parse_type(&t).unwrap();
+            if arg.starts_with("\"") && arg.ends_with("\"") {
+                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap()
+            }
+            LenientTokenizer::tokenize(&kind, arg).unwrap()
+        })
+        .collect();
     let bytes = encode(&tokens);
     bytes
 }
@@ -81,23 +90,4 @@ pub fn encode_packed_bytes(bytes: String) -> String {
     let token = Token::Bytes(bytes.to_vec());
     let encoded = encode_packed(&[token]).unwrap();
     format!("{}", Bytes::from(encoded))
-}
-
-pub fn solidity_pack(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
-    let tokens: Vec<Token> = tokenize_string_values(types, values);
-    encode_packed(tokens.as_slice()).unwrap()
-}
-
-fn tokenize_string_values(types: Vec<String>, values: Vec<String>) -> Vec<Token> {
-   values
-        .iter()
-        .zip(types.iter())
-        .map(|(arg, t)| {
-            let kind = HumanReadableParser::parse_type(&t).unwrap();
-            if arg.starts_with("\"") && arg.ends_with("\"") {
-                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap()
-            }
-            LenientTokenizer::tokenize(&kind, arg).unwrap()
-        })
-        .collect()
 }

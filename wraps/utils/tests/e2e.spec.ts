@@ -196,7 +196,8 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("20");
       });
     })
-    describe.skip("solidityPack", () => {
+
+    describe("solidityPack", () => {
       it("should encode packed [int16, uint48]", async () => {
         const response = await client.invoke<string>({
           uri,
