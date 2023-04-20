@@ -238,6 +238,19 @@ describe("Ethereum Wrapper", () => {
         if (!response.ok) throw response.error;
         expect(response.value).toEqual("0x48656c6c6f03");
       });
+
+      it("should encode packed [address, uint]", async () => {
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: {
+            types: ["address", "uint"],
+            values: ["0x8ba1f109551bd432803012645ac136ddd64dba72", "45"],
+          },
+        });
+        if (!response.ok) throw response.error;
+        expect(response.value).toEqual("0x8ba1f109551bd432803012645ac136ddd64dba72000000000000000000000000000000000000000000000000000000000000002d");
+      });
     });
   });
 });

@@ -3,26 +3,27 @@ use hex;
 use crate::address::get_checksum_address;
 use crate::regex::{matches_regex_array, matches_regex_bytes, matches_regex_number};
 
-// convert a hex data string to bytes
-fn get_bytes(value: &str) -> Result<Vec<u8>, String> {
+/// convert a hex data string to bytes
+pub fn get_bytes(value: &str) -> Result<Vec<u8>, String> {
+    let value = value.trim_start_matches("0x");
     hex::decode(value).map_err(|e| format!("Invalid hex string: {}", e))
 }
 
-// convert bytes to a hex data string
-fn hexlify(value: &[u8]) -> String {
-    hex::encode(value)
+/// convert bytes to a hex data string
+pub fn hexlify(value: &[u8]) -> String {
+    "0x".to_string() + &hex::encode(value)
 }
 
-// convert an array of byte arrays to a concatenated hex data string
-fn concat(values: &Vec<Vec<u8>>) -> String {
+/// convert an array of byte arrays to a concatenated hex data string
+pub fn concat(values: &Vec<Vec<u8>>) -> String {
     "0x".to_string() + &values.iter()
-        .map(|v| hexlify(v))
+        .map(|v| hexlify(v).trim_start_matches("0x").to_string())
         .collect::<Vec<String>>()
         .join("")
 }
 
-// get the byte length of a hex data string
-fn data_length(value: &str) -> Result<usize, String> {
+/// get the byte length of a hex data string
+pub fn data_length(value: &str) -> Result<usize, String> {
     get_bytes(value).map(|v| v.len())
 }
 
@@ -34,7 +35,7 @@ fn to_utf8_bytes(value: &str) -> Vec<u8> {
 // `width` bits.
 //
 // The result will always be positive.
-fn to_twos(value: &BigInt, width: usize) -> Result<BigInt, String> {
+pub fn to_twos(value: &BigInt, width: usize) -> Result<BigInt, String> {
     let zero = BigInt::from(0);
     let one = BigInt::from(1);
 
@@ -66,7 +67,7 @@ fn to_be_array(value: &BigInt) -> Result<Vec<u8>, String> {
     Ok(value.to_bytes_be().1)
 }
 
-fn zero_pad(data: &[u8], length: usize, left: bool) -> Result<String, String> {
+pub fn zero_pad(data: &[u8], length: usize, left: bool) -> Result<String, String> {
     if length < data.len() {
         return Err(format!("BUFFER_OVERRUN: padding exceeds data length, buffer: {:?}, length: {}, offset: {}", data, length, length + 1));
     }
@@ -86,7 +87,7 @@ fn zero_pad(data: &[u8], length: usize, left: bool) -> Result<String, String> {
 ///
 /// This pads data the same as **values** are in Solidity
 /// (e.g. `uint128`).
-fn zero_pad_value(data: &str, length: usize) -> Result<String, String> {
+pub fn zero_pad_value(data: &str, length: usize) -> Result<String, String> {
     let bytes = get_bytes(data)?;
     zero_pad(&bytes, length, true)
 }
@@ -96,7 +97,7 @@ fn zero_pad_value(data: &str, length: usize) -> Result<String, String> {
 ///
 /// This pads data the same as **bytes** are in Solidity
 /// (e.g. `bytes16`).
-fn zero_pad_bytes(data: &str, length: usize) -> Result<String, String> {
+pub fn zero_pad_bytes(data: &str, length: usize) -> Result<String, String> {
     let bytes = get_bytes(data)?;
     zero_pad(&bytes, length, false)
 }
