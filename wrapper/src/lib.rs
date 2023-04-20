@@ -321,6 +321,7 @@ pub fn solidity_pack(args: wrap::ArgsSolidityPack) -> String {
         "types": args.types,
         "values": args.values
     });
+    ethers_core::utils::solidity
     return provider.request_sync("eth_encodePacked", params).unwrap()
 }
 

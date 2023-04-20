@@ -5,7 +5,6 @@ from polywrap_core import InvokerOptions, UriPackageOrWrapper, Uri
 import json
 
 WithSigner = bool
-
 provider_uri = Uri.from_str("plugin/ethereum-provider")
 
 
@@ -134,56 +133,3 @@ async def test_send_transaction(client_factory: Callable[[WithSigner], PolywrapC
     assert isinstance(tx_hash, str)
     assert len(tx_hash) == 66
     assert tx_hash.startswith('0x')
-
-# async def test_encode_packed_int16_uint48(client_without_signer: PolywrapClient):
-#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
-#         uri=provider_uri,
-#         method="request",
-#         args={
-#             "method": "eth_encodePacked",
-#             "params": json.dumps({
-#                 "types": ["int16", "uint48"],
-#                 "values": ["-1", "12"],
-#             }),
-#         },
-#         encode_result=False,
-#     )
-#     result = await client_without_signer.invoke(options)
-
-#     assert result == json.dumps("0xffff00000000000c")
-
-
-# async def test_encode_packed_uint256_uint256(client_without_signer: PolywrapClient):
-#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
-#         uri=provider_uri,
-#         method="request",
-#         args={
-#             "method": "eth_encodePacked",
-#             "params": json.dumps({
-#                 "types": ["uint256", "uint256"],
-#                 "values": ["8", "16"],
-#             }),
-#         },
-#         encode_result=False,
-#     )
-#     result = await client_without_signer.invoke(options)
-
-#     assert result == json.dumps("0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010")
-
-
-# async def test_encode_packed_string_uint8(client_without_signer: PolywrapClient):
-#     options: InvokerOptions[UriPackageOrWrapper] = InvokerOptions(
-#         uri=provider_uri,
-#         method="request",
-#         args={
-#             "method": "eth_encodePacked",
-#             "params": json.dumps({
-#                 "types": ["string", "uint8"],
-#                 "values": ["Hello", "3"],
-#             }),
-#         },
-#         encode_result=False,
-#     )
-#     result = await client_without_signer.invoke(options)
-
-#     assert result == json.dumps("0x48656c6c6f03")
