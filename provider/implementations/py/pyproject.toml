@@ -60,7 +60,9 @@ testpaths = [
 [tool.pylint]
 disable = [
     "too-many-return-statements",
-    "invalid-name"
+    "invalid-name",
+    "unused-argument",
+    "unused-variable",
 ]
 ignore-paths = [
     "polywrap_ethereum_provider/wrap"

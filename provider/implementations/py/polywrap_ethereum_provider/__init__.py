@@ -1,33 +1,37 @@
-import time
-from hexbytes import HexBytes
-from polywrap_core import InvokerClient, UriPackageOrWrapper, Env
-from polywrap_plugin import PluginPackage
-
-from eth_account.messages import encode_structured_data, encode_defunct  # type: ignore
-from eth_account.account import SignedMessage, SignedTransaction
-from eth_account import Account
-from eth_utils.crypto import keccak
-from eth_account._utils.signing import sign_message_hash  # type: ignore
-from web3 import Web3
-from web3.exceptions import TransactionNotFound
-from web3.types import RPCEndpoint
-from web3._utils.threads import Timeout
+"""This package provides a Polywrap plugin for interacting with EVM networks."""
+# pylint: disable=no-value-for-parameter
+# pylint: disable=protected-access
 import json
 from typing import Optional, cast
-from .wrap import (
-    ArgsRequest,
-    manifest,
-    ArgsWaitForTransaction,
-    ArgsSignMessage,
-    ArgsSignerAddress,
-    ArgsSignTransaction,
-    Module,
-)
+
+from eth_account import Account
+from eth_account._utils.signing import sign_message_hash  # type: ignore
+from eth_account.datastructures import SignedMessage, SignedTransaction
+from eth_account.messages import encode_defunct, encode_structured_data  # type: ignore
+from eth_utils.crypto import keccak
+from hexbytes import HexBytes
+from polywrap_core import Env, InvokerClient, UriPackageOrWrapper
+from polywrap_plugin import PluginPackage
+from web3 import Web3
+from web3._utils.threads import Timeout
+from web3.exceptions import TransactionNotFound
+from web3.types import RPCEndpoint
 
 from polywrap_ethereum_provider.connections import Connections
 
+from .wrap import (
+    ArgsRequest,
+    ArgsSignerAddress,
+    ArgsSignMessage,
+    ArgsSignTransaction,
+    ArgsWaitForTransaction,
+    Module,
+    manifest,
+)
+
 
 class EthereumProviderPlugin(Module[Connections]):
+    """A Polywrap plugin for interacting with EVM networks."""
     def __init__(self, connections: Connections):
         super().__init__(connections)
         self.connections = connections
@@ -38,6 +42,7 @@ class EthereumProviderPlugin(Module[Connections]):
         client: InvokerClient[UriPackageOrWrapper],
         env: Optional[Env] = None,
     ) -> str:
+        """Send a remote RPC request to the registered provider."""
         connection = self.connections.get_connection(args.get("connection"))
         web3 = Web3(connection.provider)
 
@@ -71,9 +76,12 @@ class EthereumProviderPlugin(Module[Connections]):
         client: InvokerClient[UriPackageOrWrapper],
         env: Optional[Env] = None,
     ) -> Optional[str]:
+        """Get the ethereum address of the signer. Return null if signer is missing."""
         connection = self.connections.get_connection(args.get("connection"))
         if connection.has_signer():
-            return Account.from_key(connection.signer).address
+            return Account.from_key(
+                connection.signer
+            ).address
         return None
 
     async def wait_for_transaction(
@@ -82,6 +90,7 @@ class EthereumProviderPlugin(Module[Connections]):
         client: InvokerClient[UriPackageOrWrapper],
         env: Optional[Env] = None,
     ) -> bool:
+        """Wait for a transaction to be mined."""
         connection = self.connections.get_connection(args.get("connection"))
         web3 = Web3(connection.provider)
         poll_latency = 0.1
@@ -113,8 +122,9 @@ class EthereumProviderPlugin(Module[Connections]):
         self,
         args: ArgsSignMessage,
         client: InvokerClient[UriPackageOrWrapper],
-        env: None
+        env: None,
     ) -> str:
+        """Sign a message and return the signature. Throws if signer is missing."""
         connection = self.connections.get_connection(args.get("connection"))
         web3 = Web3(connection.provider)
         signable_message = encode_defunct(args["message"])
@@ -127,11 +137,20 @@ class EthereumProviderPlugin(Module[Connections]):
         self,
         args: ArgsSignTransaction,
         client: InvokerClient[UriPackageOrWrapper],
-        env: None
+        env: None,
     ) -> str:
+        """
+        Sign a serialized unsigned transaction and return the signature.\
+        Throws if signer is missing.\
+        This method requires a wallet-based signer with a private key,\
+        and is not needed for most use cases.\
+        Typically, transactions are sent by `request` and signed by the wallet.
+        """
         connection = self.connections.get_connection(args.get("connection"))
         tx_hash = keccak(args["rlp"])
-        account = Account.from_key(connection.signer)
+        account = Account.from_key(
+            connection.signer
+        )
         key_obj = account._key_obj  # type: ignore
         (v, r, s, eth_signature_bytes) = sign_message_hash(key_obj, tx_hash)  # type: ignore
         return HexBytes(cast(bytes, eth_signature_bytes)).hex()
@@ -155,6 +174,7 @@ class EthereumProviderPlugin(Module[Connections]):
 
 
 def ethereum_provider_plugin(connections: Connections) -> PluginPackage[Connections]:
+    """Create a Polywrap plugin instance for interacting with EVM networks."""
     return PluginPackage(
         module=EthereumProviderPlugin(connections=connections), manifest=manifest
     )

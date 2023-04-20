@@ -1,11 +1,13 @@
+"""This module contains a connections class for an EVM network."""
 from typing import Dict, Optional, Tuple, cast
 
-from polywrap_ethereum_provider.networks import KnownNetwork
 from polywrap_ethereum_provider.connection import Connection
+from polywrap_ethereum_provider.networks import KnownNetwork
 from polywrap_ethereum_provider.wrap.types import Connection as SchemaConnection
 
 
 class Connections:
+    """Defines a set of connections to EVM networks."""
     __slots__: Tuple[str, str, str] = ("connections", "default_network", "signer")
 
     connections: Dict[str, Connection]
@@ -18,6 +20,7 @@ class Connections:
         default_network: Optional[str],
         signer: Optional[str] = None,
     ):
+        """Initialize a set of connections to EVM networks."""
         self.connections = connections
         self.signer = signer
 
@@ -36,6 +39,7 @@ class Connections:
             )
 
     def get_connection(self, connection: Optional[SchemaConnection]) -> Connection:
+        """Get a connection from a connection object."""
         if not connection:
             return self.with_signer(self.connections[self.default_network])
 
@@ -60,6 +64,7 @@ class Connections:
         return self.with_signer(self.connections[self.default_network])
 
     def with_signer(self, connection: Connection) -> Connection:
+        """Return a connection with a signer."""
         if self.signer and not connection.has_signer():
             return Connection(connection.provider, self.signer)
         return connection
