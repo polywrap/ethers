@@ -253,6 +253,26 @@ describe("Ethereum Wrapper", () => {
         expect(response.value).toEqual("0x8ba1f109551bd432803012645ac136ddd64dba72000000000000000000000000000000000000000000000000000000000000002d");
       });
 
+      it("should encode packed [address[], uint]", async () => {
+        const types = ["address[]", "uint"];
+        const values = ["0x8ba1f109551bd432803012645ac136ddd64dba72,0x8ba1f109551bd432803012645ac136ddd64dba71", "45"];
+
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: { types, values },
+        });
+        if (!response.ok) throw response.error;
+
+        const expected = ethers.utils.solidityPack(
+          types,
+          [["0x8ba1f109551bd432803012645ac136ddd64dba72","0x8ba1f109551bd432803012645ac136ddd64dba71"],
+            "45"]
+        );
+        expect(response.value).toEqual(expected);
+      });
+
+
       it("should encode packed ethers", async () => {
         const types: string[] = [
           "string", "address", "bool",

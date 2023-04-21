@@ -174,14 +174,18 @@ fn _pack(type_: &str, value: &str, is_array: Option<bool>) -> Result<Vec<u8>, St
             return Err(format!("invalid array length {} for type {}", value, type_));
         }
 
-        let value_array: Vec<&str> = value.split(',').collect(); // Assuming the input is a comma-separated string
+        let value_array: Vec<&str> = value
+            .trim_start_matches("[")
+            .trim_end_matches("]")
+            .split(',')
+            .map(|x| x.trim())
+            .collect();
         let mut result: Vec<Vec<u8>> = vec![];
 
         for value_element in value_array {
             let packed = _pack(&base_type, value_element, Some(true))?;
             result.push(packed);
         }
-
 
         return get_bytes(&concat(&result))
     }
