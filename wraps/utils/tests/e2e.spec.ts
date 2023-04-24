@@ -316,6 +316,30 @@ describe("Ethereum Wrapper", () => {
         const expected = ethers.utils.solidityPack(types, values);
         expect(response.value).toEqual(expected);
       });
+
+      it("should encode packed negative numbers", async () => {
+        const types: string[] = ["int8", "int16", "int32", "int64", "int128", "int256", "int"];
+        const exampleValues: Record<string, string> = {
+          "int8": "-12",
+          "int16": "-3276",
+          "int32": "-214748364",
+          "int64": "-922337203685477580",
+          "int128": "-17014118346046923173168730371588410572",
+          "int256": "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
+          "int": "-5789604461865809771178549250434395392663499233282028201972879200395656481996",
+        };
+        const values: string[] = Object.values(exampleValues);
+
+        const response = await client.invoke<string>({
+          uri,
+          method: "solidityPack",
+          args: { types, values },
+        });
+        if (!response.ok) throw response.error;
+
+        const expected = ethers.utils.solidityPack(types, values);
+        expect(response.value).toEqual(expected);
+      });
     });
   });
 });
