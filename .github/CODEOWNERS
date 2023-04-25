@@ -1,2 +1,14 @@
 # Default
-* @dOrgJelli @namesty @krisbitney
+* @dOrgJelli
+
+# Interface
+provider/interface @krisbitney @cbrzn
+
+# Js implementation
+provider/implementations/js @krisbitney
+
+# Py implementation
+provider/implementations/py @Niraj-Kamdar @cbrzn
+
+# Wrapper
+/wrapper @krisbitney @cbrzn @namesty
