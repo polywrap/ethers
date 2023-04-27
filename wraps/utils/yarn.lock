@@ -1260,17 +1260,7 @@
     "@polywrap/plugin-js" "0.10.0-pre.10"
     ethers "5.7.0"
 
-"@polywrap/ethereum-provider-js@0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@polywrap/ethereum-provider-js/-/ethereum-provider-js-0.2.2.tgz#0bd6337f26da381b1567f26d077cd32debf43d03"
-  integrity sha512-GGWB7C8pLSRx1fcBaT/hnLISJNoPilM7FHrKfvhWRAjbGDLKlL1tDmHD2J1G5R5dOkA97Z+boVbI5VrjzqE5/Q==
-  dependencies:
-    "@ethersproject/address" "5.7.0"
-    "@ethersproject/providers" "5.7.0"
-    "@polywrap/core-js" "0.10.0-pre.10"
-    ethers "5.7.0"
-
-"@polywrap/ethereum-provider-js@npm:@polywrap/ethereum-provider-js@~0.3.0":
+"@polywrap/ethereum-provider-js@0.3.0", "@polywrap/ethereum-provider-js@npm:@polywrap/ethereum-provider-js@~0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@polywrap/ethereum-provider-js/-/ethereum-provider-js-0.3.0.tgz#65f12dc2ab7d6812dad9a28ee051deee2a98a1ed"
   integrity sha512-+gMML3FNMfvz/yY+j2tZhOdxa6vgw9i/lFobrmkjkGArLRuOZhYLg/mwmK5BSrzIbng4omh6PgV0DPHgU1m/2w==

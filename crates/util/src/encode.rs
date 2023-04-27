@@ -2,7 +2,7 @@ use ethers_core::{
     abi::{
         Param, Token, encode, HumanReadableParser,
         token::LenientTokenizer, token::Tokenizer,
-        Function, Abi, ParamType, encode_packed
+        Function, Abi, encode_packed
     },
     types::{Bytes}
 };
@@ -11,8 +11,7 @@ use crate::error::EncodeError;
 use std::str::FromStr;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
-    let tokens: Vec<Token> = values
-        .iter()
+    let tokens: Vec<Token> = values.iter()
         .zip(types.iter())
         .map(|(arg, t)| {
             let kind = HumanReadableParser::parse_type(&t).unwrap();
@@ -88,7 +87,7 @@ pub fn parse_method(method: &str) -> Result<Function, EncodeError> {
 
 pub fn encode_packed_bytes(bytes: String) -> String {
     let bytes = Bytes::from_str(&bytes).unwrap();
-    let bytes = Token::Bytes(bytes.to_vec());
-    let encoded = encode_packed(&[bytes]).unwrap();
-    format!("{}", Bytes::from(encoded)).to_string()
+    let token = Token::Bytes(bytes.to_vec());
+    let encoded = encode_packed(&[token]).unwrap();
+    format!("{}", Bytes::from(encoded))
 }

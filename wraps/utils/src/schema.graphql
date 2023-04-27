@@ -21,8 +21,8 @@ type Module {
   toWei(eth: String!): String!
   toEth(wei: String!): String!
 
-  # solidityPack(
-  #   types: [String!]!
-  #   values: [String!]!
-  # ): String!
+  solidityPack(
+    types: [String!]!
+    values: [String!]!
+  ): String!
 }
