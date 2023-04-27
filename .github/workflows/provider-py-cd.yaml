@@ -1,0 +1,59 @@
+name: provider-py-cd
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - "provider/implementations/py/**"
+
+jobs:
+  cd:
+    name: provider-py-cd
+    if: |
+      github.event.pull_request.merged &&
+      startsWith(github.event.pull_request.title, '[CD]') != true &&
+      github.event.pull_request.user.login != 'github-actions'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+        working-directory: ./provider/implementations/py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./provider/implementations/py
+
+      - name: Codegen
+        run: yarn codegen
+        working-directory: ./provider/implementations/py
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      
+      - name: Install poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+        working-directory: ./provider/implementations/py
+
+      - name: Publish
+        run: poetry publish --build -u __token__ -p {{ env.PYPI_TOKEN }}
+        working-directory: ./provider/implementations/py
+        env:
+          PYPI_TOKEN: ${{ secrets.POLYWRAP_BUILD_BOT_PYPI_PAT }}
+

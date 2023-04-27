@@ -1,0 +1,61 @@
+name: provider-py-ci
+
+on:
+  pull_request:
+    paths:
+      - "provider/implementations/py/**"
+
+jobs:
+  ci:
+    name: provider-py-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+        working-directory: ./provider/implementations/py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./provider/implementations/py
+
+      - name: Codegen
+        run: yarn codegen
+        working-directory: ./provider/implementations/py
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+        working-directory: ./provider/implementations/py
+
+      - name: Typecheck
+        run: poetry run tox -e typecheck
+        working-directory: ./provider/implementations/py
+
+      - name: Lint
+        run: poetry run tox -e lint
+        working-directory: ./provider/implementations/py
+
+      - name: Security
+        run: poetry run tox -e secure
+        working-directory: ./provider/implementations/py
+
+      - name: Test
+        run: poetry run tox
+        working-directory: ./provider/implementations/py
