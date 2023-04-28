@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "polywrap_ethereum-provider"
+name = "polywrap-ethereum-provider"
 version = "0.1.0a1"
 description = "Ethereum provider in python"
 authors = ["Cesar <cesar@polywrap.io>"]
