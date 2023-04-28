@@ -4,7 +4,4 @@ project:
   type: wasm/rust
 source:
   module: ./Cargo.toml
-  schema: ./src/schema.graphql
-  import_abis:
-    - uri: "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
-      abi: ../provider/interface/src/schema.graphql
+  schema: ./polywrap.graphql

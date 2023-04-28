@@ -5,25 +5,12 @@
         "path": "."
       },
       {
-        "name": "interface",
-        "path": "provider/interface"
-      },
-      {
-          "name": "python-plugin",
-          "path": "provider/implementations/py"
-      },
-      {
-          "name": "javascript-plugin",
-          "path": "provider/implementations/js"
-      },
-      {
           "name": "wrapper",
           "path": "wrapper"
       },
   ],
   "settings": {
       "files.exclude": {
-        "**/provider/*": true,
         "**/wrapper/*": true
       },
       "liveServer.settings.multiRootWorkspaceName": "root",
