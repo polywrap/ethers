@@ -14,10 +14,10 @@
     "deploy": "npx polywrap deploy -o deployment.json"
   },
   "devDependencies": {
-    "@polywrap/ethereum-provider-js": "../../plugin-provider/implementations/js",
+    "@polywrap/ethereum-provider-js": "0.3.1",
     "@polywrap/client-js": "0.10.0",
     "@polywrap/core-js": "0.10.0",
-    "@polywrap/cli-js": "0.10.0",
+    "@polywrap/cli-js": "0.10.2",
     "@types/jest": "27.0.3",
     "axios": "0.27.2",
     "eth-ens-namehash": "2.0.8",
@@ -25,7 +25,7 @@
     "ganache": "7.7.7",
     "jest": "26.6.3",
     "js-sha3": "0.8.0",
-    "polywrap": "0.10.0",
+    "polywrap": "0.10.2",
     "rimraf": "3.0.2",
     "ts-jest": "26.5.4",
     "ts-node": "10.9.1",
