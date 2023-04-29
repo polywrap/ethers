@@ -1,15 +1,14 @@
-name: ethereum-wrapper-ci
+name: ethers-wrappers-ci
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
-    paths:
-      - "wrapper/**"
-      - "provider/interface/**"
-      - "provider/implementations/js/**"
 
 jobs:
   ci:
-    name: ethereum-wrapper-ci
+    name: ethers-wrappers-ci
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -19,29 +18,32 @@ jobs:
       - name: Read .nvmrc
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
-        working-directory: ./wrapper
 
       - name: Setup Node.js
         uses: actions/setup-node@master
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
 
-      - name: Install dependencies of provider
-        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
-        working-directory: ./provider/implementations/js
-
-      - name: Build provider
-        run: yarn build
-        working-directory: ./provider/implementations/js
-
       - name: Install dependencies
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
-        working-directory: ./wrapper
+        working-directory: ./wraps/utils
 
       - name: Build
         run: yarn build
-        working-directory: ./wrapper
+        working-directory: ./wraps/utils
 
       - name: Test
         run: yarn test
-        working-directory: ./wrapper
+        working-directory: ./wraps/utils
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./wraps/core
+
+      - name: Build
+        run: yarn build
+        working-directory: ./wraps/core
+
+      - name: Test
+        run: yarn test
+        working-directory: ./wraps/core
