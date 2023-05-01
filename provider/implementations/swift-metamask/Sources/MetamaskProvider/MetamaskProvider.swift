@@ -3,6 +3,7 @@ import Foundation
 import Combine
 import PolywrapClient
 
+
 public class MetamaskProvider: Plugin {
     var provider: Ethereum
     var cancellables: Set<AnyCancellable> = []
@@ -80,17 +81,9 @@ public class MetamaskProvider: Plugin {
                         from: json
                     )
                     request = EthereumRequest(method: args.method, params: params)
-                    
                 }
                 let publisher = provider.request(request)
-                executeRequest(publisher: publisher) { result in
-                    switch result {
-                    case .success(let response):
-                        return completion(.success(response))
-                    case .failure(let error):
-                        return completion(.failure(error))
-                    }
-                }
+                executeRequest(publisher: publisher, completion: completion)
             }
         } else {
             if args.method == "eth_getBlockByNumber" {
@@ -103,14 +96,7 @@ public class MetamaskProvider: Plugin {
                     let params = [mixedArray[0].toString(), mixedArray[1].toString()]
                     let request = EthereumRequest(method: args.method, params: params)
                     let publisher = provider.request(request)
-                    executeRequest(publisher: publisher) { result in
-                        switch result {
-                        case .success(let response):
-                            return completion(.success(response))
-                        case .failure(let error):
-                            return completion(.failure(error))
-                        }
-                    }
+                    executeRequest(publisher: publisher, completion: completion)
                 }
             } else if args.method == "eth_feeHistory" {
                 handleFeeHistory(blockCount: "0xa", newestBlock: "latest", rewardPercentiles: [5.0], completion: completion)
@@ -121,42 +107,21 @@ public class MetamaskProvider: Plugin {
                         let params: [String] = try! JSONDecoder().decode([String].self, from: jsonData)
                         let request = EthereumRequest(method: args.method, params: params)
                         let publisher = provider.request(request)
-                        executeRequest(publisher: publisher) { result in
-                            switch result {
-                            case .success(let response):
-                                return completion(.success(response))
-                            case .failure(let error):
-                                return completion(.failure(error))
-                            }
-                        }
+                        executeRequest(publisher: publisher, completion: completion)
                     } else {
                         let request = EthereumRequest(method: args.method, params: "")
                         let publisher = provider.request(request)
-                        executeRequest(publisher: publisher) { result in
-                            switch result {
-                            case .success(let response):
-                                return completion(.success(response))
-                            case .failure(let error):
-                                return completion(.failure(error))
-                            }
-                        }
+                        executeRequest(publisher: publisher, completion: completion)
                     }
                 } else {
                     let request = EthereumRequest(method: args.method, params: "")
                     let publisher = provider.request(request)
-                    executeRequest(publisher: publisher) { result in
-                        switch result {
-                        case .success(let response):
-                            return completion(.success(response))
-                        case .failure(let error):
-                            return completion(.failure(error))
-                        }
-                    }
+                    executeRequest(publisher: publisher, completion: completion)
                 }
             }
         }
     }
-    
+
     public func request(args: ArgsRequest) async -> String {
         await withCheckedContinuation { continuation in
             request(args: args) { result in
@@ -234,10 +199,6 @@ public class MetamaskProvider: Plugin {
     // but this should not be the case. The way it's commented in the readme doesn't really work:
     // https://github.com/MetaMask/metamask-ios-sdk#using-a-struct
     private func handleGetBlockByNumber(block: String, includeTx: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
-        
         let jsonData = try? JSONSerialization.data(withJSONObject:[
             "id": "1",
             "jsonrpc":"2.0",
@@ -245,31 +206,11 @@ public class MetamaskProvider: Plugin {
             "params": [block, includeTx]
         ])
 
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                print("error :/ \(error)")
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
-                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
-                return completion(.success(String(data:stringJson, encoding: .utf8)!))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
+        let httpRequest = buildHttpRequest(body: jsonData)
+        handleHttpRequest(req: httpRequest, completion: completion)
     }
     
     private func handleFeeHistory(blockCount: String, newestBlock: String, rewardPercentiles: [Float]?, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
-        
         let jsonData = try? JSONSerialization.data(withJSONObject:[
             "id": "1",
             "jsonrpc":"2.0",
@@ -277,30 +218,11 @@ public class MetamaskProvider: Plugin {
             "params": [blockCount, newestBlock, rewardPercentiles]
         ])
 
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                print("error :/ \(error)")
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : Any]
-                let stringJson = try! JSONSerialization.data(withJSONObject: json["result"])
-                return completion(.success(String(data:stringJson, encoding: .utf8)!))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
+        let httpRequest = buildHttpRequest(body: jsonData)
+        handleHttpRequest(req: httpRequest, completion: completion)
     }
     
     private func handleEthCall(transaction: Transaction, completion: @escaping (Result<String, Error>) -> Void) {
-        let endpoint = URL(string: "https://eth-goerli.g.alchemy.com/v2/xs7E_AOsOwBTRspEDnkoldxihsKveaOn")!
-        var httpRequest = URLRequest(url: endpoint)
-        httpRequest.httpMethod = "post"
         let jsonData = try? JSONSerialization.data(withJSONObject:[
             "id": "1",
             "jsonrpc":"2.0",
@@ -314,23 +236,8 @@ public class MetamaskProvider: Plugin {
             ]
         ])
 
-        httpRequest.httpBody = jsonData
-        
-        httpRequest.addValue("application/json", forHTTPHeaderField: "accept")
-        httpRequest.addValue("application/json", forHTTPHeaderField: "content-type")
-       let task = URLSession.shared.dataTask(with: httpRequest) { (data, response, error) in
-            if let error = error {
-                return completion(.failure(error))
-            } else if let data = data {
-                let json = try! JSONSerialization.jsonObject(with: data, options: []) as! [String : String]
-                let result = json["result"]!
-                return completion(.success("\"\(result)\""))
-            } else {
-                print("unexpected error")
-            }
-        }
-           
-       task.resume()
+        let httpRequest = buildHttpRequest(body: jsonData)
+        handleHttpRequest(req: httpRequest, completion: completion)
     }
     
     private enum DelayUnit: UInt64 {
