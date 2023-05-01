@@ -6,7 +6,7 @@ import {
   Connection,
   Connections,
   ethereumProviderPlugin
-} from "../../provider/implementations/js";
+} from "@polywrap/ethereum-provider-js";
 
 import { provider as Web3MockProvider } from "ganache"
 import { ethers, Wallet } from "ethers";
