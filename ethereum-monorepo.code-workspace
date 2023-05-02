@@ -1,0 +1,27 @@
+{
+  "folders": [
+      {
+        "name": "root",
+        "path": "."
+      },
+      {
+        "name": "core-wrap",
+        "path": "wraps/core"
+      },
+      {
+        "name": "utils-wrap",
+        "path": "wraps/utils"
+      },
+      {
+        "name": "utils-crate",
+        "path": "crates/util"
+      },
+  ],
+  "settings": {
+      "files.exclude": {
+        "**/wraps/*": true,
+        "**/crates/*": true
+      },
+      "liveServer.settings.multiRootWorkspaceName": "root",
+  }
+}
