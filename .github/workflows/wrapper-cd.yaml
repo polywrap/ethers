@@ -1,52 +1,62 @@
-# TODO(cbrzn): Update with new structure & tags
-# name: ethereum-wrapper-cd
+# name: ethereum-wrap-cd
 
-# on:
-#   pull_request:
-#     types: [closed]
-#     branches:
-#       - main
-#     paths:
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
 
-# jobs:
-#   cd:
-#     name: ethereum-wrapper-cd
-#     if: |
-#       github.event.pull_request.merged &&
-#       startsWith(github.event.pull_request.title, '[CD]') != true &&
-#       github.event.pull_request.user.login != 'github-actions'
-#     runs-on: ubuntu-latest
-#     timeout-minutes: 60
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v2
+jobs:
+  cd:
+    name: ethereum-wrap-cd
+    if: |
+      github.event.pull_request.merged &&
+      endsWith(github.event.pull_request.title, '/workflows/cd') &&
+      github.event.pull_request.user.login != 'github-actions'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-#       - name: Read .nvmrc
-#         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-#         id: nvm
-#         working-directory: ./wrapper
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@master
-#         with:
-#           node-version: '${{ steps.nvm.outputs.NVMRC }}'
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
 
-#       - name: Install dependencies
-#         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
-#         working-directory: ./wrapper
+      - name: Install dependencies for core wrap
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./wraps/core
 
-#       - name: Build
-#         run: yarn build
-#         working-directory: ./wrapper
+      - name: Build core wrap
+        run: yarn build
+        working-directory: ./wraps/core
 
-#       - name: Deploy
-#         run: yarn deploy
-#         working-directory: ./wrapper
+      - name: Deploy core wrap
+        run: yarn deploy
+        working-directory: ./wraps/core
 
-#       - name: PR New URI
-#         uses: peter-evans/create-pull-request@v3
-#         with:
-#           branch: wrapper-cd-pr-${{github.event.number}}
-#           commit-message: "[CD] ethereum-wrapper"
-#           title: "[CD] ethereum-wrapper"
-#           body: "Triggered by: https://github.com/${{github.repository}}/pull/${{github.event.number}}"
+      - name: Install dependencies for utils wrap
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./wraps/utils
+
+      - name: Build utils wrap
+        run: yarn build
+        working-directory: ./wraps/utils
+
+      - name: Deploy utils wrap
+        run: yarn deploy
+        working-directory: ./wraps/utils
+
+
+      - name: PR New URI
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: wrap-cd-pr-${{github.event.number}}
+          commit-message: "bump: wraps deployment uri"
+          title: "bump: wraps deployment uri"
+          body: "Triggered by: https://github.com/${{github.repository}}/pull/${{github.event.number}}"
