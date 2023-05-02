@@ -24,26 +24,26 @@ jobs:
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
 
-      - name: Install dependencies
+      - name: Install dependencies for utils wrap
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
         working-directory: ./wraps/utils
 
-      - name: Build
+      - name: Build utils wrap
         run: yarn build
         working-directory: ./wraps/utils
 
-      - name: Test
+      - name: Test utils wrap
         run: yarn test
         working-directory: ./wraps/utils
 
-      - name: Install dependencies
+      - name: Install dependencies for core wrap
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
         working-directory: ./wraps/core
 
-      - name: Build
+      - name: Build core wrap
         run: yarn build
         working-directory: ./wraps/core
 
-      - name: Test
+      - name: Test core wrap
         run: yarn test
         working-directory: ./wraps/core
