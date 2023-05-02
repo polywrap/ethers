@@ -17,8 +17,7 @@ use wrap::module::{Module, ModuleTrait};
 
 impl ModuleTrait for Module {
     fn keccak256(args: wrap::ArgsKeccak256) -> Result<String, String> {
-        let decoded = Bytes::from_str(&args.value).unwrap();
-        let hash = keccak256_ethers(decoded);
+        let hash = keccak256_ethers(args.value.as_bytes());
         Ok(format!("{}", Bytes::from(hash)).to_string())
     }
 

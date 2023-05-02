@@ -56,7 +56,7 @@ describe("Ethereum Wrapper", () => {
       );
     });
 
-    it.skip("should encode keccak256", async () => {
+    it("should encode keccak256", async () => {
       let input = "0xe1c7392a";
       const response = await client.invoke<string>({
         uri,
@@ -66,7 +66,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
       if (!response.ok) throw response.error;
-      expect(response.value).toEqual(keccak256(input));
+      expect(response.value).toEqual("0x" + keccak256(input));
     });
 
     it("should encode meta transaction", async () => {
