@@ -1,3 +1,4 @@
+use crate::polywrap_provider::provider::Provider;
 use crate::provider::WrapProvider;
 use crate::wrap::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
 use ethers_core::types::{
@@ -7,7 +8,6 @@ use ethers_core::types::{
 use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 use ethers_core::types::transaction::eip2930::{AccessList, AccessListItem};
-use ethers_provider::Provider;
 
 pub struct EthersTxOptions {
     pub gas_limit: Option<U256>,

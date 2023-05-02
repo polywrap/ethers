@@ -7,7 +7,9 @@ use ethers_core::{
         BlockId, Bytes, Signature,
     },
 };
+use ethers_providers::ProviderError;
 use ethers_signers::to_eip155_v;
+use thiserror::Error;
 
 use crate::wrap::{
     connection::Connection,
@@ -17,7 +19,31 @@ use crate::wrap::{
     },
 };
 
-use ethers_provider::{Signer, SignerError};
+#[derive(Error, Debug)]
+pub enum SignerError {
+    /// Error type from Eip712Error message
+    #[error("error encoding eip712 struct: {0:?}")]
+    Eip712Error(String),
+    #[error("error in send transaction: {0:?}")]
+    SendError(String)
+}
+
+pub trait Signer {
+    fn send(
+        &self,
+        tx: &TypedTransaction,
+        block: Option<BlockId>,
+    ) -> Result<Bytes, ProviderError>;
+    fn sign_message<S: Send + Sync + AsRef<[u8]>>(
+        &self,
+        message: S,
+    ) -> Result<Signature, SignerError>;
+    fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, SignerError>;
+    fn sign_typed_data<T: Eip712 + Send + Sync>(
+        &self,
+        _payload: &T,
+    ) -> Result<Signature, SignerError>;
+}
 
 #[derive(Clone, Debug)]
 pub struct WrapSigner {

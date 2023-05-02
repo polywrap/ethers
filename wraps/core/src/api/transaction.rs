@@ -1,19 +1,58 @@
-use ethers_core::{
-    abi::{Abi, Token, Function},
-    types::{
-        transaction::eip2718::TypedTransaction, Address, Bytes,
-        TransactionRequest, H256, U256, Eip1559TransactionRequest,
+use crate::{
+    error::WrapperError,
+    polywrap_provider::{
+        provider::{Provider, WrapProvider},
+        signer::WrapSigner,
     },
-    utils::{serialize},
 };
 use ethers_core::types::{BlockId, Chain};
-use ethers_provider::Provider;
+use ethers_core::{
+    abi::{Abi, Function, Token},
+    types::{
+        transaction::eip2718::TypedTransaction, Address, Bytes, Eip1559TransactionRequest,
+        TransactionRequest, H256, U256,
+    },
+    utils::serialize,
+};
 use ethers_providers::ProviderError;
-use crate::{error::WrapperError, polywrap_provider::{provider::WrapProvider, signer::WrapSigner}};
 
 use crate::mapping::EthersTxOptions;
 
-pub fn send_transaction(provider: &WrapProvider, signer: &WrapSigner, tx: &mut TypedTransaction) -> H256 {
+pub fn create_transaction(
+    address: Option<Address>,
+    data: Bytes,
+    options: &EthersTxOptions,
+) -> TypedTransaction {
+    if options.gas_price.is_some() {
+        return TransactionRequest {
+            to: address.map(Into::into),
+            data: Some(data),
+            gas: options.gas_limit,
+            gas_price: options.gas_price,
+            value: options.value,
+            nonce: options.nonce,
+            ..Default::default()
+        }
+        .into();
+    }
+    Eip1559TransactionRequest {
+        to: address.map(Into::into),
+        data: Some(data),
+        gas: options.gas_limit,
+        max_fee_per_gas: options.max_fee_per_gas,
+        max_priority_fee_per_gas: options.max_priority_fee_per_gas,
+        value: options.value,
+        nonce: options.nonce,
+        ..Default::default()
+    }
+    .into()
+}
+
+pub fn send_transaction(
+    provider: &WrapProvider,
+    signer: &WrapSigner,
+    tx: &mut TypedTransaction,
+) -> H256 {
     fill_transaction(provider, signer, tx, None).unwrap();
     let rlp = serialize(tx);
     let tx_hash: H256 = provider.request("eth_sendTransaction", [rlp]).unwrap();
@@ -24,19 +63,22 @@ pub fn create_deploy_contract_transaction(
     abi: &Abi,
     bytecode: Bytes,
     values: &Vec<String>,
-    options: &EthersTxOptions
+    options: &EthersTxOptions,
 ) -> Result<TypedTransaction, WrapperError> {
     let data: Bytes = match (abi.constructor(), values.is_empty()) {
         (None, false) => {
             let error = "Constructor not found in contract ABI".to_string();
             return Err(WrapperError::ContractError(error));
-        },
+        }
         (None, true) => bytecode.clone(),
         (Some(constructor), _) => {
             let tokens: Vec<Token> = ethers_utils::tokenize_values(&values, &constructor.inputs);
-                //TODO (cbrzn): Remove unwrap
-                constructor.encode_input(bytecode.to_vec(), &tokens).unwrap().into()
-        },
+            //TODO (cbrzn): Remove unwrap
+            constructor
+                .encode_input(bytecode.to_vec(), &tokens)
+                .unwrap()
+                .into()
+        }
     };
     let tx: TypedTransaction = create_transaction(None, data, options);
     Ok(tx)
@@ -48,7 +90,8 @@ pub fn estimate_contract_call_gas(
     address: Address,
     method: &str,
     args: &Vec<String>,
-    options: &EthersTxOptions) -> U256 {
+    options: &EthersTxOptions,
+) -> U256 {
     let (_, data): (Function, Bytes) = ethers_utils::encode_function(method, args).unwrap();
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
     fill_transaction(provider, signer, &mut tx, None).unwrap();
@@ -62,7 +105,7 @@ pub fn call_contract_view(
     provider: &WrapProvider,
     address: Address,
     method: &str,
-    args: &Vec<String>
+    args: &Vec<String>,
 ) -> Vec<Token> {
     let (function, data): (Function, Bytes) = ethers_utils::encode_function(method, args).unwrap();
 
@@ -70,7 +113,8 @@ pub fn call_contract_view(
         to: Some(address.into()),
         data: Some(data),
         ..Default::default()
-    }.into();
+    }
+    .into();
 
     let bytes: Bytes = provider.call(&tx, None).unwrap();
 
@@ -112,37 +156,10 @@ pub fn call_contract_method(
 ) -> H256 {
     let (_, encode_data): (Function, Bytes) = ethers_utils::encode_function(method, args).unwrap();
 
-    let mut tx: TypedTransaction = create_transaction(
-        Some(address),
-        Bytes::from(encode_data),
-        options
-    );
+    let mut tx: TypedTransaction =
+        create_transaction(Some(address), Bytes::from(encode_data), options);
     let tx_hash: H256 = send_transaction(provider, signer, &mut tx);
     tx_hash
-}
-
-fn create_transaction(address: Option<Address>, data: Bytes, options: &EthersTxOptions) -> TypedTransaction {
-    if options.gas_price.is_some() {
-        return TransactionRequest {
-            to: address.map(Into::into),
-            data: Some(data),
-            gas: options.gas_limit,
-            gas_price: options.gas_price,
-            value: options.value,
-            nonce: options.nonce,
-            ..Default::default()
-        }.into();
-    }
-    Eip1559TransactionRequest {
-        to: address.map(Into::into),
-        data: Some(data),
-        gas: options.gas_limit,
-        max_fee_per_gas: options.max_fee_per_gas,
-        max_priority_fee_per_gas: options.max_priority_fee_per_gas,
-        value: options.value,
-        nonce: options.nonce,
-        ..Default::default()
-    }.into()
 }
 
 /// Helper for filling a transaction's nonce using the wallet
@@ -178,7 +195,6 @@ fn fill_transaction(
         }
     }
 
-    provider
-        .fill_transaction(tx, block)?;
+    provider.fill_transaction(tx, block)?;
     Ok(())
 }

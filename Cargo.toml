@@ -2,8 +2,6 @@
 
 members = [
     "crates/util",
-    "crates/transaction",
-    "crates/provider",
     "wraps/core",
     "wraps/utils",
 ]
