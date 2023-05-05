@@ -3,4 +3,4 @@ project:
   name: Ethereum-Provider
   type: app/typescript
 source:
-  schema: ../../src/schema.graphql
+  schema: ../../polywrap.graphql

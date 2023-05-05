@@ -1,4 +1,4 @@
-# name: ethereum-wrap-cd
+name: ethers-utils-cd
 
 on:
   pull_request:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   cd:
-    name: ethereum-wrap-cd
     if: |
       github.event.pull_request.merged &&
       endsWith(github.event.pull_request.title, '/workflows/cd') &&
@@ -28,19 +27,7 @@ jobs:
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
 
-      - name: Install dependencies for core wrap
-        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
-        working-directory: ./wraps/core
-
-      - name: Build core wrap
-        run: yarn build
-        working-directory: ./wraps/core
-
-      - name: Deploy core wrap
-        run: yarn deploy
-        working-directory: ./wraps/core
-
-      - name: Install dependencies for utils wrap
+      - name: Install dependencies
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
         working-directory: ./wraps/utils
 
@@ -52,11 +39,10 @@ jobs:
         run: yarn deploy
         working-directory: ./wraps/utils
 
-
       - name: PR New URI
         uses: peter-evans/create-pull-request@v3
         with:
-          branch: wrap-cd-pr-${{github.event.number}}
-          commit-message: "bump: wraps deployment uri"
-          title: "bump: wraps deployment uri"
+          branch: ethers-utils-cd-pr-${{github.event.number}}
+          commit-message: "chore: ethers-utils wrap deployment uri"
+          title: "[CD]: ethers-utils wrap deployment uri"
           body: "Triggered by: https://github.com/${{github.repository}}/pull/${{github.event.number}}"

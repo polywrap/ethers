@@ -1,0 +1,48 @@
+name: ethers-core-cd
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  cd:
+    if: |
+      github.event.pull_request.merged &&
+      endsWith(github.event.pull_request.title, '/workflows/cd') &&
+      github.event.pull_request.user.login != 'github-actions'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+
+      - name: Install dependencies
+        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
+        working-directory: ./wraps/core
+
+      - name: Build core wrap
+        run: yarn build
+        working-directory: ./wraps/core
+
+      - name: Deploy core wrap
+        run: yarn deploy
+        working-directory: ./wraps/core
+
+      - name: PR New URI
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: ethers-core-cd-pr-${{github.event.number}}
+          commit-message: "chore: ethers-core wrap deployment uri"
+          title: "[CD]: ethers-core wrap deployment uri"
+          body: "Triggered by: https://github.com/${{github.repository}}/pull/${{github.event.number}}"

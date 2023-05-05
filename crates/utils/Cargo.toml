@@ -1,7 +1,7 @@
 [package]
 name = "ethers-utils"
 version = "0.1.0"
-description = "Ethereum Wrapper that can be invoked from any language with a Polywrap client"
+description = "Utils used by the ethers wrap"
 authors = [
   "Nestor Amesty <nestor@dorg.tech>",
   "Kris Bitney <kris@dorg.tech>",

@@ -1,9 +1,9 @@
 format: 0.3.0
 project:
-  name: ethereum-wrapper
+  name: ethers-core
   type: wasm/rust
 source:
   module: ./Cargo.toml
-  schema: ./src/schema.graphql
+  schema: ./polywrap.graphql
 extensions:
   build: ./polywrap.build.yaml

@@ -15,10 +15,6 @@ describe("Ethereum Wrapper", () => {
   beforeAll(async () => {
     const config = new ClientConfigBuilder()
       .addDefaults()
-      .addInterfaceImplementation(
-        "wrap://ens/wraps.eth:ethereum-provider@2.0.0",
-        "wrap://package/ethereum-provider"
-      )
       .build();
     client = new PolywrapClient(config);
   });

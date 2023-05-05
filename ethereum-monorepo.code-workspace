@@ -14,7 +14,7 @@
       },
       {
         "name": "utils-crate",
-        "path": "crates/util"
+        "path": "crates/utils"
       },
   ],
   "settings": {

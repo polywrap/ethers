@@ -1,0 +1,101 @@
+type Module {
+  """
+  Generates a deterministic Ethereum address using the CREATE2 opcode.
+  Returns the generated address.
+  """
+  generateCreate2Address(
+    # address that will create the new contract
+    address: String!
+    # salt for the transaction (nonce)
+    salt: String!
+    # init code of the contract that will be created
+    initCode: String!
+  ): String!
+
+  """
+  The input string of bytes will be `encode_packed`,
+  and then hashed using the Keccak-256 algorithm.
+  Returns the resulting hash as a string of bytes.
+  """
+  keccak256BytesEncodePacked(
+    value: String!
+  ) : String!
+
+  """
+  Hashes the given input using the Keccak-256 algorithm.
+  Returns the resulting hash as a string of bytes.
+  """
+  keccak256(
+    value: String!
+  ): String!
+
+  """
+  Encodes a meta-transaction into a string that can be
+  signed and broadcast to the Ethereum network.
+  Returns the encoded meta-transaction as a string.
+  """
+  encodeMetaTransaction(
+    # transaction type
+    operation: BigInt
+    # recipient address
+    to: String!
+    # value being transferred
+    value: BigInt!
+    # data being sent with the transaction
+    data: String!
+  ): String!
+
+  """
+  Encodes the given parameters into a string that can be
+  used in an Ethereum transaction.
+  Returns the encoded parameters as a string.
+  """
+  encodeParams(
+    # an array of parameter types (e.g. "uint256", "address", etc.)
+    types: [String!]!
+    # an array of parameter values (e.g. "1234", "0x1234...", etc.)
+    values: [String!]!
+  ): String!
+
+  """
+  Encodes the given function call into a string that can be used
+  in an Ethereum transaction.
+  Returns the encoded function call as a string.
+  """
+  encodeFunction(
+    # the name of the function being called
+    method: String!
+    # an array of its arguments
+    args: [String!]
+  ): String!
+
+  """
+  Converts the given value in Ether to its equivalent value in Wei.
+  Returns the equivalent value in Wei as a string.
+  """
+  toWei(
+    # a string representing a number in Ether
+    eth: String!
+  ): String!
+
+  """
+  Converts the given value in Wei to its equivalent value in Ether.
+  Returns the equivalent value in Ether as a string.
+  """
+  toEth(
+    # a string representing a number in Wei
+    wei: String!
+  ): String!
+
+  """
+  Packs the given values into a tightly-packed byte array using
+  Solidity's packing rules.
+  Returns the packed byte array as a string.
+  """
+  solidityPack(
+    # an array of types (e.g. "uint256", "address", etc.)
+    types: [String!]!
+    # an array of values (e.g. "1234", "0x1234...", etc.)
+    values: [String!]!
+  ): String!
+}

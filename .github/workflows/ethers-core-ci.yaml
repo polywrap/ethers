@@ -1,4 +1,4 @@
-name: ethers-wrappers-ci
+name: ethers-core-ci
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   ci:
-    name: ethers-wrappers-ci
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -23,18 +22,6 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
-
-      - name: Install dependencies for utils wrap
-        run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
-        working-directory: ./wraps/utils
-
-      - name: Build utils wrap
-        run: yarn build
-        working-directory: ./wraps/utils
-
-      - name: Test utils wrap
-        run: yarn test
-        working-directory: ./wraps/utils
 
       - name: Install dependencies for core wrap
         run: yarn install --nonInteractive --frozen-lockfile --prefer-offline
