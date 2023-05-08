@@ -1,260 +1,329 @@
 #import { Module } into Provider from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
 
+# Connection type containing node and network information
 type Connection {
-    node: String
-    networkNameOrChainId: String
+  node: String
+  networkNameOrChainId: String
 }
 
+# Transaction request type with required fields and optional EIP-1559 fields
 type TxRequest {
-    to: String
-    from: String
-    data: String
-    type: UInt32
-    chainId: BigInt
-    accessList: [AccessItem!]
-    """Gas supplied for the transaction"""
-    gasLimit: BigInt
-    """
-    The max total fee to pay per unit of gas.
-    The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
-    This property is ignored when gasPrice is not null.
-    """
-    maxFeePerGas: BigInt
-    """
-    The gas price paid is baseFeePerGas + maxPriorityFeePerGas.
-    The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
-    This property is ignored when gasPrice is not null.
-    """
-    maxPriorityFeePerGas: BigInt
-    """
-    The gas price for legacy transactions.
-    If this property is not null, a legacy transaction will be sent and maxFeePerGas and maxPriorityFeePerGas will be ignored.
-    """
-    gasPrice: BigInt
-    """Ether value sent with transaction"""
-    value: BigInt
-    """Override default nonce"""
-    nonce: UInt32
+  to: String
+  from: String
+  data: String
+  type: UInt32
+  chainId: BigInt
+  accessList: [AccessItem!]
+  """
+  Gas supplied for the transaction
+  """
+  gasLimit: BigInt
+  """
+  The max total fee to pay per unit of gas.
+  The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
+  This property is ignored when gasPrice is not null.
+  """
+  maxFeePerGas: BigInt
+  """
+  The gas price paid is baseFeePerGas + maxPriorityFeePerGas.
+  The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
+  This property is ignored when gasPrice is not null.
+  """
+  maxPriorityFeePerGas: BigInt
+  """
+  The gas price for legacy transactions.
+  If this property is not null, a legacy transaction will be sent and maxFeePerGas and maxPriorityFeePerGas will be ignored.
+  """
+  gasPrice: BigInt
+  """
+  Ether value sent with transaction
+  """
+  value: BigInt
+  """
+  Override default nonce
+  """
+  nonce: UInt32
 }
 
+# Access list item type with an address and its associated storage keys
 type AccessItem {
-    address: String!
-    storageKeys: [String!]!
+  address: String!
+  storageKeys: [String!]!
 }
 
+# Transaction response type with fields for transaction details and EIP-1559 fields
 type TxResponse {
-    hash: String!
-    to: String
-    from: String!
-    nonce: UInt32!
-    gasLimit: BigInt!
-    maxFeePerGas: BigInt
-    maxPriorityFeePerGas: BigInt
-    gasPrice: BigInt
-    value: BigInt!
-    chainId: BigInt!
-    blockNumber: BigInt
-    blockHash: String
-    timestamp: UInt32
-    r: String
-    s: String
-    v: UInt32
-    type: UInt32
-    accessList: [AccessItem!]
+  hash: String!
+  to: String
+  from: String!
+  nonce: UInt32!
+  gasLimit: BigInt!
+  maxFeePerGas: BigInt
+  maxPriorityFeePerGas: BigInt
+  gasPrice: BigInt
+  value: BigInt!
+  chainId: BigInt!
+  blockNumber: BigInt
+  blockHash: String
+  timestamp: UInt32
+  r: String
+  s: String
+  v: UInt32
+  type: UInt32
+  accessList: [AccessItem!]
 }
 
+# Log type with fields for log details
 type Log {
-    blockNumber: BigInt!
-    blockHash: String!
-    transactionIndex: UInt32!
-    removed: Boolean!
-    address: String!
-    data: String!
-    topics: [String!]!
-    transactionHash: String!
-    logIndex: UInt32!
+  blockNumber: BigInt!
+  blockHash: String!
+  transactionIndex: UInt32!
+  removed: Boolean!
+  address: String!
+  data: String!
+  topics: [String!]!
+  transactionHash: String!
+  logIndex: UInt32!
 }
 
+# Transaction receipt type with fields for receipt details and logs
 type TxReceipt {
-    to: String!
-    from: String!
-    contractAddress: String!
-    transactionIndex: UInt32!
-    root: String
-    gasUsed: BigInt!
-    logsBloom: String!
-    transactionHash: String!
-    logs: [Log!]!
-    blockNumber: BigInt!
-    blockHash: String!
-    confirmations: UInt32!
-    cumulativeGasUsed: BigInt!
-    effectiveGasPrice: BigInt!
-    type: UInt32!
-    status: UInt32
+  to: String!
+  from: String!
+  contractAddress: String!
+  transactionIndex: UInt32!
+  root: String
+  gasUsed: BigInt!
+  logsBloom: String!
+  transactionHash: String!
+  logs: [Log!]!
+  blockNumber: BigInt!
+  blockHash: String!
+  confirmations: UInt32!
+  cumulativeGasUsed: BigInt!
+  effectiveGasPrice: BigInt!
+  type: UInt32!
+  status: UInt32
 }
 
+# Transaction options type with optional EIP-1559 fields
 type TxOptions {
-    """Gas supplied for the transaction"""
-    gasLimit: BigInt
-    """
-    The max total fee to pay per unit of gas.
-    The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
-    This property is ignored when gasPrice is not null.
-    """
-    maxFeePerGas: BigInt
-    """
-    The gas price paid is baseFeePerGas + maxPriorityFeePerGas.
-    The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
-    This property is ignored when gasPrice is not null.
-    """
-    maxPriorityFeePerGas: BigInt
-    """
-    The gas price for legacy transactions.
-    If this property is not null, a legacy transaction will be sent and maxFeePerGas and maxPriorityFeePerGas will be ignored.
-    """
-    gasPrice: BigInt
-    """Ether value sent with transaction"""
-    value: BigInt
-    """Override default nonce"""
-    nonce: UInt32
+  """
+  Gas supplied for the transaction
+  """
+  gasLimit: BigInt
+  """
+  The max total fee to pay per unit of gas.
+  The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
+  This property is ignored when gasPrice is not null.
+  """
+  maxFeePerGas: BigInt
+  """
+  The gas price paid is baseFeePerGas + maxPriorityFeePerGas.
+  The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
+  This property is ignored when gasPrice is not null.
+  """
+  maxPriorityFeePerGas: BigInt
+  """
+  The gas price for legacy transactions.
+  If this property is not null, a legacy transaction will be sent and maxFeePerGas and maxPriorityFeePerGas will be ignored.
+  """
+  gasPrice: BigInt
+  """
+  Ether value sent with transaction
+  """
+  value: BigInt
+  """
+  Override default nonce
+  """
+  nonce: UInt32
 }
 
+# Result of a static contract method call
 type StaticTxResult {
-    result: String!
-    error: Boolean!
+  # The result of the method call (e.g., return value)
+  result: String!
+  # Indicates whether there was an error during the method call
+  error: Boolean!
 }
 
+# Fee estimate for EIP-1559 transactions
 type Eip1559FeesEstimate {
-    maxFeePerGas: BigInt!
-    maxPriorityFeePerGas: BigInt!
+  # The estimated maximum fee per gas unit for the transaction
+  maxFeePerGas: BigInt!
+  # The estimated maximum priority fee per gas unit for the transaction
+  maxPriorityFeePerGas: BigInt!
 }
 
 type Module {
+  # Get the chain ID of the connected Ethereum network
   getChainId(connection: Connection): String!
 
+  # Get the address of the connected signer
+  getSignerAddress(connection: Connection): String!
+
+  # Get the balance of the connected signer at a specific block
+  getSignerBalance(blockTag: BigInt, connection: Connection): BigInt!
+
+  # Get the current gas price on the connected Ethereum network
+  getGasPrice(connection: Connection): BigInt!
+
+  # Estimate the EIP-1559 gas fees for a transaction
+  estimateEip1559Fees(connection: Connection): Eip1559FeesEstimate!
+
+  # Get the transaction count (nonce) of the connected signer (wallet) at a specific block
+  getSignerTransactionCount(blockTag: BigInt, connection: Connection): BigInt!
+
+  # Check if an address is valid on the connected Ethereum network
+  checkAddress(address: String!, connection: Connection): Boolean!
+
   callContractView(
+    # Contract address to interact with
     address: String!
+    # Name of the contract view method
     method: String!
+    # Arguments passed to the contract view method
     args: [String!]
+    # Connection to the Ethereum network
     connection: Connection
   ): String!
 
+  # Call a contract method without sending a transaction (static call)
   callContractStatic(
+    # Contract address to interact with
     address: String!
+    # Name of the contract method
     method: String!
+    # Arguments passed to the contract method
     args: [String!]
+    # Transaction options such as gas limit and price
     options: TxOptions
+    # Connection to the Ethereum network
     connection: Connection
   ): StaticTxResult!
 
-  getSignerAddress(connection: Connection): String!
-
-  getSignerBalance(
-    blockTag: BigInt
-    connection: Connection
-  ): BigInt!
-
+  # Get the balance of an address at a specific block
   getBalance(
+    # Address to fetch balance for
     address: String!
+    # Block number to fetch balance at (default is 'latest')
     blockTag: BigInt
+    # Connection to the Ethereum network
     connection: Connection
   ): BigInt!
 
-  getGasPrice(connection: Connection): BigInt!
-
-  estimateEip1559Fees(connection: Connection): Eip1559FeesEstimate!
-
+  # Send an arbitrary JSON-RPC request to the Ethereum node
   sendRpc(
+    # JSON-RPC method to call
     method: String!
+    # Parameters for the JSON-RPC method
     params: [String!]!
+    # Connection to the Ethereum network
     connection: Connection
   ): String!
 
-  getSignerTransactionCount(
-    blockTag: BigInt
-    connection: Connection
-  ): BigInt!
-
-  checkAddress(
-    address: String!
-    connection: Connection
-  ): Boolean!
-
+  # Estimate the gas required for a transaction
   estimateTransactionGas(
+    # Transaction details to estimate gas for
     tx: TxRequest!
+    # Connection to the Ethereum network
     connection: Connection
   ): BigInt!
 
+  # Wait for a transaction to be confirmed and return the receipt
   awaitTransaction(
+    # Transaction hash to wait for
     txHash: String!
+    # Number of confirmations required
     confirmations: UInt32!
+    # Maximum time to wait (in seconds) before timing out
     timeout: UInt32
+    # Connection to the Ethereum network
     connection: Connection
   ): TxReceipt!
 
+  # Send a transaction and return the transaction response
   sendTransaction(
+    # Transaction details to send
     tx: TxRequest!
+    # Connection to the Ethereum network
     connection: Connection
   ): TxResponse!
 
+  # Send a transaction and wait for it to be confirmed, then return the receipt
   sendTransactionAndWait(
+    # Transaction details to send
     tx: TxRequest!
+    # Connection to the Ethereum network
     connection: Connection
   ): TxReceipt!
 
+  # ...
+  # Deploy a smart contract and return the contract address
   deployContract(
+    # ABI of the smart contract
     abi: String!
+    # Bytecode of the smart contract
     bytecode: String!
+    # Constructor arguments for the smart contract
     args: [String!]
+    # Transaction options such as gas limit and price
     options: TxOptions
+    # Connection to the Ethereum network
     connection: Connection
   ): String!
 
+  # Estimate the gas required for a contract method call
   estimateContractCallGas(
+    # Contract address to interact with
     address: String!
+    # Name of the contract method
     method: String!
+    # Arguments passed to the contract method
     args: [String!]
+    # Transaction options such as gas limit and price
     options: TxOptions
+    # Connection to the Ethereum network
     connection: Connection
   ): BigInt!
 
+  # Call a contract method and send a transaction, then return the transaction response
   callContractMethod(
+    # Contract address to interact with
     address: String!
+    # Name of the contract method
     method: String!
+    # Arguments passed to the contract method
     args: [String!]
+    # Transaction options such as gas limit and price
     options: TxOptions
+    # Connection to the Ethereum network
     connection: Connection
   ): TxResponse!
 
+  # Call a contract method, send a transaction, wait for it to be confirmed, and then return the receipt
   callContractMethodAndWait(
+    # Contract address to interact with
     address: String!
+    # Name of the contract method
     method: String!
+    # Arguments passed to the contract method
     args: [String!]
+    # Transaction options such as gas limit and price
     options: TxOptions
+    # Connection to the Ethereum network
     connection: Connection
   ): TxReceipt!
 
-  signMessage(
-    message: String!
-    connection: Connection
-  ): String!
+  # Sign a message using the connected signer
+  signMessage(message: String!, connection: Connection): String!
 
-  signMessageBytes(
-    bytes: Bytes!
-    connection: Connection
-  ): String!
+  # Sign a message in bytes format using the connected signer
+  signMessageBytes(bytes: Bytes!, connection: Connection): String!
 
-  """
-  Sign a transaction and return the signature. Requires wallet signer (i.e. signer with private key)
-  """
-  signTransaction(
-    tx: TxRequest!
-    connection: Connection
-  ): String!
+  # Sign a transaction using the connected signer and return the signature
+  signTransaction(tx: TxRequest!, connection: Connection): String!
 
-  signTypedData(
-    payload: JSON!
-    connection: Connection
-  ): String!
+  # Sign typed data using the connected signer and return the signature
+  signTypedData(payload: JSON!, connection: Connection): String!
 }

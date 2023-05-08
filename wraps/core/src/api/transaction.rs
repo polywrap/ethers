@@ -73,7 +73,6 @@ pub fn create_deploy_contract_transaction(
         (None, true) => bytecode.clone(),
         (Some(constructor), _) => {
             let tokens: Vec<Token> = ethers_utils::tokenize_values(&values, &constructor.inputs);
-            //TODO (cbrzn): Remove unwrap
             constructor
                 .encode_input(bytecode.to_vec(), &tokens)
                 .unwrap()
