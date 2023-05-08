@@ -1,6 +1,5 @@
 # Polywrap Ethereum
 
 Table Of Contents:
-1. [Ethereum Wrapper](./wrapper/README.md)
-2. [Ethereum Provider Interface](./provider/interface/README.md)
-3. [Ethereum Provider Implementation (JavaScript)](./provider/implementations/js/README.md)
+1. [ethers-core Wrap](./wraps/core/README.md)
+1. [ethers-utils Wrap](./wraps/utils/README.md)

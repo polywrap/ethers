@@ -5,26 +5,22 @@
         "path": "."
       },
       {
-        "name": "interface",
-        "path": "provider/interface"
+        "name": "core-wrap",
+        "path": "wraps/core"
       },
       {
-          "name": "python-plugin",
-          "path": "provider/implementations/py"
+        "name": "utils-wrap",
+        "path": "wraps/utils"
       },
       {
-          "name": "javascript-plugin",
-          "path": "provider/implementations/js"
-      },
-      {
-          "name": "wrapper",
-          "path": "wrapper"
+        "name": "utils-crate",
+        "path": "crates/utils"
       },
   ],
   "settings": {
       "files.exclude": {
-        "**/provider/*": true,
-        "**/wrapper/*": true
+        "**/wraps/*": true,
+        "**/crates/*": true
       },
       "liveServer.settings.multiRootWorkspaceName": "root",
   }

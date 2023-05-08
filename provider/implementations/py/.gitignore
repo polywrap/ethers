@@ -1,8 +1,0 @@
-__pycache__
-.idea
-.vscode
-dist
-**/.pytest_cache/
-**/node_modules/
-**/.tox/
-wrap/

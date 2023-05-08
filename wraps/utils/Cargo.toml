@@ -1,0 +1,27 @@
+[package]
+name = "ethers-utils-wrap"
+version = "0.1.0"
+description = "Ethereum Wrapper that can be invoked from any language with a Polywrap client"
+authors = [
+  "Nestor Amesty <nestor@dorg.tech>",
+  "Kris Bitney <kris@dorg.tech>",
+]
+repository = "https://github.com/polywrap/ethereum"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+thiserror = "1.0.38"
+polywrap-wasm-rs = "0.10.0"
+serde = { version = "1.0.152", features = ["derive"] }
+ethers-core = { version="=2.0.2" }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+ethers-utils = { path = "../../crates/utils" }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 'z'
+lto = true
+panic = 'abort'

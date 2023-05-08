@@ -1,2 +1,9 @@
 .DS_Store
-node_modules/
+target
+node_modules
+.env
+.polywrap
+build
+wrap
+coverage
+Cargo.lock
