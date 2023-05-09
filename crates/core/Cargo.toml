@@ -1,0 +1,19 @@
+[package]
+name = "ethers-core"
+version = "0.1.0"
+description = "Utils used by the ethers wrap"
+authors = [
+  "Nestor Amesty <nestor@dorg.tech>",
+  "Kris Bitney <kris@dorg.tech>",
+]
+repository = "https://github.com/polywrap/ethereum"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+thiserror = "1.0.38"
+polywrap-wasm-rs = "0.10.2"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = { version = "1.0.93", default-features = false, features = ["raw_value"] }
+ethers-core = { version="=2.0.2", features = [] }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }

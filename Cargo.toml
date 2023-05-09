@@ -2,6 +2,7 @@
 
 members = [
     "crates/utils",
+    "crates/core",
     "wraps/core",
     "wraps/utils",
 ]
