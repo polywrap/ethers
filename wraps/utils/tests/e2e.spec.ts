@@ -135,6 +135,25 @@ describe("Ethereum Wrapper", () => {
       );
     });
 
+    it("encodeParams - address array", async () => {
+      const response = await client.invoke<string>({
+        uri,
+        method: "encodeParams",
+        args: {
+          types: ["address[]"],
+          values: ["[0x0000000000000000000000000000000000000001,0x0000000000000000000000000000000000000001]"],
+        },
+      });
+
+      if (!response.ok) throw response.error;
+
+      const expected = ethers.utils.defaultAbiCoder.encode(
+        ["address[]"],
+        [["0x0000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000001"]]
+      );
+      expect(response.value).toBe(expected);
+    });
+
     it("encodeFunction", async () => {
       const response = await client.invoke<string>({
         uri,
@@ -162,6 +181,47 @@ describe("Ethereum Wrapper", () => {
       });
 
       expect(response.ok).toBeTruthy();
+    });
+
+    it("encodeFunction - address[]", async () => {
+      const method = "function setup(address[] _owners,uint256 _threshold,address to,bytes data,address fallbackHandler,address paymentToken,uint256 payment,address paymentReceiver)";
+      const signer = "0x0000000000000000000000000000000000000001";
+
+      const response = await client.invoke<string>({
+        uri,
+        method: "encodeFunction",
+        args: {
+          method,
+          args: [
+            "[" + signer + "]",
+            "1",
+            signer,
+            "0x",
+            signer,
+            signer,
+            "0",
+            signer,
+          ],
+        },
+      });
+
+      if (!response.ok) throw response.error;
+
+      const functionInterface = ethers.Contract.getInterface([method]);
+      const expected = functionInterface.encodeFunctionData(
+        functionInterface.functions[Object.keys(functionInterface.functions)[0]],
+        [
+          [signer],
+          "1",
+          signer,
+          "0x",
+          signer,
+          signer,
+          "0",
+          signer,
+        ]
+      );
+      expect(response.value).toBe(expected);
     });
 
     describe("Amount formatting", () => {
