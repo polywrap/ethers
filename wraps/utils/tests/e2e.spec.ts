@@ -193,7 +193,7 @@ describe("Ethereum Wrapper", () => {
         args: {
           method,
           args: [
-            "[" + signer + "]",
+            "[\"" + signer + "\"]",
             "1",
             signer,
             "0x",
@@ -219,6 +219,48 @@ describe("Ethereum Wrapper", () => {
           signer,
           "0",
           signer,
+        ]
+      );
+      expect(response.value).toBe(expected);
+    });
+
+    it("encodeFunction - address[] with quotes around address strings", async () => {
+      const method = "function setup(address[] _owners,uint256 _threshold,address to,bytes data,address fallbackHandler,address paymentToken,uint256 payment,address paymentReceiver)";
+      const signer = "0xd405aebF7b60eD2cb2Ac4497Bddd292DEe534E82";
+      const zeroAddr = "0x0000000000000000000000000000000000000000"
+      
+      const response = await client.invoke<string>({
+        uri,
+        method: "encodeFunction",
+        args: {
+          method,
+          args: [
+            "[\"" + signer + "\"]",
+            "1",
+            zeroAddr,
+            "0x",
+            zeroAddr,
+            zeroAddr,
+            "0",
+            zeroAddr,
+          ],
+        },
+      });
+
+      if (!response.ok) throw response.error;
+
+      const functionInterface = ethers.Contract.getInterface([method]);
+      const expected = functionInterface.encodeFunctionData(
+        functionInterface.functions[Object.keys(functionInterface.functions)[0]],
+        [
+          [signer],
+          "1",
+          zeroAddr,
+          "0x",
+          zeroAddr,
+          zeroAddr,
+          "0",
+          zeroAddr,
         ]
       );
       expect(response.value).toBe(expected);

@@ -1,6 +1,6 @@
 use ethers_core::{
     abi::{
-        Param, Token, encode, HumanReadableParser,
+        Param, ParamType, Token, encode, HumanReadableParser,
         token::LenientTokenizer, token::Tokenizer,
         Function, Abi, encode_packed
     },
@@ -15,8 +15,13 @@ pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
         .zip(types.iter())
         .map(|(arg, t)| {
             let kind = HumanReadableParser::parse_type(&t).unwrap();
+            if let ParamType::Array(items) = &kind {
+                if let ParamType::Address = items.as_ref() {
+                    return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap();
+                }
+            }
             if arg.starts_with("\"") && arg.ends_with("\"") {
-                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap()
+                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap();
             }
             LenientTokenizer::tokenize(&kind, arg).unwrap()
         })
@@ -54,8 +59,13 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
         .iter()
         .zip(values.iter())
         .map(|(param, arg)| {
+            if let ParamType::Array(items) = &param.kind {
+                if let ParamType::Address = items.as_ref() {
+                    return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap();
+                }
+            }
             if arg.starts_with("\"") && arg.ends_with("\"") {
-                return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap()
+                return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap();
             }
             LenientTokenizer::tokenize(&param.kind, arg).unwrap()
         })
