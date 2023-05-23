@@ -1,7 +1,6 @@
 import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
-import { keccak256 } from "js-sha3";
 import * as path from "path";
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 
 jest.setTimeout(360000);
 
@@ -62,7 +61,7 @@ describe("Ethereum Wrapper", () => {
         },
       });
       if (!response.ok) throw response.error;
-      expect(response.value).toEqual("0x" + keccak256(input));
+      expect(response.value).toEqual(utils.keccak256(input));
     });
 
     it("should encode meta transaction", async () => {
