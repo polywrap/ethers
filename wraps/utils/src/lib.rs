@@ -2,26 +2,26 @@ use ethers_core::abi::{encode_packed, Function, Token};
 use ethers_core::types::{Address, Bytes};
 use ethers_core::utils::{get_create2_address, keccak256 as keccak256_ethers};
 use ethers_utils::{
-    encode_function as utils_encode_function,
-    encode_params as utils_encode_params,
-    solidity_pack as utils_solidity_pack,
-    to_eth as utils_to_eth,
-    to_wei as utils_to_wei
+    encode_function as utils_encode_function, encode_params as utils_encode_params,
+    solidity_pack as utils_solidity_pack, to_eth as utils_to_eth, to_wei as utils_to_wei,
 };
-use polywrap_wasm_rs::{BigInt, JSON};
+use polywrap_wasm_rs::BigInt;
 use std::str::FromStr;
 
 mod wrap;
-use wrap::*;
 use wrap::module::{Module, ModuleTrait};
+use wrap::*;
 
 impl ModuleTrait for Module {
     fn keccak256(args: wrap::ArgsKeccak256) -> Result<String, String> {
-        let hash = keccak256_ethers(args.value.as_bytes());
+        let decoded = Bytes::from_str(&args.value).unwrap();
+        let hash = keccak256_ethers(decoded);
         Ok(format!("{}", Bytes::from(hash)).to_string())
     }
 
-    fn keccak256_bytes_encode_packed(args: wrap::ArgsKeccak256BytesEncodePacked) -> Result<String, String> {
+    fn keccak256_bytes_encode_packed(
+        args: wrap::ArgsKeccak256BytesEncodePacked,
+    ) -> Result<String, String> {
         let bytes = Bytes::from_str(&args.value).unwrap();
         let bytes = Token::Bytes(bytes.to_vec());
         let encoded = keccak256_ethers(encode_packed(&[bytes]).unwrap());
@@ -33,6 +33,7 @@ impl ModuleTrait for Module {
         let init_code = Bytes::from_str(&args.init_code).unwrap();
         let address = args.address.parse::<Address>().unwrap();
         let generated_address = get_create2_address(address, salt, init_code);
+
         Ok(format!("{:?}", generated_address))
     }
 
