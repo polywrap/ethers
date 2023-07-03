@@ -11,7 +11,7 @@
     "deploy": "npx polywrap deploy -o deployment.json"
   },
   "devDependencies": {
-    "@polywrap/cli-js": "~0.10.5",
+    "@polywrap/cli-js": "^0.10.6",
     "@polywrap/client-js": "~0.10.1",
     "@polywrap/core-js": "~0.10.1",
     "@polywrap/ethereum-provider-js": "0.3.1",
@@ -22,7 +22,7 @@
     "ganache": "7.7.7",
     "jest": "26.6.3",
     "js-sha3": "0.8.0",
-    "polywrap": "^0.10.5",
+    "polywrap": "^0.10.6",
     "ts-jest": "26.5.4",
     "ts-node": "10.9.1",
     "typescript": "4.9.5"
