@@ -1,5 +1,5 @@
 format: 0.1.0
 description: Interact with the Ethereum Blockchain
 website: https://polywrap.io
-repository: https://github.com/polywrap/ens
-readme: ./docs/readme.md
+repository: https://github.com/polywrap/ethers
+readme: ./README.md
