@@ -149,12 +149,13 @@ impl WrapProvider {
         params: T,
     ) -> Result<R, ProviderError> {
         let params_v: serde_json::Value = JSON::to_value(&params).unwrap();
-        let res = ProviderModule::request(&ArgsRequest {
+        let res: JSON::Value = ProviderModule::request(&ArgsRequest {
             method: method.to_string(),
-            params: Some(params_v),
+            params: Some(params_v.into()),
             connection: self.connection.clone(),
         })
-        .map_err(|err| ClientError::Error(err))?;
+        .map_err(|err| ClientError::Error(err))?
+        .into();
         let res = JSON::from_value(res).map_err(|err| ClientError::SerdeJson {
             err,
             text: "from str failed".to_string(),

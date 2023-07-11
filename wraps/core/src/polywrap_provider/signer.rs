@@ -9,6 +9,7 @@ use ethers_core::{
 };
 use ethers_providers::ProviderError;
 use ethers_signers::to_eip155_v;
+use polywrap_wasm_rs::JSON;
 use thiserror::Error;
 
 use crate::wrap::{
@@ -66,12 +67,13 @@ impl WrapSigner {
         })
         .unwrap()
         .unwrap();
-        let chain_id = ProviderModule::request(&ArgsRequest {
+        let chain_id: JSON::Value = ProviderModule::request(&ArgsRequest {
             method: "eth_chainId".to_string(),
             params: None,
             connection: iprovider_connection.clone(),
         })
-        .expect("failed to obtain signer chain id from provider plugin");
+        .expect("failed to obtain signer chain id from provider plugin")
+        .into();
         let chain_id = chain_id.as_str().unwrap();
         Self {
             address: Address::from_str(&address.as_str()).unwrap(),

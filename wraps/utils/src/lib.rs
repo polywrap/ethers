@@ -41,7 +41,7 @@ impl ModuleTrait for Module {
         let mut op_bytes: [u8; 1] = [0];
 
         if let Some(op) = args.operation {
-            if BigInt::from(1) == op {
+            if BigInt::from(1) == op.0 {
                 op_bytes[0] = 1;
             }
         }
@@ -49,7 +49,7 @@ impl ModuleTrait for Module {
         let operation = Token::FixedBytes(op_bytes.into());
         let to = args.to.parse::<Address>().unwrap();
 
-        let value = utils_encode_params(vec!["uint256".into()], vec![args.value.to_string()]);
+        let value = utils_encode_params(vec!["uint256".into()], vec![args.value.0.to_string()]);
 
         let data = Bytes::from_str(&args.data).unwrap();
         let data_len = utils_encode_params(vec!["uint256".into()], vec![data.len().to_string()]);
