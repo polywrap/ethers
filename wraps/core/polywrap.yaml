@@ -1,6 +1,6 @@
 format: 0.4.0
 project:
-  name: ethers-core
+  name: ethers
   type: wasm/rust
 source:
   module: ./Cargo.toml

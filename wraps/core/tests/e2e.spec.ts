@@ -1,12 +1,12 @@
 import {
-  ClientConfigBuilder,
+  PolywrapClientConfigBuilder,
   PolywrapClient
 } from "@polywrap/client-js";
 import {
   Connection,
   Connections,
-  ethereumProviderPlugin
-} from "@polywrap/ethereum-provider-js";
+  ethereumWalletPlugin
+} from "@polywrap/ethereum-wallet-js";
 
 import { provider as Web3MockProvider } from "ganache"
 import { ethers, Wallet } from "ethers";
@@ -59,7 +59,7 @@ describe("Ethereum Wrapper", () => {
   const wrapperPath: string = path.join(dirname, "..");
   const uri = `fs/${wrapperPath}/build`;
 
-  const ethProviderPluginUri = "wrap://ens/wraps.eth:ethereum-provider@2.0.0";
+  const ethWalletPluginUri = "wrapscan.io/polywrap/ethereum-wallet@1.0";
 
   beforeAll(async () => {
     await initInfra();
@@ -67,17 +67,17 @@ describe("Ethereum Wrapper", () => {
     ensAddress = ETH_ENS_IPFS_MODULE_CONSTANTS.ensAddresses.ensAddress.toLowerCase();
     registrarAddress = ETH_ENS_IPFS_MODULE_CONSTANTS.ensAddresses.registrarAddress.toLowerCase();
 
-    const config = new ClientConfigBuilder()
+    const config = new PolywrapClientConfigBuilder()
       .addDefaults()
       .addEnv(
-        "ens/wraps.eth:ens-uri-resolver-ext@1.0.0",
+        "wrapscan.io/polywrap/ens-uri-resolver@1.0",
         {
           registryAddress: ensAddress,
         },
       )
-      .addPackages({
+      .setPackages({
         // @ts-ignore
-        [ethProviderPluginUri]: ethereumProviderPlugin({
+        [ethWalletPluginUri]: ethereumWalletPlugin({
           connections: new Connections({
             networks: {
               testnet: new Connection({
@@ -94,17 +94,17 @@ describe("Ethereum Wrapper", () => {
 
     clientWithCustomSigner = new PolywrapClient(config.build());
 
-    const configWeb3Provider = new ClientConfigBuilder()
+    const configWeb3Provider = new PolywrapClientConfigBuilder()
     .addDefaults()
     .addEnv(
-      "ens/wraps.eth:ens-uri-resolver-ext@1.0.0",
+      "wrapscan.io/polywrap/ens-uri-resolver@1.0",
       {
         registryAddress: ensAddress,
       },
     )
-    .addPackages({
+    .setPackages({
       // @ts-ignore
-     [ethProviderPluginUri]: ethereumProviderPlugin({
+     [ethWalletPluginUri]: ethereumWalletPlugin({
         connections: new Connections({
           networks: {
             testnet: new Connection({
@@ -414,7 +414,7 @@ describe("Ethereum Wrapper", () => {
 
       for (let i = 0; i < confirmations; i++) {
         await clientWithCustomSigner.invoke({
-          uri: ethProviderPluginUri,
+          uri: ethWalletPluginUri,
           method: "request",
           args: { method: "evm_mine" }
         });

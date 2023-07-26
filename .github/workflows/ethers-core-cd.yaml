@@ -38,6 +38,8 @@ jobs:
       - name: Deploy core wrap
         run: yarn deploy
         working-directory: ./wraps/core
+        env:
+          POLYWRAP_WRAPSCAN_AUTH_HEADER_PROD: ${{secrets.POLYWRAP_WRAPSCAN_AUTH_HEADER_PROD}}
 
       - name: PR New URI
         uses: peter-evans/create-pull-request@v3

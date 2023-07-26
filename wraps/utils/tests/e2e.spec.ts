@@ -1,4 +1,4 @@
-import { ClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
+import { PolywrapClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
 import * as path from "path";
 import { ethers, utils } from "ethers";
 
@@ -12,7 +12,7 @@ describe("Ethereum Wrapper", () => {
   const uri = `fs/${wrapperPath}/build`;
 
   beforeAll(async () => {
-    const config = new ClientConfigBuilder()
+    const config = new PolywrapClientConfigBuilder()
       .addDefaults()
       .build();
     client = new PolywrapClient(config);
