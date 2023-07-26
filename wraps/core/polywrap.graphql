@@ -1,4 +1,4 @@
-#import { Module } into Provider from "wrap://ens/wraps.eth:ethereum-provider@2.0.0"
+#import { Module } into Provider from "wrapscan.io/polywrap/ethereum-wallet@1.0"
 
 # Connection type containing node and network information
 type Connection {

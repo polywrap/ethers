@@ -8,9 +8,7 @@ To run the Ethers wrap you'll need a Polywrap client in your application. See he
 
 ### Configuration
 
-The Ethers wrap requires an [ethereum-provider plugin](https://github.com/polywrap/ethereum-wallet). Plugins are added directly to the client using its config.
-
-[Here's an example](https://github.com/polywrap/ethers/blob/36e6f3331264732e73f3e236004416e82930ed64/provider/implementations/js/tests/index.spec.ts#L15-L30) of setting up a JavaScript / TypeScript client with the ethereum-provider plugin.
+The Ethers wrap requires an [ethereum-wallet plugin](https://github.com/polywrap/ethereum-wallet). Plugins are added directly to the client using its config.
 
 You can learn more about Polywrap clients & configs in the docs [here](https://docs.polywrap.io/tutorials/use-wraps/configure-client).
 

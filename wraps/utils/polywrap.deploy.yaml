@@ -1,9 +1,18 @@
-format: 0.2.0
+format: 0.4.0
+primaryJobName: ipfs_deploy
 jobs:
-  deploy:
+  ipfs_deploy:
     steps:
       - name: ipfs_deploy
         package: ipfs
         uri: fs/./build
         config:
           gatewayUri: https://ipfs.wrappers.io
+      - name: http_deploy
+        package: http
+        uri: $$ipfs_deploy
+        config:
+          postUrl: https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.0
+          headers:
+            - name: Authorization
+              value: $POLYWRAP_WRAPSCAN_AUTH_HEADER_PROD
