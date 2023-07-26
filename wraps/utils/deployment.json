@@ -1,12 +1,18 @@
 [
   {
-    "name": "deploy",
+    "name": "ipfs_deploy",
     "steps": [
       {
         "name": "ipfs_deploy",
-        "id": "deploy.ipfs_deploy",
+        "id": "ipfs_deploy.ipfs_deploy",
         "input": "wrap://fs/./build",
-        "result": "wrap://ipfs/QmaHYcvpM3mWVY7KSi4kmEKP26JhE3SWYitKCUaLfJQguy"
+        "result": "wrap://ipfs/QmNcoVkyBi6t1jL33eRDorQHdQHUhBmJksRunaCr9v2kyq"
+      },
+      {
+        "name": "http_deploy",
+        "id": "ipfs_deploy.http_deploy",
+        "input": "wrap://ipfs/QmNcoVkyBi6t1jL33eRDorQHdQHUhBmJksRunaCr9v2kyq",
+        "result": "wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.0"
       }
     ]
   }
