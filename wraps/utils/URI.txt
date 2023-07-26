@@ -1,1 +1,1 @@
-wrap://ipfs/QmaHYcvpM3mWVY7KSi4kmEKP26JhE3SWYitKCUaLfJQguy
+wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.0
