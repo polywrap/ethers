@@ -1,5 +1,6 @@
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
 use ethers_core::abi::{Abi};
+use polywrap_msgpack_serde::BigIntWrapper;
 use polywrap_provider::provider::{WrapProvider, Provider};
 use polywrap_provider::signer::{WrapSigner, Signer};
 use polywrap_wasm_rs::{BigInt,JSON};
@@ -22,7 +23,7 @@ impl ModuleTrait for Module {
         Ok(provider.get_chainid().unwrap().to_string())
     }
 
-    fn get_balance(args: wrap::ArgsGetBalance) -> Result<BigInt, String> {
+    fn get_balance(args: wrap::ArgsGetBalance) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let address = match Address::from_str(&args.address) {
             Ok(addr) => Ok(addr),
@@ -38,7 +39,7 @@ impl ModuleTrait for Module {
         if let Err(error) = balance {
             return Err(format!("Error in get_balance: {}", error.to_string()));
         }
-        Ok(BigInt::from_str(&balance.unwrap().to_string()).unwrap())
+        Ok(BigIntWrapper(BigInt::from_str(&balance.unwrap().to_string()).unwrap()))
     }
 
     fn check_address(args: wrap::ArgsCheckAddress) -> Result<bool, String> {
@@ -48,18 +49,18 @@ impl ModuleTrait for Module {
         })
     }
 
-    fn get_gas_price(args: wrap::ArgsGetGasPrice) -> Result<BigInt, String> {
+    fn get_gas_price(args: wrap::ArgsGetGasPrice) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let price = provider.get_gas_price().unwrap();
-        Ok(BigInt::from_str(&price.to_string()).unwrap())
+        Ok(BigIntWrapper(BigInt::from_str(&price.to_string()).unwrap()))
     }
 
     fn estimate_eip1559_fees(args: wrap::ArgsEstimateEip1559Fees) -> Result<wrap::Eip1559FeesEstimate, String> {
         let provider = WrapProvider::new(&args.connection);
         let price = provider.estimate_eip1559_fees(None).unwrap();
         Ok(wrap::Eip1559FeesEstimate {
-            max_fee_per_gas: BigInt::from_str(&price.0.to_string()).unwrap(),
-            max_priority_fee_per_gas: BigInt::from_str(&price.1.to_string()).unwrap(),
+            max_fee_per_gas: BigIntWrapper(BigInt::from_str(&price.0.to_string()).unwrap()),
+            max_priority_fee_per_gas: BigIntWrapper(BigInt::from_str(&price.1.to_string()).unwrap()),
         })
     }
 
@@ -68,22 +69,22 @@ impl ModuleTrait for Module {
         Ok(format!("{:#x}", address))
     }
 
-    fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> Result<BigInt, String> {
+    fn get_signer_balance(args: wrap::ArgsGetSignerBalance) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let address = WrapSigner::new(&args.connection).address();
         let block_tag: BlockId = BlockNumber::Latest.into();
         let balance = provider.get_balance(address, Some(block_tag)).unwrap();
-        Ok(BigInt::from_str(&balance.to_string()).unwrap())
+        Ok(BigIntWrapper(BigInt::from_str(&balance.to_string()).unwrap()))
     }
 
-    fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -> Result<BigInt, String> {
+    fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let address = WrapSigner::new(&args.connection).address();
         let block_tag: BlockId = BlockNumber::Latest.into();
         let count = provider
             .get_transaction_count(address, Some(block_tag))
             .unwrap();
-        Ok(BigInt::from_str(&count.to_string()).unwrap())
+        Ok(BigIntWrapper(BigInt::from_str(&count.to_string()).unwrap()))
     }
 
     fn sign_message(args: wrap::ArgsSignMessage) -> Result<String, String> {
@@ -111,7 +112,7 @@ impl ModuleTrait for Module {
     fn sign_typed_data(args: wrap::ArgsSignTypedData) -> Result<String, String> {
         let address = WrapSigner::new(&args.connection).address();
         let address_value = JSON::Value::String(format!("{:#x}", address));
-        let params = JSON::Value::Array(vec![address_value, args.payload]);
+        let params = JSON::Value::Array(vec![address_value, args.payload.into()]);
         let provider = WrapProvider::new(&args.connection);
         provider
             .request("eth_signTypedData_v4", params)
@@ -124,11 +125,11 @@ impl ModuleTrait for Module {
         Ok(res.to_string())
     }
 
-    fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> Result<BigInt, String> {
+    fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let tx = mapping::from_wrap_request(args.tx);
         let gas = provider.estimate_gas(&tx, None).unwrap();
-        Ok(BigInt::from_str(&gas.to_string()).unwrap())
+        Ok(BigIntWrapper(BigInt::from_str(&gas.to_string()).unwrap()))
     }
 
     fn await_transaction(args: wrap::ArgsAwaitTransaction) -> Result<wrap::TxReceipt, String> {
@@ -205,7 +206,7 @@ impl ModuleTrait for Module {
 
     fn estimate_contract_call_gas(
         args: wrap::ArgsEstimateContractCallGas,
-    ) -> Result<BigInt, String> {
+    ) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let signer = WrapSigner::new(&args.connection);
 
@@ -224,7 +225,13 @@ impl ModuleTrait for Module {
             &params,
             &tx_options,
         );
-        BigInt::from_str(&gas.to_string()).map_err(|e| e.to_string())
+        {
+            let this = BigInt::from_str(&gas.to_string());
+            match this {
+                Ok(t) => Ok(BigIntWrapper(t)),
+                Err(e) => Err((|e: polywrap_wasm_rs::DecodeError| e.to_string())(e.into())),
+            }
+        }
     }
 
     fn call_contract_view(args: wrap::ArgsCallContractView) -> Result<String, String> {
