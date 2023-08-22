@@ -13,7 +13,7 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.38"
 polywrap_msgpack_serde = "0.0.2-beta.5"
-polywrap-wasm-rs = "0.10.3"
+polywrap-wasm-rs = "0.11.2"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_bytes = "0.11.5"
 serde_json = { version = "1.0.93", default-features = false, features = ["raw_value"] }
