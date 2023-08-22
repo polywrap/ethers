@@ -72,7 +72,8 @@ impl WrapSigner {
             connection: iprovider_connection.clone(),
         })
         .expect("failed to obtain signer chain id from provider plugin");
-        let chain_id = chain_id.as_str().unwrap();
+        let chain_id_binding = chain_id.to_json();
+        let chain_id = chain_id_binding.as_str().unwrap();
         Self {
             address: Address::from_str(&address.as_str()).unwrap(),
             chain_id: u64::from_str_radix(&chain_id[2..], 16).unwrap(),
