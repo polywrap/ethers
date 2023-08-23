@@ -1,4 +1,6 @@
 #import { Module } into Provider from "wrapscan.io/polywrap/ethereum-wallet@1.0"
+#import * into Utils from "wrapscan.io/polywrap/ethers-utils@1"
+
 
 # Connection type containing node and network information
 type Connection {
@@ -155,7 +157,7 @@ type Eip1559FeesEstimate {
   maxPriorityFeePerGas: BigInt!
 }
 
-type Module {
+type Module implements Utils_Module {
   # Get the chain ID of the connected Ethereum network
   getChainId(connection: Connection): String!
 

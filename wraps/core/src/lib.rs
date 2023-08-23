@@ -1,18 +1,18 @@
+use ethers_core::abi::Abi;
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use ethers_core::abi::{Abi};
 use polywrap_msgpack_serde::BigIntWrapper;
-use polywrap_provider::provider::{WrapProvider, Provider};
-use polywrap_provider::signer::{WrapSigner, Signer};
-use polywrap_wasm_rs::{BigInt,JSON};
-use wrap::module::{Module, ModuleTrait};
+use polywrap_provider::provider::{Provider, WrapProvider};
+use polywrap_provider::signer::{Signer, WrapSigner};
+use polywrap_wasm_rs::{BigInt, JSON};
 use std::str::FromStr;
+use wrap::module::{Module, ModuleTrait};
 mod wrap;
 use wrap::*;
 
 mod polywrap_provider;
 
-use polywrap_provider::{provider, error};
 use helpers::{format, mapping};
+use polywrap_provider::{error, provider};
 
 mod api;
 mod helpers;
@@ -31,7 +31,7 @@ impl ModuleTrait for Module {
         };
 
         if address.is_err() {
-            return Err(address.unwrap_err())
+            return Err(address.unwrap_err());
         }
         let block_tag: BlockId = BlockNumber::Latest.into();
         let balance = provider.get_balance(address.unwrap(), Some(block_tag));
@@ -39,7 +39,9 @@ impl ModuleTrait for Module {
         if let Err(error) = balance {
             return Err(format!("Error in get_balance: {}", error.to_string()));
         }
-        Ok(BigIntWrapper(BigInt::from_str(&balance.unwrap().to_string()).unwrap()))
+        Ok(BigIntWrapper(
+            BigInt::from_str(&balance.unwrap().to_string()).unwrap(),
+        ))
     }
 
     fn check_address(args: wrap::ArgsCheckAddress) -> Result<bool, String> {
@@ -55,12 +57,16 @@ impl ModuleTrait for Module {
         Ok(BigIntWrapper(BigInt::from_str(&price.to_string()).unwrap()))
     }
 
-    fn estimate_eip1559_fees(args: wrap::ArgsEstimateEip1559Fees) -> Result<wrap::Eip1559FeesEstimate, String> {
+    fn estimate_eip1559_fees(
+        args: wrap::ArgsEstimateEip1559Fees,
+    ) -> Result<wrap::Eip1559FeesEstimate, String> {
         let provider = WrapProvider::new(&args.connection);
         let price = provider.estimate_eip1559_fees(None).unwrap();
         Ok(wrap::Eip1559FeesEstimate {
             max_fee_per_gas: BigIntWrapper(BigInt::from_str(&price.0.to_string()).unwrap()),
-            max_priority_fee_per_gas: BigIntWrapper(BigInt::from_str(&price.1.to_string()).unwrap()),
+            max_priority_fee_per_gas: BigIntWrapper(
+                BigInt::from_str(&price.1.to_string()).unwrap(),
+            ),
         })
     }
 
@@ -74,10 +80,14 @@ impl ModuleTrait for Module {
         let address = WrapSigner::new(&args.connection).address();
         let block_tag: BlockId = BlockNumber::Latest.into();
         let balance = provider.get_balance(address, Some(block_tag)).unwrap();
-        Ok(BigIntWrapper(BigInt::from_str(&balance.to_string()).unwrap()))
+        Ok(BigIntWrapper(
+            BigInt::from_str(&balance.to_string()).unwrap(),
+        ))
     }
 
-    fn get_signer_transaction_count(args: wrap::ArgsGetSignerTransactionCount) -> Result<BigIntWrapper, String> {
+    fn get_signer_transaction_count(
+        args: wrap::ArgsGetSignerTransactionCount,
+    ) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let address = WrapSigner::new(&args.connection).address();
         let block_tag: BlockId = BlockNumber::Latest.into();
@@ -125,7 +135,9 @@ impl ModuleTrait for Module {
         Ok(res.to_string())
     }
 
-    fn estimate_transaction_gas(args: wrap::ArgsEstimateTransactionGas) -> Result<BigIntWrapper, String> {
+    fn estimate_transaction_gas(
+        args: wrap::ArgsEstimateTransactionGas,
+    ) -> Result<BigIntWrapper, String> {
         let provider = WrapProvider::new(&args.connection);
         let tx = mapping::from_wrap_request(args.tx);
         let gas = provider.estimate_gas(&tx, None).unwrap();
@@ -138,10 +150,7 @@ impl ModuleTrait for Module {
         provider
             .await_transaction(tx_hash.clone(), args.confirmations, args.timeout)
             .unwrap();
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .unwrap()
-            .unwrap();
+        let receipt = provider.get_transaction_receipt(tx_hash).unwrap().unwrap();
         let tx_receipt = mapping::to_wrap_receipt(receipt, args.confirmations);
         Ok(tx_receipt)
     }
@@ -170,10 +179,7 @@ impl ModuleTrait for Module {
         provider
             .await_transaction(tx_hash.clone(), 1, None)
             .unwrap();
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .unwrap()
-            .unwrap();
+        let receipt = provider.get_transaction_receipt(tx_hash).unwrap().unwrap();
         let tx_receipt = mapping::to_wrap_receipt(receipt, 1);
         Ok(tx_receipt)
     }
@@ -194,10 +200,7 @@ impl ModuleTrait for Module {
         provider
             .await_transaction(tx_hash.clone(), 1, None)
             .unwrap();
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .unwrap()
-            .unwrap();
+        let receipt = provider.get_transaction_receipt(tx_hash).unwrap().unwrap();
         let address = receipt
             .contract_address
             .expect("Contract failed to deploy.");
@@ -329,11 +332,67 @@ impl ModuleTrait for Module {
         provider
             .await_transaction(tx_hash.clone(), 1, None)
             .unwrap();
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .unwrap()
-            .unwrap();
+        let receipt = provider.get_transaction_receipt(tx_hash).unwrap().unwrap();
         let tx_receipt = mapping::to_wrap_receipt(receipt, 1);
         Ok(tx_receipt)
+    }
+
+    // Re-export utils
+    fn keccak256(args: ArgsKeccak256) -> Result<String, String> {
+        UtilsModule::keccak256(&imported::utils_module::ArgsKeccak256 { value: args.value })
+    }
+
+    fn keccak256_bytes_encode_packed(
+        args: ArgsKeccak256BytesEncodePacked,
+    ) -> Result<String, String> {
+        UtilsModule::keccak256_bytes_encode_packed(
+            &imported::utils_module::ArgsKeccak256BytesEncodePacked { value: args.value },
+        )
+    }
+
+    fn generate_create2_address(args: ArgsGenerateCreate2Address) -> Result<String, String> {
+        UtilsModule::generate_create2_address(&imported::utils_module::ArgsGenerateCreate2Address {
+            address: args.address,
+            salt: args.salt,
+            init_code: args.init_code,
+        })
+    }
+
+    fn encode_meta_transaction(args: ArgsEncodeMetaTransaction) -> Result<String, String> {
+        UtilsModule::encode_meta_transaction(&imported::utils_module::ArgsEncodeMetaTransaction {
+            operation: args.operation,
+            to: args.to,
+            value: args.value,
+            data: args.data,
+        })
+    }
+
+    fn encode_params(args: ArgsEncodeParams) -> Result<String, String> {
+        UtilsModule::encode_params(&imported::utils_module::ArgsEncodeParams {
+            types: args.types,
+            values: args.values,
+        })
+    }
+
+    fn encode_function(args: ArgsEncodeFunction) -> Result<String, String> {
+        UtilsModule::encode_function(&imported::utils_module::ArgsEncodeFunction {
+            method: args.method,
+            args: args.args,
+        })
+    }
+
+    fn to_wei(args: ArgsToWei) -> Result<String, String> {
+        UtilsModule::to_wei(&imported::utils_module::ArgsToWei { eth: args.eth })
+    }
+
+    fn to_eth(args: ArgsToEth) -> Result<String, String> {
+        UtilsModule::to_eth(&imported::utils_module::ArgsToEth { wei: args.wei })
+    }
+
+    fn solidity_pack(args: ArgsSolidityPack) -> Result<String, String> {
+        UtilsModule::solidity_pack(&imported::utils_module::ArgsSolidityPack {
+            types: args.types,
+            values: args.values,
+        })
     }
 }
