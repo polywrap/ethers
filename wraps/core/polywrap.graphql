@@ -1,5 +1,5 @@
 #import { Module } into Provider from "wrapscan.io/polywrap/ethereum-wallet@1.0"
-#import * into Utils from "wrapscan.io/polywrap/ethers-utils@1"
+#import * into Utils from "wrapscan.io/polywrap/ethers-utils@1.0.1"
 
 
 # Connection type containing node and network information
