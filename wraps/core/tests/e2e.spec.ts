@@ -91,6 +91,7 @@ describe("Ethereum Wrapper", () => {
           })
         })
       })
+      .setRedirect("wrap://wrapscan.io/polywrap/ethers-utils@1.0.1", "fs/../../utils/build")
 
     clientWithCustomSigner = new PolywrapClient(config.build());
 
@@ -124,6 +125,7 @@ describe("Ethereum Wrapper", () => {
         })
       })
     })
+    .setRedirect("wrap://wrapscan.io/polywrap/ethers-utils@1.0.1", "fs/../../utils/build")
 
     clientWithWeb3Provider = new PolywrapClient(configWeb3Provider.build())
 
