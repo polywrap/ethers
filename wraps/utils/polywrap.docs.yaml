@@ -1,0 +1,5 @@
+format: 0.1.0
+description: Ethereum blockchain utilities
+website: https://polywrap.io
+repository: https://github.com/polywrap/ethers
+readme: ./README.md

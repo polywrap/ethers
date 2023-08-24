@@ -1,6 +1,9 @@
-format: 0.2.0
+format: 0.4.0
 project:
   name: ethers
   type: app/typescript
 source:
   schema: ../../polywrap.graphql
+  import_abis:
+    - uri: wrap://wrapscan.io/polywrap/ethers-utils@1.0.1
+      abi: ../../../utils/polywrap.graphql
