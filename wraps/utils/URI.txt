@@ -1,1 +1,1 @@
-wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.0
+wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.1

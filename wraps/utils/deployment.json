@@ -6,13 +6,13 @@
         "name": "ipfs_deploy",
         "id": "ipfs_deploy.ipfs_deploy",
         "input": "wrap://fs/./build",
-        "result": "wrap://ipfs/QmNcoVkyBi6t1jL33eRDorQHdQHUhBmJksRunaCr9v2kyq"
+        "result": "wrap://ipfs/QmdC3864ARsXiu3LyzAgUky6naSRcuvdneTSAT9Tjcmgs1"
       },
       {
         "name": "http_deploy",
         "id": "ipfs_deploy.http_deploy",
-        "input": "wrap://ipfs/QmNcoVkyBi6t1jL33eRDorQHdQHUhBmJksRunaCr9v2kyq",
-        "result": "wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.0"
+        "input": "wrap://ipfs/QmdC3864ARsXiu3LyzAgUky6naSRcuvdneTSAT9Tjcmgs1",
+        "result": "wrap://http/https://wraps.wrapscan.io/r/polywrap/ethers-utils@1.0.1"
       }
     ]
   }
