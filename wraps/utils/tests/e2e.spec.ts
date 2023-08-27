@@ -1,4 +1,4 @@
-import { PolywrapClientConfigBuilder, PolywrapClient } from "@polywrap/client-js";
+import { PolywrapClient, PolywrapClientConfigBuilder } from "@polywrap/client-js";
 import * as path from "path";
 import { ethers, utils } from "ethers";
 
@@ -149,6 +149,26 @@ describe("Ethereum Wrapper", () => {
       const expected = ethers.utils.defaultAbiCoder.encode(
         ["address[]"],
         [["0x0000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000001"]]
+      );
+      expect(response.value).toBe(expected);
+    });
+
+    it.only("encodeParams", async () => {
+      const response = await client.invoke<string>({
+        uri,
+        method: "encodeParams",
+        args: {
+          types: ["uint256"],
+          values: ["0xb1073742015cbcf5a3a4d9d1ae33ecf619439710b89475f92e2abd2117e90f90"],
+        },
+      });
+
+      console.log(response)
+      if (!response.ok) throw response.error;
+
+      const expected = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        ["0xb1073742015cbcf5a3a4d9d1ae33ecf619439710b89475f92e2abd2117e90f90"]
       );
       expect(response.value).toBe(expected);
     });
