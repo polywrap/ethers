@@ -445,9 +445,9 @@ describe("Ethereum Wrapper", () => {
         expect(response.value.hash).toBeDefined();
       })
       it("using provider signer", async () => {
-        const response = await clientWithWeb3Provider.invoke<Schema.TxResponse>({
+        const response = await clientWithWeb3Provider.invoke<Schema.TxReceipt>({
           uri,
-          method: "sendTransaction",
+          method: "sendTransactionAndWait",
           args: {
             tx: { data: contracts.SimpleStorage.bytecode }
           }
@@ -455,7 +455,18 @@ describe("Ethereum Wrapper", () => {
         
         if (!response.ok) throw response.error;
         expect(response.value).toBeDefined();
-        expect(response.value.hash).toBeDefined();
+        expect(response.value).toBeDefined();
+
+        const getTransactionResponse = await clientWithWeb3Provider.invoke<string>({
+          uri,
+          method: "getTransaction",
+          args: {
+            hash: response.value.transactionHash,
+          },
+        });
+  
+        if (!getTransactionResponse.ok) throw getTransactionResponse.error;
+        expect(getTransactionResponse.value).toBeDefined();
       })
     })
 
