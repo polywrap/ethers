@@ -44,6 +44,20 @@ impl ModuleTrait for Module {
         ))
     }
 
+    fn get_transaction(args: wrap::ArgsGetTransaction) -> Result<TxResponse, String> {
+        let provider = WrapProvider::new(&args.connection);
+        let transaction = provider.get_transaction(H256::from_str(&args.hash).unwrap());
+        if let Ok(tx) = transaction {
+            if let Some(tx) = tx {
+                Ok(mapping::to_wrap_response(&provider, tx))
+            } else {
+                return Err(format!("Transaction with hash {} not found", args.hash));
+            }
+        } else {
+            return Err("Error fetching transaction".to_string());
+        }
+    }
+
     fn check_address(args: wrap::ArgsCheckAddress) -> Result<bool, String> {
         Ok(match Address::from_str(&args.address) {
             Ok(_) => true,
