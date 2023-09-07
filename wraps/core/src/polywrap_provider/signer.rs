@@ -9,6 +9,7 @@ use ethers_core::{
 };
 use ethers_providers::ProviderError;
 use ethers_signers::to_eip155_v;
+use polywrap_wasm_rs::ByteBuf;
 use thiserror::Error;
 
 use crate::wrap::{
@@ -83,7 +84,7 @@ impl WrapSigner {
 
     pub(super) fn sign_rlp(&self, rlp: Vec<u8>) -> Result<Signature, String> {
         let signature = ProviderModule::sign_transaction(&ArgsSignTransaction {
-            rlp,
+            rlp: ByteBuf::from(rlp),
             connection: self.connection.clone(),
         })?;
         Ok(Signature::from_str(&signature).unwrap())
@@ -91,7 +92,7 @@ impl WrapSigner {
 
     pub(super) fn sign_bytes(&self, message: Vec<u8>) -> Result<Signature, String> {
         let signature = ProviderModule::sign_message(&ArgsSignMessage {
-            message,
+            message: ByteBuf::from(message),
             connection: self.connection.clone(),
         })?;
         Ok(Signature::from_str(&signature).unwrap())

@@ -1,9 +1,8 @@
 use ethers_core::abi::Abi;
 use ethers_core::types::{Address, BlockId, BlockNumber, Bytes, H256};
-use polywrap_msgpack_serde::BigIntWrapper;
 use polywrap_provider::provider::{Provider, WrapProvider};
 use polywrap_provider::signer::{Signer, WrapSigner};
-use polywrap_wasm_rs::{BigInt, JSON};
+use polywrap_wasm_rs::{BigInt, JSON, BigIntWrapper};
 use std::str::FromStr;
 use wrap::module::{Module, ModuleTrait};
 mod wrap;
