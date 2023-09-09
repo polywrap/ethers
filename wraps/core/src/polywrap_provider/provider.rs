@@ -6,10 +6,8 @@ use ethers_core::types::{
     TxHash, U256,
 };
 use ethers_core::utils;
-use ethers_providers::{ProviderError, RpcError};
 use polywrap_wasm_rs::JSON;
 use serde::{de::DeserializeOwned, Serialize};
-use thiserror::Error;
 
 use crate::wrap::connection::Connection;
 use crate::wrap::imported::{
@@ -21,110 +19,62 @@ pub trait Provider {
         &self,
         from: T,
         block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
+    ) -> Result<U256, String>;
 
     fn get_block_gen<Tx: Default + Serialize + DeserializeOwned + Debug>(
         &self,
         id: BlockId,
         include_txs: bool,
-    ) -> Result<Option<Block<Tx>>, ProviderError>;
+    ) -> Result<Option<Block<Tx>>, String>;
 
     fn get_block<T: Into<BlockId> + Send + Sync>(
         &self,
         block_hash_or_number: T,
-    ) -> Result<Option<Block<TxHash>>, ProviderError>;
+    ) -> Result<Option<Block<TxHash>>, String>;
 
     fn fee_history<T: Into<U256> + Send + Sync>(
         &self,
         block_count: T,
         last_block: BlockNumber,
         reward_percentiles: &[f64],
-    ) -> Result<FeeHistory, ProviderError>;
+    ) -> Result<FeeHistory, String>;
 
-    fn fill_gas_fees(&self, tx: &mut TypedTransaction) -> Result<(), ProviderError>;
+    fn fill_gas_fees(&self, tx: &mut TypedTransaction) -> Result<(), String>;
 
-    fn get_gas_price(&self) -> Result<U256, ProviderError>;
+    fn get_gas_price(&self) -> Result<U256, String>;
 
     fn estimate_eip1559_fees(
         &self,
         estimator: Option<fn(U256, Vec<Vec<U256>>) -> (U256, U256)>,
-    ) -> Result<(U256, U256), ProviderError>;
+    ) -> Result<(U256, U256), String>;
 
-    fn estimate_gas(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
+    fn estimate_gas(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<U256, String>;
 
     fn fill_transaction(
         &self,
         tx: &mut TypedTransaction,
         block: Option<BlockId>,
-    ) -> Result<(), ProviderError>;
+    ) -> Result<(), String>;
 
-    fn get_chainid(&self) -> Result<U256, ProviderError>;
+    fn get_chainid(&self) -> Result<U256, String>;
 
     fn get_balance<T: Into<NameOrAddress> + Send + Sync>(
         &self,
         from: T,
         block: Option<BlockId>,
-    ) -> Result<U256, ProviderError>;
+    ) -> Result<U256, String>;
 
     fn get_transaction<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
-    ) -> Result<Option<Transaction>, ProviderError>;
+    ) -> Result<Option<Transaction>, String>;
 
     fn get_transaction_receipt<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
-    ) -> Result<Option<TransactionReceipt>, ProviderError>;
+    ) -> Result<Option<TransactionReceipt>, String>;
 
-    fn call(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<Bytes, ProviderError>;
-}
-
-#[derive(Error, Debug)]
-/// Error thrown when sending an HTTP request
-pub enum ClientError {
-    /// Serde JSON Error
-    #[error("Deserialization Error: {err}. Response: {text}")]
-    SerdeJson {
-        err: serde_json::Error,
-        text: String,
-    },
-    /// Serde JSON Error
-    #[error("Client error: {0}")]
-    Error(String),
-    /// Error in rpc request using provider
-    #[error(transparent)]
-    RpcClientError(ProviderError)
-
-}
-
-// @TODO(cbrzn): This need to be implemented before merging new packages structure
-// Relevant:
-// https://docs.rs/ethers/2.0.3/ethers/providers/struct.JsonRpcError.html
-// https://github.com/ethers-io/ethers.js/blob/9f990c57f0486728902d4b8e049536f2bb3487ee/packages/providers/src.ts/json-rpc-provider.ts#L25-L53
-impl RpcError for ClientError {
-    fn as_error_response(&self) -> Option<&ethers_providers::JsonRpcError> {
-        todo!()
-    }
-
-    fn as_serde_error(&self) -> Option<&JSON::Error> {
-        todo!()
-    }
-}
-
-impl From<ClientError> for ProviderError {
-    fn from(src: ClientError) -> Self {
-        match src {
-            _ => ProviderError::JsonRpcClientError(Box::new(src)),
-        }
-    }
+    fn call(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, String>;
 }
 
 #[derive(Debug)]
@@ -147,19 +97,17 @@ impl WrapProvider {
         &self,
         method: &str,
         params: T,
-    ) -> Result<R, ProviderError> {
+    ) -> Result<R, String> {
         let params_v: serde_json::Value = JSON::to_value(&params).unwrap();
         let res = ProviderModule::request(&ArgsRequest {
             method: method.to_string(),
             params: Some(params_v.into()),
             connection: self.connection.clone(),
         })
-        .map_err(|err| ClientError::Error(err))?;
-        let res = JSON::from_value(res.into()).map_err(|err| ClientError::SerdeJson {
-            err,
-            text: "from str failed".to_string(),
-        })?;
-        Ok(res)
+        .map_err(|e| format!("Error in provider.request method: {e}"))?;
+        JSON::from_value(res.into()).map_err(|e| {
+            format!("Value received from provider.request method could not be parsed to JSON: {e}")
+        })
     }
 
     pub fn await_transaction<T: Send + Sync + Into<TxHash>>(
@@ -167,17 +115,15 @@ impl WrapProvider {
         transaction_hash: T,
         confirmations: u32,
         timeout: Option<u32>,
-    ) -> Result<bool, ProviderError> {
+    ) -> Result<bool, String> {
         let hash = transaction_hash.into();
 
-        let res = ProviderModule::wait_for_transaction(&ArgsWaitForTransaction {
+        ProviderModule::wait_for_transaction(&ArgsWaitForTransaction {
             tx_hash: format!("{:#x}", hash),
             confirmations,
             timeout,
             connection: self.connection.clone(),
         })
-        .map_err(|err| ClientError::Error(err))?;
-        Ok(res)
     }
 }
 
@@ -187,12 +133,12 @@ impl Provider for WrapProvider {
         &self,
         from: T,
         block: Option<BlockId>,
-    ) -> Result<U256, ProviderError> {
+    ) -> Result<U256, String> {
         let from = match from.into() {
             NameOrAddress::Name(ens_name) => {
-                return Err(ProviderError::EnsError(format!(
+                return Err(format!(
                     "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
-                )))
+                ));
             }
             NameOrAddress::Address(addr) => addr,
         };
@@ -206,7 +152,7 @@ impl Provider for WrapProvider {
         &self,
         id: BlockId,
         include_txs: bool,
-    ) -> Result<Option<Block<Tx>>, ProviderError> {
+    ) -> Result<Option<Block<Tx>>, String> {
         let include_txs = utils::serialize(&include_txs);
 
         Ok(match id {
@@ -225,7 +171,7 @@ impl Provider for WrapProvider {
     fn get_block<T: Into<BlockId> + Send + Sync>(
         &self,
         block_hash_or_number: T,
-    ) -> Result<Option<Block<TxHash>>, ProviderError> {
+    ) -> Result<Option<Block<TxHash>>, String> {
         self.get_block_gen(block_hash_or_number.into(), false)
     }
 
@@ -234,7 +180,7 @@ impl Provider for WrapProvider {
         block_count: T,
         last_block: BlockNumber,
         reward_percentiles: &[f64],
-    ) -> Result<FeeHistory, ProviderError> {
+    ) -> Result<FeeHistory, String> {
         let block_count = block_count.into();
         let last_block = utils::serialize(&last_block);
         let reward_percentiles = utils::serialize(&reward_percentiles);
@@ -271,7 +217,7 @@ impl Provider for WrapProvider {
         }
     }
 
-    fn fill_gas_fees(&self, tx: &mut TypedTransaction) -> Result<(), ProviderError> {
+    fn fill_gas_fees(&self, tx: &mut TypedTransaction) -> Result<(), String> {
         match tx {
             TypedTransaction::Eip2930(_) | TypedTransaction::Legacy(_) => {
                 let gas_price = if tx.gas_price().is_some() {
@@ -294,7 +240,7 @@ impl Provider for WrapProvider {
     }
 
     /// Gets the current gas price as estimated by the node
-    fn get_gas_price(&self) -> Result<U256, ProviderError> {
+    fn get_gas_price(&self) -> Result<U256, String> {
         self.request("eth_gasPrice", ())
     }
 
@@ -303,12 +249,12 @@ impl Provider for WrapProvider {
     fn estimate_eip1559_fees(
         &self,
         estimator: Option<fn(U256, Vec<Vec<U256>>) -> (U256, U256)>,
-    ) -> Result<(U256, U256), ProviderError> {
+    ) -> Result<(U256, U256), String> {
         let base_fee_per_gas = self
             .get_block(BlockNumber::Latest)?
-            .ok_or_else(|| ProviderError::CustomError("Latest block not found".into()))?
+            .ok_or_else(|| "Latest block not found")?
             .base_fee_per_gas
-            .ok_or_else(|| ProviderError::CustomError("EIP-1559 not activated".into()))?;
+            .ok_or_else(|| "EIP-1559 not activated")?;
 
         let fee_history = self.fee_history(
             utils::EIP1559_FEE_ESTIMATION_PAST_BLOCKS,
@@ -330,11 +276,7 @@ impl Provider for WrapProvider {
     /// required (as a U256) to send it This is free, but only an estimate. Providing too little
     /// gas will result in a transaction being rejected (while still consuming all provided
     /// gas).
-    fn estimate_gas(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<U256, ProviderError> {
+    fn estimate_gas(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<U256, String> {
         let tx = utils::serialize(tx);
         // Some nodes (e.g. old Optimism clients) don't support a block ID being passed as a param,
         // so refrain from defaulting to BlockNumber::Latest.
@@ -350,12 +292,12 @@ impl Provider for WrapProvider {
         &self,
         tx: &mut TypedTransaction,
         block: Option<BlockId>,
-    ) -> Result<(), ProviderError> {
+    ) -> Result<(), String> {
         // set the ENS name
         if let Some(NameOrAddress::Name(ref ens_name)) = tx.to() {
-            return Err(ProviderError::EnsError(format!(
+            return Err(format!(
                 "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
-            )));
+            ));
         }
 
         // fill gas price
@@ -373,7 +315,7 @@ impl Provider for WrapProvider {
 
     /// Returns the currently configured chain id, a value used in replay-protected
     /// transaction signing as introduced by EIP-155.
-    fn get_chainid(&self) -> Result<U256, ProviderError> {
+    fn get_chainid(&self) -> Result<U256, String> {
         self.request("eth_chainId", ())
     }
 
@@ -382,12 +324,12 @@ impl Provider for WrapProvider {
         &self,
         from: T,
         block: Option<BlockId>,
-    ) -> Result<U256, ProviderError> {
+    ) -> Result<U256, String> {
         let from = match from.into() {
             NameOrAddress::Name(ens_name) => {
-                return Err(ProviderError::EnsError(format!(
+                return Err(format!(
                     "Cannot resolve ENS name {ens_name}. ENS name resolution is not supported."
-                )))
+                ))
             }
             NameOrAddress::Address(addr) => addr,
         };
@@ -401,7 +343,7 @@ impl Provider for WrapProvider {
     fn get_transaction<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
-    ) -> Result<Option<Transaction>, ProviderError> {
+    ) -> Result<Option<Transaction>, String> {
         let hash = transaction_hash.into();
         self.request("eth_getTransactionByHash", [hash])
     }
@@ -410,7 +352,7 @@ impl Provider for WrapProvider {
     fn get_transaction_receipt<T: Send + Sync + Into<TxHash>>(
         &self,
         transaction_hash: T,
-    ) -> Result<Option<TransactionReceipt>, ProviderError> {
+    ) -> Result<Option<TransactionReceipt>, String> {
         let hash = transaction_hash.into();
         self.request("eth_getTransactionReceipt", [hash])
     }
@@ -418,7 +360,7 @@ impl Provider for WrapProvider {
     /// Sends the read-only (constant) transaction to a single Ethereum node and return the result
     /// (as bytes) of executing it. This is free, since it does not change any state on the
     /// blockchain.
-    fn call(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, ProviderError> {
+    fn call(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, String> {
         let tx = utils::serialize(tx);
         let block = utils::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
         self.request("eth_call", [tx, block])

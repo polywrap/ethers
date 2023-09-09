@@ -1,6 +1,6 @@
 use crate::polywrap_provider::provider::Provider;
 use crate::provider::WrapProvider;
-use crate::wrap::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
+use crate::wrap::prelude::{AccessItem, Log as TxLog, TxReceipt, TxRequest, TxResponse, TxOptions};
 use ethers_core::types::{
     transaction::eip2718::TypedTransaction, Bytes, Log, NameOrAddress, Address, Transaction,
     TransactionReceipt, TransactionRequest, H160, H256, U64, U256, Eip1559TransactionRequest

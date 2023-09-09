@@ -26,15 +26,11 @@ pub enum SignerError {
     #[error("error encoding eip712 struct: {0:?}")]
     Eip712Error(String),
     #[error("error in send transaction: {0:?}")]
-    SendError(String)
+    SendError(String),
 }
 
 pub trait Signer {
-    fn send(
-        &self,
-        tx: &TypedTransaction,
-        block: Option<BlockId>,
-    ) -> Result<Bytes, ProviderError>;
+    fn send(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, ProviderError>;
     fn sign_message<S: Send + Sync + AsRef<[u8]>>(
         &self,
         message: S,

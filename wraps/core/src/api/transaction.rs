@@ -1,9 +1,6 @@
-use crate::{
-    error::WrapperError,
-    polywrap_provider::{
-        provider::{Provider, WrapProvider},
-        signer::WrapSigner,
-    },
+use crate::polywrap_provider::{
+    provider::{Provider, WrapProvider},
+    signer::WrapSigner,
 };
 use ethers_core::types::{BlockId, Chain};
 use ethers_core::{
@@ -14,7 +11,6 @@ use ethers_core::{
     },
     utils::serialize,
 };
-use ethers_providers::ProviderError;
 
 use crate::mapping::EthersTxOptions;
 
@@ -64,11 +60,11 @@ pub fn create_deploy_contract_transaction(
     bytecode: Bytes,
     values: &Vec<String>,
     options: &EthersTxOptions,
-) -> Result<TypedTransaction, WrapperError> {
+) -> Result<TypedTransaction, String> {
     let data: Bytes = match (abi.constructor(), values.is_empty()) {
         (None, false) => {
             let error = "Constructor not found in contract ABI".to_string();
-            return Err(WrapperError::ContractError(error));
+            return Err(error);
         }
         (None, true) => bytecode.clone(),
         (Some(constructor), _) => {
@@ -129,17 +125,17 @@ pub fn call_contract_static(
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions,
-) -> Result<Vec<Token>, WrapperError> {
-    let (function, data): (Function, Bytes) = ethers_utils::encode_function(method, args)?;
+) -> Result<Vec<Token>, String> {
+    let (function, data): (Function, Bytes) = ethers_utils::encode_function(method, args)
+        .map_err(|e| format!("Error encoding function in call contract method: {e}"))?;
 
     let mut tx: TypedTransaction = create_transaction(Some(address), data, options);
     fill_transaction(provider, signer, &mut tx, None)?;
-    let bytes: Result<Bytes, WrapperError> = provider.call(&tx, None).map_err(|e| e.into());
+    let bytes: Result<Bytes, String> = provider.call(&tx, None).map_err(|e| e.into());
 
     if bytes.is_err() {
         Err(bytes.unwrap_err())
     } else {
-        //TODO (cbrzn): Remove unwrap
         let tokens: Vec<Token> = function.decode_output(&bytes.unwrap()).unwrap();
         Ok(tokens)
     }
@@ -152,13 +148,14 @@ pub fn call_contract_method(
     method: &str,
     args: &Vec<String>,
     options: &EthersTxOptions,
-) -> H256 {
-    let (_, encode_data): (Function, Bytes) = ethers_utils::encode_function(method, args).unwrap();
+) -> Result<H256, String> {
+    let (_, encode_data): (Function, Bytes) = ethers_utils::encode_function(method, args)
+        .map_err(|e| format!("Error encoding function in call contract method: {e}"))?;
 
     let mut tx: TypedTransaction =
         create_transaction(Some(address), Bytes::from(encode_data), options);
     let tx_hash: H256 = send_transaction(provider, signer, &mut tx);
-    tx_hash
+    Ok(tx_hash)
 }
 
 /// Helper for filling a transaction's nonce using the wallet
@@ -167,14 +164,15 @@ fn fill_transaction(
     signer: &WrapSigner,
     tx: &mut TypedTransaction,
     block: Option<BlockId>,
-) -> Result<(), ProviderError> {
+) -> Result<(), String> {
     // get the `from` field's nonce if it's set, else get the signer's nonce
-    let from = if tx.from().is_some() && tx.from() != Some(&signer.address()) {
-        *tx.from().unwrap()
+    let default_address = signer.address();
+    let from = tx.from().unwrap_or(&default_address);
+    if from != &default_address {
+        tx.set_from(*from);
     } else {
-        signer.address()
-    };
-    tx.set_from(from);
+        tx.set_from(default_address);
+    }
 
     // get the signer's chain_id if the transaction does not set it
     let chain_id = signer.chain_id();
@@ -194,6 +192,5 @@ fn fill_transaction(
         }
     }
 
-    provider.fill_transaction(tx, block)?;
-    Ok(())
+    provider.fill_transaction(tx, block)
 }
