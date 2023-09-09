@@ -14,24 +14,41 @@ use wrap::*;
 
 impl ModuleTrait for Module {
     fn keccak256(args: wrap::ArgsKeccak256) -> Result<String, String> {
-        let decoded = Bytes::from_str(&args.value).unwrap();
+        let decoded = Bytes::from_str(&args.value)
+            .map_err(|e| format!("Value could not be parsed in keccak256: {e}"))?;
+
         let hash = keccak256_ethers(decoded);
-        Ok(format!("{}", Bytes::from(hash)).to_string())
+        Ok(format!("{}", Bytes::from(hash)))
     }
 
     fn keccak256_bytes_encode_packed(
         args: wrap::ArgsKeccak256BytesEncodePacked,
     ) -> Result<String, String> {
-        let bytes = Bytes::from_str(&args.value).unwrap();
-        let bytes = Token::Bytes(bytes.to_vec());
-        let encoded = keccak256_ethers(encode_packed(&[bytes]).unwrap());
-        Ok(format!("{}", Bytes::from(encoded)).to_string())
+        let decoded = Bytes::from_str(&args.value).map_err(|e| {
+            format!("Value could not be parsed in keccak256 bytes encode packed method: {e}")
+        })?;
+
+        let bytes = Token::Bytes(decoded.to_vec());
+
+        let packed = encode_packed(&[bytes])
+            .map_err(|e| format!("Error encoding bytes token into Vec<u8>: {e}"))?;
+
+        let encoded = keccak256_ethers(packed);
+        Ok(format!("{}", Bytes::from(encoded)))
     }
 
     fn generate_create2_address(args: wrap::ArgsGenerateCreate2Address) -> Result<String, String> {
-        let salt = Bytes::from_str(&args.salt).unwrap();
-        let init_code = Bytes::from_str(&args.init_code).unwrap();
-        let address = args.address.parse::<Address>().unwrap();
+        let salt =
+            Bytes::from_str(&args.salt).map_err(|e| format!("Failed to convert salt: {e}"))?;
+
+        let init_code = Bytes::from_str(&args.init_code)
+            .map_err(|e| format!("Failed to convert init_code: {e}"))?;
+
+        let address = args
+            .address
+            .parse::<Address>()
+            .map_err(|e| format!("Failed to parse address: {e}"))?;
+
         let generated_address = get_create2_address(address, salt, init_code);
 
         Ok(format!("{:?}", generated_address))
@@ -68,13 +85,14 @@ impl ModuleTrait for Module {
 
     fn encode_params(input: wrap::ArgsEncodeParams) -> Result<String, String> {
         let bytes: Bytes = utils_encode_params(input.types, input.values).into();
-        Ok(format!("{}", bytes))
+        Ok(format!("{bytes}"))
     }
 
     fn encode_function(input: wrap::ArgsEncodeFunction) -> Result<String, String> {
         let args: Vec<String> = input.args.unwrap_or(vec![]);
-        let (_, bytes): (Function, Bytes) = utils_encode_function(&input.method, &args).unwrap();
-        Ok(format!("{}", bytes))
+        let (_, bytes): (Function, Bytes) = utils_encode_function(&input.method, &args)
+            .map_err(|e| format!("Error in encode function: {e}"))?;
+        Ok(format!("{bytes}"))
     }
 
     fn to_wei(input: ArgsToWei) -> Result<String, String> {
