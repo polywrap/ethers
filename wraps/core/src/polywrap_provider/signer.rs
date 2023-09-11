@@ -2,12 +2,8 @@ use std::str::FromStr;
 
 use ethers_core::{
     abi::Address,
-    types::{
-        transaction::{eip2718::TypedTransaction, eip712::Eip712},
-        BlockId, Bytes, Signature,
-    },
+    types::{transaction::eip2718::TypedTransaction, Signature},
 };
-use ethers_providers::ProviderError;
 use ethers_signers::to_eip155_v;
 use polywrap_wasm_rs::ByteBuf;
 use thiserror::Error;
@@ -30,16 +26,11 @@ pub enum SignerError {
 }
 
 pub trait Signer {
-    fn send(&self, tx: &TypedTransaction, block: Option<BlockId>) -> Result<Bytes, ProviderError>;
     fn sign_message<S: Send + Sync + AsRef<[u8]>>(
         &self,
         message: S,
     ) -> Result<Signature, SignerError>;
     fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, SignerError>;
-    fn sign_typed_data<T: Eip712 + Send + Sync>(
-        &self,
-        _payload: &T,
-    ) -> Result<Signature, SignerError>;
 }
 
 #[derive(Clone, Debug)]
@@ -110,6 +101,7 @@ impl Signer for WrapSigner {
         message: S,
     ) -> Result<Signature, SignerError> {
         let bytes = message.as_ref().to_vec();
+        // TODO(cbrzn): This is wrong and we should not map the error to `Eip712Error`
         self.sign_bytes(bytes)
             .map_err(|e| SignerError::Eip712Error(e))
     }
@@ -130,27 +122,8 @@ impl Signer for WrapSigner {
                 sig.v = to_eip155_v(sig.v as u8 - 27, chain_id);
                 Ok(sig)
             }
+            // TODO(cbrzn): This is wrong and we should not map the error to `Eip712Error`
             Err(e) => Err(SignerError::Eip712Error(e)),
         }
-    }
-
-    fn sign_typed_data<T: Eip712 + Send + Sync>(
-        &self,
-        _payload: &T,
-    ) -> Result<Signature, SignerError> {
-        panic!("{} Not implemented.", "WrapSigner.sign_typed_data");
-        // TODO: implement sign_typed_data
-        // let encoded = payload
-        //     .encode_eip712()
-        //     .map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
-        // self.sign_bytes(encoded.to_vec().unwrap()).map_err(|e| SignerError::Eip712Error(e))
-    }
-
-    fn send(
-        &self,
-        _tx: &TypedTransaction,
-        _block: Option<BlockId>,
-    ) -> Result<Bytes, ethers_providers::ProviderError> {
-        todo!()
     }
 }

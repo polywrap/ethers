@@ -297,7 +297,7 @@ describe("Ethereum Wrapper", () => {
         );
       })
 
-      it.skip("with provider signer", async () => {
+      it("with provider signer", async () => {
         const response = await clientWithWeb3Provider.invoke<string>({
           uri,
           method: "signTypedData",
