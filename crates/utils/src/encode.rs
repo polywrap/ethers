@@ -9,6 +9,7 @@ use ethers_core::{
 
 use crate::error::EncodeError;
 use std::str::FromStr;
+use ethers_core::abi::Error;
 use polywrap_wasm_rs::BigInt;
 use num_traits::Num;
 
@@ -17,22 +18,7 @@ pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
         .zip(types.iter())
         .map(|(arg, t)| {
             let kind = HumanReadableParser::parse_type(&t).unwrap();
-            if let ParamType::Array(items) = &kind {
-                if let ParamType::Address = items.as_ref() {
-                    return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap();
-                }
-            }
-            if arg.starts_with("\"") && arg.ends_with("\"") {
-                return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap();
-            }
-            if let ParamType::Uint(_) = &kind {
-                if arg.chars().any(char::is_alphabetic) {
-                    let hex = if arg.starts_with("0x") { arg.strip_prefix("0x").unwrap() } else { arg.as_str() };
-                    let decimal = BigInt::from_str_radix(hex, 16).unwrap().to_string();
-                    return LenientTokenizer::tokenize(&kind, &decimal).unwrap()
-                }
-            }
-            LenientTokenizer::tokenize(&kind, arg).unwrap()
+            tokenize(&kind, arg).unwrap()
         })
         .collect();
     let bytes = encode(&tokens);
@@ -68,22 +54,7 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
         .iter()
         .zip(values.iter())
         .map(|(param, arg)| {
-            if let ParamType::Array(items) = &param.kind {
-                if let ParamType::Address = items.as_ref() {
-                    return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap();
-                }
-            }
-            if arg.starts_with("\"") && arg.ends_with("\"") {
-                return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap();
-            }
-            if let ParamType::Uint(_) = &param.kind {
-                if arg.chars().any(char::is_alphabetic) {
-                    let hex = if arg.starts_with("0x") { arg.strip_prefix("0x").unwrap() } else { arg.as_str() };
-                    let decimal = BigInt::from_str_radix(hex, 16).unwrap().to_string();
-                    return LenientTokenizer::tokenize(&param.kind, &decimal).unwrap()
-                }
-            }
-            LenientTokenizer::tokenize(&param.kind, arg).unwrap()
+            tokenize(&param.kind, arg).unwrap()
         })
         .collect()
 }
@@ -116,4 +87,23 @@ pub fn encode_packed_bytes(bytes: String) -> String {
     let token = Token::Bytes(bytes.to_vec());
     let encoded = encode_packed(&[token]).unwrap();
     format!("{}", Bytes::from(encoded))
+}
+
+fn tokenize(kind: &ParamType, arg: &String) -> Result<Token, Error> {
+    if let ParamType::Array(items) = &kind {
+        if let ParamType::Address = items.as_ref() {
+            return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str());
+        }
+    }
+    if arg.starts_with("\"") && arg.ends_with("\"") {
+        return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str());
+    }
+    if let ParamType::Uint(_) = &kind {
+        if arg.chars().any(char::is_alphabetic) {
+            let hex = if arg.starts_with("0x") { arg.strip_prefix("0x").unwrap() } else { arg.as_str() };
+            let decimal = BigInt::from_str_radix(hex, 16).unwrap().to_string();
+            return LenientTokenizer::tokenize(&kind, &decimal);
+        }
+    }
+    LenientTokenizer::tokenize(&kind, arg)
 }
