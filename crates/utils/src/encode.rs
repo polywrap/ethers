@@ -9,6 +9,8 @@ use ethers_core::{
 
 use crate::error::EncodeError;
 use std::str::FromStr;
+use polywrap_wasm_rs::BigInt;
+use num_traits::Num;
 
 pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
     let tokens: Vec<Token> = values.iter()
@@ -22,6 +24,13 @@ pub fn encode_params(types: Vec<String>, values: Vec<String>) -> Vec<u8> {
             }
             if arg.starts_with("\"") && arg.ends_with("\"") {
                 return LenientTokenizer::tokenize(&kind, arg.replace("\"", "").as_str()).unwrap();
+            }
+            if let ParamType::Uint(_) = &kind {
+                if arg.chars().any(char::is_alphabetic) {
+                    let hex = if arg.starts_with("0x") { arg.strip_prefix("0x").unwrap() } else { arg.as_str() };
+                    let decimal = BigInt::from_str_radix(hex, 16).unwrap().to_string();
+                    return LenientTokenizer::tokenize(&kind, &decimal).unwrap()
+                }
             }
             LenientTokenizer::tokenize(&kind, arg).unwrap()
         })
