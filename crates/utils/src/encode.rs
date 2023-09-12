@@ -76,6 +76,13 @@ pub fn tokenize_values(values: &Vec<String>, params: &Vec<Param>) -> Vec<Token> 
             if arg.starts_with("\"") && arg.ends_with("\"") {
                 return LenientTokenizer::tokenize(&param.kind, arg.replace("\"", "").as_str()).unwrap();
             }
+            if let ParamType::Uint(_) = &param.kind {
+                if arg.chars().any(char::is_alphabetic) {
+                    let hex = if arg.starts_with("0x") { arg.strip_prefix("0x").unwrap() } else { arg.as_str() };
+                    let decimal = BigInt::from_str_radix(hex, 16).unwrap().to_string();
+                    return LenientTokenizer::tokenize(&param.kind, &decimal).unwrap()
+                }
+            }
             LenientTokenizer::tokenize(&param.kind, arg).unwrap()
         })
         .collect()
