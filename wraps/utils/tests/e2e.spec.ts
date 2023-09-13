@@ -153,7 +153,7 @@ describe("Ethereum Wrapper", () => {
       expect(response.value).toBe(expected);
     });
 
-    it.only("encodeParams", async () => {
+    it("encodeParams uint256", async () => {
       const response = await client.invoke<string>({
         uri,
         method: "encodeParams",
@@ -163,7 +163,6 @@ describe("Ethereum Wrapper", () => {
         },
       });
 
-      console.log(response)
       if (!response.ok) throw response.error;
 
       const expected = ethers.utils.defaultAbiCoder.encode(
